@@ -1,0 +1,19 @@
+# Unit test / coverage reports
+.tox/
+.coverage
+coverage.xml
+
+# Byte-compiled / optimized / DLL files
+.pytest_cache/
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+build/
+build_travis/
+develop-eggs/
+dist/
+eggs/
+sdist/
+*.egg-info/
+*.egg
