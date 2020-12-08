@@ -6,4 +6,6 @@ KEG - Image Compositon Tool
 
 |Build Status|
 
-Image Compositon Tool
+keg is a command line tool that creates a
+[kiwi](https://github.com/OSInside/kiwi) image description based on
+description snippets in a given GIT repository.
