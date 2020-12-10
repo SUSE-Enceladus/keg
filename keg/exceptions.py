@@ -36,3 +36,23 @@ class KegLogFileSetupFailed(KegError):
     """
     Exception raised if the log file could not be created.
     """
+
+
+class KegDescriptionNotFound(KegError):
+    """
+    Exception raised if the keg written description could not be found
+    """
+
+
+class KegKiwiValidationError(KegError):
+    """
+    Exception raised if the validation of the keg written
+    description against the KIWI API has failed
+    """
+
+
+class KegKiwiDescriptionError(KegError):
+    """
+    Exception raised if the creation of the keg written description
+    through the KIWI API has failed
+    """
