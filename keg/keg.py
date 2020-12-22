@@ -15,15 +15,70 @@
 # You should have received a copy of the GNU General Public License
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
+
+import argparse
 import logging
+import sys
 
 # project
+from keg.exceptions import KegError
+from keg.generator import create_image_description
 from keg.version import __version__
 
 log = logging.getLogger('keg')
 
 
 def main():
-    log.info(
-        'This is keg version {0}'.format(__version__)
+    argparser = argparse.ArgumentParser(
+        description='Create KIWI image description from keg recipe'
     )
+    argparser.add_argument(
+        '-r', '--recipes-root',
+        dest='recipes_root',
+        help='Root directory of recipes (required)'
+    )
+    argparser.add_argument(
+        '-d', '--dest-dir',
+        default='.',
+        dest='dest_dir',
+        help='Destination directory for generated description, default cwd'
+    )
+    argparser.add_argument(
+        '-f', '--force',
+        action='store_true',
+        default=False,
+        dest='force',
+        help='Force mode (ignore errors, overwrite files)'
+    )
+    argparser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        default=False,
+        dest='verbose',
+        help='Enable verbose output'
+    )
+    argparser.add_argument(
+        '--version',
+        action='version',
+        version=__version__,
+        help='Print version'
+    )
+    argparser.add_argument(
+        'source',
+        help='Path to image source, expected under recipes-root/images'
+    )
+    args = argparser.parse_args()
+
+    if args.verbose:
+        log.setLevel(logging.DEBUG)
+
+    try:
+        create_image_description(
+            args.source,
+            args.recipes_root,
+            args.dest_dir,
+            log,
+            args.force
+        )
+    except KegError as err:
+        sys.exit('Error creating image description: {}'.format(err))
