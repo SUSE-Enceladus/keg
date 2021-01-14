@@ -25,11 +25,12 @@ from keg.exceptions import KegError
 class ImageDefinition:
     """Class for constructing a keg image definition from recipes"""
 
-    def __init__(self, image_name, recipes_root):
+    def __init__(self, image_name, recipes_root, data_roots):
         """Init ImageDefintion with image_name and recipes root path"""
         self._image_name = image_name
         self._image_root = os.path.join(recipes_root, 'images')
-        self._data_root = os.path.join(recipes_root, 'data')
+        self._data_roots = [os.path.join(recipes_root, 'data')]
+        self._data_roots += data_roots
 
     def populate(self):
         """Parse recipes data and construct wanted image definition"""
@@ -42,7 +43,7 @@ class ImageDefinition:
         }
         try:
             self._data.update(
-                yaml_utils.parse_tree(self._image_name, self._image_root)
+                yaml_utils.parse_tree(self._image_name, [self._image_root])
             )
         except Exception as e:
             raise KegError('Error parsing image data: {}'.format(e))
@@ -58,7 +59,7 @@ class ImageDefinition:
                             yaml_utils.rmerge(
                                 yaml_utils.parse_tree(
                                     inc,
-                                    self._data_root,
+                                    self._data_roots,
                                     include_paths
                                 ),
                                 profile
@@ -77,7 +78,7 @@ class ImageDefinition:
                     yaml_utils.rmerge(
                         yaml_utils.parse_tree(
                             inc,
-                            self._data_root,
+                            self._data_roots,
                             include_paths
                         ),
                         contents

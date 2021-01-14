@@ -36,14 +36,13 @@ def _get_versioned_source_files(src_path, include_paths):
     return src_files
 
 
-def _get_source_files(src_path, include_paths=None):
-    src_files = _get_versioned_source_files(src_path, include_paths)
+def _get_source_files(root, src_path, include_paths=None):
+    src_files = _get_versioned_source_files(os.path.join(root, src_path), include_paths)
     for parent in Path(src_path).parents:
-        if parent.name:
-            src_files = _get_versioned_source_files(
-                parent,
-                include_paths
-            ) + src_files
+        src_files = _get_versioned_source_files(
+            os.path.join(root, parent),
+            include_paths
+        ) + src_files
     return src_files
 
 
@@ -57,8 +56,10 @@ def rmerge(src, dest):
     return dest
 
 
-def parse_tree(name, root, include_paths=None):
-    desc_files = _get_source_files(os.path.join(root, name), include_paths)
+def parse_tree(sub_dir, roots, include_paths=None):
+    desc_files = []
+    for root_dir in roots:
+        desc_files += _get_source_files(root_dir, sub_dir, include_paths)
     merged_tree = {}
     for df in desc_files:
         with open(df, 'r') as f:

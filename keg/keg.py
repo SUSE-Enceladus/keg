@@ -38,6 +38,13 @@ def main():
         help='Root directory of recipes (required)'
     )
     argparser.add_argument(
+        '-a', '--additional-data-root',
+        action='append',
+        default=[],
+        dest='add_data_roots',
+        help='Additional data root directory of recipes (more than one allowed)'
+    )
+    argparser.add_argument(
         '-d', '--dest-dir',
         default='.',
         dest='dest_dir',
@@ -76,9 +83,11 @@ def main():
         create_image_description(
             args.source,
             args.recipes_root,
+            args.add_data_roots,
             args.dest_dir,
             log,
             args.force
         )
     except KegError as err:
+        raise
         sys.exit('Error creating image description: {}'.format(err))

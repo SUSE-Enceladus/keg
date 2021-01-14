@@ -28,6 +28,7 @@ from keg.exceptions import KegError, KegKiwiValidationError
 
 def create_image_description(image_source,
                              recipes_root,
+                             data_roots,
                              dest_dir,
                              log,
                              force=False):
@@ -45,7 +46,7 @@ def create_image_description(image_source,
         else:
             raise KegError(errmsg)
 
-    img = image_definition.ImageDefinition(image_source, recipes_root)
+    img = image_definition.ImageDefinition(image_source, recipes_root, data_roots)
     img.populate()
 
     schemas_dir = os.path.join(recipes_root, 'schemas')
