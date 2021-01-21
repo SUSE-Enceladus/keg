@@ -21,7 +21,8 @@ import os
 from keg import (
     image_definition,
     kiwi_description,
-    template_functions
+    template_functions,
+    utils
 )
 from keg.exceptions import KegError, KegKiwiValidationError
 
@@ -73,8 +74,10 @@ def create_image_description(image_source,
         else:
             raise
 
+    script_roots = [ os.path.join(recipes_root, 'data') ] + data_roots
+    script_lib = utils.load_scripts('scripts', script_roots, img['include-paths'])
     config_templ = env.get_template('{}.config.sh.templ'.format(img['schema']))
-    config_sh = config_templ.render(data=img.get_data())
+    config_sh = config_templ.render(data=img.get_data(), scripts=script_lib)
 
     outfile = os.path.join(dest_dir, 'config.sh')
     if os.path.exists(outfile) and not force:

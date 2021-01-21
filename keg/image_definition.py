@@ -18,7 +18,7 @@
 from datetime import datetime, timezone
 import os
 
-from keg import version, yaml_utils
+from keg import version, utils
 from keg.exceptions import KegError
 
 
@@ -43,7 +43,7 @@ class ImageDefinition:
         }
         try:
             self._data.update(
-                yaml_utils.parse_tree(self._image_name, [self._image_root])
+                utils.parse_yaml_tree(self._image_name, [self._image_root])
             )
         except Exception as e:
             raise KegError('Error parsing image data: {}'.format(e))
@@ -56,8 +56,8 @@ class ImageDefinition:
                 for item, value in profile_data.items():
                     if item == 'include':
                         for inc in value:
-                            yaml_utils.rmerge(
-                                yaml_utils.parse_tree(
+                            utils.rmerge(
+                                utils.parse_yaml_tree(
                                     inc,
                                     self._data_roots,
                                     include_paths
@@ -65,7 +65,7 @@ class ImageDefinition:
                                 profile
                             )
                     else:
-                        yaml_utils.rmerge({item: value}, profile_data)
+                        utils.rmerge({item: value}, profile_data)
                 self._data['profiles'][profile_name].update(profile)
         except Exception as e:
             raise KegError('Error parsing profile data: {}'.format(e))
@@ -75,8 +75,8 @@ class ImageDefinition:
             if self._data.get('contents'):
                 contents = {}
                 for inc in self._data['contents']['include']:
-                    yaml_utils.rmerge(
-                        yaml_utils.parse_tree(
+                    utils.rmerge(
+                        utils.parse_yaml_tree(
                             inc,
                             self._data_roots,
                             include_paths
