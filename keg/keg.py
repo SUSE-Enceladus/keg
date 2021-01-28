@@ -15,8 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
-
-import argparse
+import docopt
 import logging
 import sys
 
@@ -29,64 +28,49 @@ log = logging.getLogger('keg')
 
 
 def main():
-    argparser = argparse.ArgumentParser(
-        description='Create KIWI image description from keg recipe'
-    )
-    argparser.add_argument(
-        '-r', '--recipes-root',
-        dest='recipes_root',
-        help='Root directory of recipes (required)'
-    )
-    argparser.add_argument(
-        '-a', '--additional-data-root',
-        action='append',
-        default=[],
-        dest='add_data_roots',
-        help='Additional data root directory of recipes (more than one allowed)'
-    )
-    argparser.add_argument(
-        '-d', '--dest-dir',
-        default='.',
-        dest='dest_dir',
-        help='Destination directory for generated description, default cwd'
-    )
-    argparser.add_argument(
-        '-f', '--force',
-        action='store_true',
-        default=False,
-        dest='force',
-        help='Force mode (ignore errors, overwrite files)'
-    )
-    argparser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        default=False,
-        dest='verbose',
-        help='Enable verbose output'
-    )
-    argparser.add_argument(
-        '--version',
-        action='version',
-        version=__version__,
-        help='Print version'
-    )
-    argparser.add_argument(
-        'source',
-        help='Path to image source, expected under recipes-root/images'
-    )
-    args = argparser.parse_args()
+    """
+Usage: keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
+           [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
+           SOURCE
+       keg -h | --help
+       keg --version
 
-    if args.verbose:
+Arguments:
+    SOURCE    Path to image source, expected under RECIPES_ROOT/images
+
+Options:
+    -r RECIPES_ROOT, --recipes-root=RECIPES_ROOT
+        Root directory of keg recipes
+
+    -a ADD_DATA_ROOT, --add-data-root=ADD_DATA_ROOT
+        Additional data root directory of recipes (multiples allowed)
+
+    -d DEST_DIR, --dest-dir=DEST_DIR
+        Destination directory for generated description, default cwd
+
+    -f, --force
+        Force mode (ignore errors, overwrite files)
+
+    -v, --verbose
+        Enable verbose output
+
+    --version
+        Print version
+"""
+
+    args = docopt.docopt(main.__doc__, version=__version__)
+
+    if args['--verbose']:
         log.setLevel(logging.DEBUG)
 
     try:
         create_image_description(
-            args.source,
-            args.recipes_root,
-            args.add_data_roots,
-            args.dest_dir,
+            args['SOURCE'],
+            args['--recipes-root'],
+            args['--add-data-root'],
+            args['--dest-dir'],
             log,
-            args.force
+            args['--force']
         )
     except KegError as err:
         raise
