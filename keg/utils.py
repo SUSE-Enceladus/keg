@@ -29,12 +29,12 @@ def _get_versioned_source_files(src_path, ext, include_paths):
         for include_path in include_paths:
             current_dir = src_path
             if current_dir not in scanned_dirs:
-                scanned_dirs.append(current_dir)
                 for level_down in Path(include_path).parts:
                     current_dir = os.path.join(current_dir, level_down)
                     src_files += glob(
                         os.path.join(current_dir, '*.{}'.format(ext))
                     )
+                    scanned_dirs.append(current_dir)
     return src_files
 
 
