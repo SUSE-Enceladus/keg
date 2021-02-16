@@ -16,7 +16,9 @@
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
 """
-Global version information used in keg and the package
+Utility functions for use in Jinja templates
 """
-__version__ = '0.0.1'
-__githash__ = '$Format:%H$'
+
+
+def ternary(var, trueval, falseval=""):
+    return trueval if var else falseval

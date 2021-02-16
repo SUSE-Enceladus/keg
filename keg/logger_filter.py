@@ -1,4 +1,4 @@
-# Copyright (c) 2020 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2021 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #

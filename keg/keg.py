@@ -1,4 +1,4 @@
-# Copyright (c) 2020 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2021 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -15,15 +15,63 @@
 # You should have received a copy of the GNU General Public License
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
+import docopt
 import logging
+import sys
 
 # project
+from keg.exceptions import KegError
+from keg.generator import create_image_description
 from keg.version import __version__
 
 log = logging.getLogger('keg')
 
 
 def main():
-    log.info(
-        'This is keg version {0}'.format(__version__)
-    )
+    """
+Usage: keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
+           [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
+           SOURCE
+       keg -h | --help
+       keg --version
+
+Arguments:
+    SOURCE    Path to image source, expected under RECIPES_ROOT/images
+
+Options:
+    -r RECIPES_ROOT, --recipes-root=RECIPES_ROOT
+        Root directory of keg recipes
+
+    -a ADD_DATA_ROOT, --add-data-root=ADD_DATA_ROOT
+        Additional data root directory of recipes (multiples allowed)
+
+    -d DEST_DIR, --dest-dir=DEST_DIR
+        Destination directory for generated description, default cwd
+
+    -f, --force
+        Force mode (ignore errors, overwrite files)
+
+    -v, --verbose
+        Enable verbose output
+
+    --version
+        Print version
+"""
+
+    args = docopt.docopt(main.__doc__, version=__version__)
+
+    if args['--verbose']:
+        log.setLevel(logging.DEBUG)
+
+    try:
+        create_image_description(
+            args['SOURCE'],
+            args['--recipes-root'],
+            args['--add-data-root'],
+            args['--dest-dir'],
+            log,
+            args['--force']
+        )
+    except KegError as err:
+        raise
+        sys.exit('Error creating image description: {}'.format(err))
