@@ -75,7 +75,7 @@ def create_image_description(
         else:
             raise
 
-    script_roots = [ os.path.join(recipes_root, 'data') ] + data_roots
+    script_roots = [os.path.join(recipes_root, 'data')] + data_roots
     script_lib = utils.load_scripts('scripts', script_roots, img['include-paths'])
     config_templ = env.get_template('{}.config.sh.templ'.format(img['schema']))
     config_sh = config_templ.render(data=img.get_data(), scripts=script_lib)
