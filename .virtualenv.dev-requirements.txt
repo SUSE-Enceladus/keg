@@ -7,9 +7,6 @@
 # setuptools for pypi upload
 setuptools
 
-# virtualenv-based automation of test activities
-tox
-
 # python unit testing framework
 pytest
 pytest-cov
