@@ -1,0 +1,12 @@
+schema: vm
+image:
+  author: The Team
+  contact: bob@example.net
+archs:
+  - x86_64
+users:
+  - name: root
+    groups:
+      - root
+    home: /root
+    password: foo

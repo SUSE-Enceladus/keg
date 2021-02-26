@@ -1,0 +1,7 @@
+profiles:
+  common:
+    include:
+      - defaults
+
+  other:
+      description: Some Other Profile

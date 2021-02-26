@@ -15,20 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
-import docopt
-import logging
-import sys
-
-# project
-from keg.exceptions import KegError
-from keg.generator import create_image_description
-from keg.version import __version__
-
-log = logging.getLogger('keg')
-
-
-def main():
-    """
+"""
 Usage: keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
            [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
            SOURCE
@@ -49,16 +36,28 @@ Options:
         Destination directory for generated description, default cwd
 
     -f, --force
-        Force mode (ignore errors, overwrite files)
+       Force mode (ignore errors, overwrite files)
 
     -v, --verbose
         Enable verbose output
 
     --version
-        Print version
+       Print version
 """
+import docopt
+import logging
+import sys
 
-    args = docopt.docopt(main.__doc__, version=__version__)
+# project
+from keg.exceptions import KegError
+from keg.generator import create_image_description
+from keg.version import __version__
+
+log = logging.getLogger('keg')
+
+
+def main():
+    args = docopt.docopt(__doc__, version=__version__)
 
     if args['--verbose']:
         log.setLevel(logging.DEBUG)
@@ -69,9 +68,16 @@ Options:
             args['--recipes-root'],
             args['--add-data-root'],
             args['--dest-dir'],
-            log,
             args['--force']
         )
-    except KegError as err:
+    except KegError as issue:
+        # known exception, log information and exit
+        log.error('%s: %s', type(issue).__name__, format(issue))
+        sys.exit(1)
+    except KeyboardInterrupt:
+        log.error('keg aborted by keyboard interrupt')
+        sys.exit(1)
+    except Exception:
+        # exception we did no expect, show python backtrace
+        log.error('Unexpected error:')
         raise
-        sys.exit('Error creating image description: {}'.format(err))

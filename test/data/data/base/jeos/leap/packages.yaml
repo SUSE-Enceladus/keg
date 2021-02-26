@@ -1,0 +1,6 @@
+packages:
+  image:
+    jeos:
+      - name: grub2-x86_64-efi
+        arch: x86_64
+      - patterns-base-minimal_base

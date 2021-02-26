@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
+import logging
 from jinja2 import Environment, FileSystemLoader
 import os
 
@@ -26,13 +27,13 @@ from keg import (
 )
 from keg.exceptions import KegError, KegKiwiValidationError
 
+log = logging.getLogger('keg')
 
-def create_image_description(image_source,
-                             recipes_root,
-                             data_roots,
-                             dest_dir,
-                             log,
-                             force=False):
+
+def create_image_description(
+    image_source, recipes_root, data_roots,
+    dest_dir, force=False
+):
     """
     Create a KIWI image description in dest_dir from image_source.
 
@@ -74,7 +75,7 @@ def create_image_description(image_source,
         else:
             raise
 
-    script_roots = [ os.path.join(recipes_root, 'data') ] + data_roots
+    script_roots = [os.path.join(recipes_root, 'data')] + data_roots
     script_lib = utils.load_scripts('scripts', script_roots, img['include-paths'])
     config_templ = env.get_template('{}.config.sh.templ'.format(img['schema']))
     config_sh = config_templ.render(data=img.get_data(), scripts=script_lib)
