@@ -1,5 +1,5 @@
 include-paths:
-  - jeos/leap
+  - base/jeos/leap
 image:
   name: Leap15.2-JeOS
   specification: "Leap 15.2 guest image"

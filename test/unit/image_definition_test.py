@@ -62,6 +62,48 @@ class TestKegImageDefinition:
             'profiles': {
                 'common': {
                     'include': ['defaults'],
+                    'packages': {
+                        'image': {
+                            'jeos': [
+                                {
+                                    'name': 'grub2-x86_64-efi',
+                                    'arch': 'x86_64'
+                                },
+                                'patterns-base-minimal_base'
+                            ]
+                        }
+                    },
+                    'config': {
+                        'files': {
+                            'JeOS-sysconfig': [
+                                {
+                                    'path': '/etc/sysconfig/console',
+                                    'append': True,
+                                    'content': 'CONSOLE_ENCODING="UTF-8"'
+                                }
+                            ]
+                        },
+                        'scripts': {
+                            'JeOS-config': ['remove-root-pw']
+                        },
+                        'services': {
+                            'JeOS-services': [
+                                'sshd', {
+                                    'name': 'kbd',
+                                    'enable': False
+                                }
+                            ]
+                        },
+                        'sysconfig': {
+                            'JeOS-sysconfig': [
+                                {
+                                    'file': '/etc/sysconfig/language',
+                                    'name': 'INSTALLED_LANGUAGES',
+                                    'value': ''
+                                }
+                            ]
+                        }
+                    },
                     'profile': {
                         'bootloader': {
                             'name': 'grub2',
@@ -86,7 +128,7 @@ class TestKegImageDefinition:
                     'description': 'Some Other Profile'
                 }
             },
-            'include-paths': ['jeos/leap']
+            'include-paths': ['base/jeos/leap']
         }
 
     @patch('keg.image_definition.datetime')
