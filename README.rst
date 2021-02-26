@@ -18,12 +18,20 @@ keg is written in Python, it uses [tox](https://tox.readthedocs.io/en/latest/) t
 for the desired Python version. Make sure the Python development headers
 are installed (e.g. `python36-devel`)
 
-The following procedure describes how to create such an environment:
+Currently, there are 5 targets for tox:
+
+- **check**: for code quality and integrity
+- **devel**: for development
+- **doc**: for building man pages
+- **unit_py3_8**: to run unit tests with Python version set to *3.8*
+- **unit_py3_6**: to run unit tests with Python version set to *3.6*
+
+The following procedure describes how to create the development environment:
 
 1.  Let tox create the virtual environment(s):
 
     ```
-    $ tox
+    $ tox -e devel
     ```
 
 2.  Activate the virtual environment
