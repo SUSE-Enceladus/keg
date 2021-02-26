@@ -38,7 +38,7 @@ class TestKegImageDefinition:
 
         self.keg_definition.populate()
 
-        assert self.keg_definition.get_data() == {
+        assert self.keg_definition.data == {
             'generator': 'keg 0.0.1',
             'timestamp': 'time-string',
             'image source path': 'leap/15.2',
@@ -142,4 +142,4 @@ class TestKegImageDefinition:
 
         keg_definition.populate()
 
-        assert keg_definition.get_data()['schema'] == 'vm_singlebuild'
+        assert keg_definition.data['schema'] == 'vm_singlebuild'

@@ -50,7 +50,8 @@ import sys
 
 # project
 from keg.exceptions import KegError
-from keg.generator import create_image_description
+from keg.image_definition import KegImageDefinition
+from keg.generator import KegGenerator
 from keg.version import __version__
 
 log = logging.getLogger('keg')
@@ -63,11 +64,19 @@ def main():
         log.setLevel(logging.DEBUG)
 
     try:
-        create_image_description(
-            args['SOURCE'],
-            args['--recipes-root'],
-            args['--add-data-root'],
-            args['--dest-dir'],
+        image_definition = KegImageDefinition(
+            image_name=args['SOURCE'],
+            recipes_root=args['--recipes-root'],
+            data_roots=args['--add-data-root']
+        )
+        image_generator = KegGenerator(
+            image_definition=image_definition,
+            dest_dir=args['--dest-dir']
+        )
+        image_generator.create_kiwi_description(
+            args['--force']
+        )
+        image_generator.create_custom_scripts(
             args['--force']
         )
     except KegError as issue:

@@ -3,7 +3,9 @@ import sys
 from pytest import (
     fixture, raises
 )
-from mock import patch
+from mock import (
+    patch, Mock
+)
 from keg.keg import main
 
 from keg.exceptions import KegError
@@ -21,30 +23,44 @@ class TestKeg:
             '--dest-dir', 'some-target', '../data/images/leap/15.2'
         ]
 
-    @patch('keg.keg.create_image_description')
-    def test_keg(self, mock_create_image_description):
+    @patch('keg.keg.KegImageDefinition')
+    @patch('keg.keg.KegGenerator')
+    def test_keg(self, mock_KegGenerator, mock_KegImageDefinition):
+        image_definition = Mock()
+        mock_KegImageDefinition.return_value = image_definition
+        image_generator = Mock()
+        mock_KegGenerator.return_value = image_generator
         with self._caplog.at_level(logging.DEBUG):
             main()
-            mock_create_image_description.assert_called_once_with(
-                '../data/images/leap/15.2', '../data', [],
-                'some-target',
+            mock_KegImageDefinition.assert_called_once_with(
+                image_name='../data/images/leap/15.2',
+                recipes_root='../data',
+                data_roots=[]
+            )
+            mock_KegGenerator.assert_called_once_with(
+                image_definition=image_definition, dest_dir='some-target'
+            )
+            image_generator.create_kiwi_description.assert_called_once_with(
+                False
+            )
+            image_generator.create_custom_scripts.assert_called_once_with(
                 False
             )
 
-    @patch('keg.keg.create_image_description')
+    @patch('keg.keg.KegImageDefinition')
     @patch('sys.exit')
     def test_keg_error_conditions(
-        self, mock_exit, mock_create_image_description
+        self, mock_exit, mock_KegImageDefinition
     ):
-        mock_create_image_description.side_effect = KegError('some-error')
+        mock_KegImageDefinition.side_effect = KegError('some-error')
         with self._caplog.at_level(logging.ERROR):
             main()
             assert 'some-error' in self._caplog.text
-        mock_create_image_description.side_effect = KeyboardInterrupt
+        mock_KegImageDefinition.side_effect = KeyboardInterrupt
         with self._caplog.at_level(logging.ERROR):
             main()
             assert 'keg aborted by keyboard interrupt' in self._caplog.text
-        mock_create_image_description.side_effect = Exception
+        mock_KegImageDefinition.side_effect = Exception
         with self._caplog.at_level(logging.ERROR):
             with raises(Exception):
                 main()

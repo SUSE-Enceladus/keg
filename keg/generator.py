@@ -19,69 +19,92 @@ import logging
 from jinja2 import Environment, FileSystemLoader
 import os
 
+from keg.image_definition import KegImageDefinition
+from keg.kiwi_description import KiwiDescription
 from keg import (
-    image_definition,
-    kiwi_description,
-    template_functions,
-    utils
+    template_functions, utils
 )
-from keg.exceptions import KegError, KegKiwiValidationError
+from keg.exceptions import KegError
 
 log = logging.getLogger('keg')
 
 
-def create_image_description(
-    image_source, recipes_root, data_roots,
-    dest_dir, force=False
-):
+class KegGenerator:
     """
-    Create a KIWI image description in dest_dir from image_source.
+    Class for creating a KIWI image description from Keg Templates
 
-    Expects a keg-recipes structure at recipes_root and image_source
-    referring to a directory under images in recipes_root.
+    :param object image_definition: Instance of KegImageDefinition
+    :param str dest_dir: Destination directory
     """
-    # Sanity check image source location
-    if not os.path.exists(os.path.join(recipes_root, 'images', image_source)):
-        errmsg = 'Source directory for {} does not exist.'.format(image_source)
-        if force:
-            log.warning(errmsg)
-        else:
-            raise KegError(errmsg)
+    def __init__(
+        self, image_definition: KegImageDefinition, dest_dir: str
+    ):
+        self.image_definition = image_definition
+        self.description_schemas = os.path.join(
+            image_definition.recipes_root, 'schemas'
+        )
+        self.dest_dir = dest_dir
+        self.env = Environment(
+            loader=FileSystemLoader(self.description_schemas)
+        )
+        self.env.globals['keg_funcs'] = template_functions
 
-    img = image_definition.ImageDefinition(image_source, recipes_root, data_roots)
-    img.populate()
+        self.image_definition.populate()
 
-    schemas_dir = os.path.join(recipes_root, 'schemas')
-    env = Environment(loader=FileSystemLoader(schemas_dir))
-    env.globals['keg_funcs'] = template_functions
+    def create_kiwi_description(
+        self, markup: str = 'xml', override: bool = False
+    ):
+        """
+        Creates KIWI config.xml from a KegImageDefinition.
 
-    kiwi_templ = env.get_template('{}.kiwi.templ'.format(img['schema']))
-    kiwi_doc = kiwi_templ.render(data=img.get_data())
+        :param bool override:
+            Override destination contents, default is: False
+        """
+        outfile = os.path.join(self.dest_dir, 'config.kiwi')
+        self._validate_outfile(outfile, override)
 
-    outfile = os.path.join(dest_dir, 'config.kiwi')
-    if os.path.exists(outfile) and not force:
-        raise KegError('{} exists, use force to overwrite.'.format(outfile))
-    with open(outfile, 'w') as fd:
-        fd.write(kiwi_doc)
+        kiwi_template = self.env.get_template(
+            '{}.kiwi.templ'.format(self.image_definition.data['schema'])
+        )
+        kiwi_document = kiwi_template.render(
+            data=self.image_definition.data
+        )
+        with open(outfile, 'w') as kiwi_config:
+            kiwi_config.write(kiwi_document)
+        kiwi = KiwiDescription(outfile)
+        if markup == 'xml':
+            kiwi.create_XML_description(outfile)
+        if markup == 'yaml':
+            kiwi.create_YAML_description(outfile)
 
-    kiwi_desc = kiwi_description.KiwiDescription(outfile)
-    try:
-        kiwi_desc.validate_description()
-    except KegKiwiValidationError:
-        if force:
-            log.warning('KIWI description validation error')
-            # FIXME: find out how to get details
-            pass
-        else:
-            raise
+    def create_custom_scripts(self, override: bool = False):
+        """
+        Creates custom KIWI config.sh script from a KegImageDefinition.
 
-    script_roots = [os.path.join(recipes_root, 'data')] + data_roots
-    script_lib = utils.load_scripts('scripts', script_roots, img['include-paths'])
-    config_templ = env.get_template('{}.config.sh.templ'.format(img['schema']))
-    config_sh = config_templ.render(data=img.get_data(), scripts=script_lib)
+        :param bool override:
+            Override destination contents, default is: False
+        """
+        outfile = os.path.join(self.dest_dir, 'config.sh')
+        self._validate_outfile(outfile, override)
 
-    outfile = os.path.join(dest_dir, 'config.sh')
-    if os.path.exists(outfile) and not force:
-        raise KegError('{} exists, use force to overwrite.'.format(outfile))
-    with open(outfile, 'w') as fd:
-        fd.write(config_sh)
+        script_lib = utils.load_scripts(
+            'scripts', self.image_definition.data_roots,
+            self.image_definition.data['include-paths']
+        )
+        config_template = self.env.get_template(
+            '{}.config.sh.templ'.format(self.image_definition.data['schema'])
+        )
+        config_sh = config_template.render(
+            data=self.image_definition.data, scripts=script_lib
+        )
+        with open(outfile, 'w') as custom_script:
+            custom_script.write(config_sh)
+
+    @staticmethod
+    def _validate_outfile(outfile, override):
+        if not override and os.path.exists(outfile):
+            raise KegError(
+                '{target} exists, use force to overwrite.'.format(
+                    target=outfile
+                )
+            )
