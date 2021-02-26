@@ -1,10 +1,7 @@
 KEG - Image Compositon Tool
 ===========================
 
-.. |Build Status| image:: https://travis-ci.com/SUSE-Enceladus/keg.svg?branch=main
-   :target: https://travis-ci.com/SUSE-Enceladus/keg
-
-|Build Status|
+.. ![CILint](https://github.com/SUSE-Enceladus/keg/workflows/CILint/badge.svg?branch=main)
 
 keg is a command line tool that creates a
 [kiwi](https://github.com/OSInside/kiwi) image description based on
