@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 
+from os import path
 from setuptools import setup
 from setuptools.command import sdist as setuptools_sdist
 
@@ -9,41 +10,14 @@ import subprocess
 
 from keg.version import __version__
 
-
-class sdist(setuptools_sdist.sdist):
-    """
-    Custom sdist command
-    Host requirements: git
-    """
-    def run(self):
-        """
-        Run first the git commit format update $Format:%H$
-        and after that the usual Python sdist
-        """
-        # git attributes
-        command = ['make', 'git_attributes']
-        self.announce(
-            'Running make git_attributes target: %s' % str(command),
-            level=distutils.log.INFO
-        )
-        self.announce(
-            subprocess.check_output(command).decode(),
-            level=distutils.log.INFO
-        )
-
-        # standard sdist process
-        setuptools_sdist.sdist.run(self)
-
-        # cleanup attributes
-        command = ['make', 'clean_git_attributes']
-        self.announce(
-            subprocess.check_output(command).decode(),
-            level=distutils.log.INFO
-        )
-
+here = path.abspath(path.dirname(__file__))
+with open(path.join(here, 'README.rst'), encoding='utf-8') as readme:
+    long_description = readme.read()
 
 config = {
     'name': 'keg',
+    'long_description': long_description,
+    'long_description_content_type': 'text/x-rst',
     'description': 'KEG - Image Composition Tool',
     'author': 'Public Cloud Team',
     'url': 'https://github.com/SUSE-Enceladus/keg',
