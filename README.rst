@@ -1,18 +1,17 @@
 KEG - Image Compositon Tool
 ===========================
 
-![CILint](https://github.com/SUSE-Enceladus/keg/workflows/CILint/badge.svg?branch=main)
+.. |GitHub CI Action| image:: https://github.com/SUSE-Enceladus/keg/workflows/CILint/badge.svg?branch=main
+   :target: https://github.com/SUSE-Enceladus/keg/actions
+
+|GitHub CI Action|
 
 keg is a command line tool that creates a
 [kiwi](https://github.com/OSInside/kiwi) image description based on
 description snippets in a given GIT repository.
 
-
-## Contents
-
-  * [Contributing](#contributing)
-
-## Contributing
+Contributing
+------------
 
 keg is written in Python, it uses [tox](https://tox.readthedocs.io/en/latest/) to setup a development environment
 for the desired Python version. Make sure the Python development headers
@@ -28,39 +27,39 @@ Currently, there are 5 targets for tox:
 
 The following procedure describes how to create the development environment:
 
-1.  Let tox create the virtual environment(s):
+1. Let tox create the virtual environment(s):
 
-    ```
-    $ tox -e devel
-    ```
+   .. code:: bash
 
-2.  Activate the virtual environment
+       $ tox -e devel
 
-    ```
-    $ source .tox/3/bin/activate
-    ```
+2. Activate the virtual environment
+    
+   .. code:: bash
 
-3.  Install requirements inside the virtual environment:
+       $ source .tox/3/bin/activate
 
-    ```
-    $ pip install -U pip setuptools
-    $ pip install -r .virtualenv.dev-requirements.txt
-    ```
+3. Install requirements inside the virtual environment:
 
-4.  Let setuptools create/update your entrypoints
+   .. code:: bash
 
-    ```
-    $ ./setup.py develop
-    ```
+       $ pip install -U pip setuptools
+       $ pip install -r .virtualenv.dev-requirements.txt
+
+4. Let setuptools create/update your entrypoints
+
+   .. code:: bash
+
+       $ ./setup.py develop
 
 Once the development environment is activated and initialized with
 the project required Python modules, you are ready to work.
 
 In order to leave the development mode just call:
 
-```
-$ deactivate
-```
+.. code:: bash
+
+   $ deactivate
 
 To resume your work, change into your local Git repository and
 run `source .tox/3/bin/activate` again. Skip step 3 and 4 as
