@@ -5,9 +5,9 @@ from mock import (
 )
 from pytest import raises
 
-from keg.generator import KegGenerator
-from keg.image_definition import KegImageDefinition
-from keg.exceptions import KegError
+from kiwi_keg.generator import KegGenerator
+from kiwi_keg.image_definition import KegImageDefinition
+from kiwi_keg.exceptions import KegError
 
 
 class TestKegGenerator:
@@ -35,8 +35,8 @@ class TestKegGenerator:
         assert "Given destination directory: 'dest-dir' does not exist" in \
             str(exception_info.value)
 
-    @patch('keg.generator.KiwiDescription')
-    @patch('keg.image_definition.datetime')
+    @patch('kiwi_keg.generator.KiwiDescription')
+    @patch('kiwi_keg.image_definition.datetime')
     def test_create_kiwi_description_by_keg(
         self, mock_datetime, mock_KiwiDescription
     ):
@@ -54,7 +54,7 @@ class TestKegGenerator:
                 '../data/keg_output/config.kiwi', tmpdirname + '/config.kiwi'
             ) is True
 
-    @patch('keg.generator.KiwiDescription')
+    @patch('kiwi_keg.generator.KiwiDescription')
     def test_create_kiwi_description_markup(self, mock_KiwiDescription):
         kiwi = Mock()
         mock_KiwiDescription.return_value = kiwi
@@ -73,7 +73,7 @@ class TestKegGenerator:
                 tmpdirname + '/config.kiwi'
             )
 
-    @patch('keg.generator.KiwiDescription')
+    @patch('kiwi_keg.generator.KiwiDescription')
     def test_create_kiwi_description_unsupported_markup(
         self, mock_KiwiDescription
     ):

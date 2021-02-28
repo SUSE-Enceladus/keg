@@ -1,9 +1,9 @@
 from pytest import raises
 from mock import patch
 
-from keg.kiwi_description import KiwiDescription
+from kiwi_keg.kiwi_description import KiwiDescription
 
-from keg.exceptions import (
+from kiwi_keg.exceptions import (
     KegDescriptionNotFound,
     KegKiwiValidationError,
     KegKiwiDescriptionError

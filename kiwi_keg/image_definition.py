@@ -24,8 +24,8 @@ from datetime import (
 )
 
 # project
-from keg import version, utils
-from keg.exceptions import KegError
+from kiwi_keg import version, utils
+from kiwi_keg.exceptions import KegError
 
 
 class KegImageDefinition:

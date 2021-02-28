@@ -49,10 +49,10 @@ import logging
 import sys
 
 # project
-from keg.exceptions import KegError
-from keg.image_definition import KegImageDefinition
-from keg.generator import KegGenerator
-from keg.version import __version__
+from kiwi_keg.exceptions import KegError
+from kiwi_keg.image_definition import KegImageDefinition
+from kiwi_keg.generator import KegGenerator
+from kiwi_keg.version import __version__
 
 log = logging.getLogger('keg')
 

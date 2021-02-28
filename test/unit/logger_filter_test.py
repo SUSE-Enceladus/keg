@@ -1,7 +1,7 @@
 from collections import namedtuple
 import logging
 
-from keg.logger_filter import (
+from kiwi_keg.logger_filter import (
     LoggerSchedulerFilter,
     InfoFilter,
     DebugFilter,

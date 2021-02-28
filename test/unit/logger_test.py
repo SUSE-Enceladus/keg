@@ -1,9 +1,9 @@
 from mock import patch
 from pytest import raises
 
-from keg.logger import Logger
+from kiwi_keg.logger import Logger
 
-from keg.exceptions import KegLogFileSetupFailed
+from kiwi_keg.exceptions import KegLogFileSetupFailed
 
 
 class TestLogger:

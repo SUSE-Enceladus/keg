@@ -1,6 +1,6 @@
 import logging
 
-from keg.logger import Logger
+from kiwi_keg.logger import Logger
 
 # Initialize custom logger class for keg
 logging.setLoggerClass(Logger)
