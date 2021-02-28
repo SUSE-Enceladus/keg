@@ -17,11 +17,23 @@ class TestKegGenerator:
         )
 
     @patch('os.path.exists')
-    def test_raises_on_data_exists(self, mock_os_path_exists):
+    @patch('os.path.isdir')
+    def test_raises_on_dest_dir_data_exists(
+        self, mock_os_path_is_dir, mock_os_path_exists
+    ):
+        mock_os_path_is_dir.return_value = True
         mock_os_path_exists.return_value = True
         generator = KegGenerator(self.image_definition, 'dest-dir')
         with raises(KegError):
             generator.create_kiwi_description()
+
+    @patch('os.path.isdir')
+    def test_raises_on_dest_dir_does_not_exist(self, mock_os_path_is_dir):
+        mock_os_path_is_dir.return_value = False
+        with raises(KegError) as exception_info:
+            KegGenerator(self.image_definition, 'dest-dir')
+        assert "Given destination directory: 'dest-dir' does not exist" in \
+            str(exception_info.value)
 
     @patch('keg.generator.KiwiDescription')
     @patch('keg.image_definition.datetime')

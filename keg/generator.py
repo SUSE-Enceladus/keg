@@ -39,6 +39,12 @@ class KegGenerator:
     def __init__(
         self, image_definition: KegImageDefinition, dest_dir: str
     ):
+        if not os.path.isdir(dest_dir):
+            raise KegError(
+                'Given destination directory: {target} does not exist'.format(
+                    target=repr(dest_dir)
+                )
+            )
         self.image_definition = image_definition
         self.description_schemas = os.path.join(
             image_definition.recipes_root, 'schemas'
