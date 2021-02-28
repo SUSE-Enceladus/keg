@@ -70,10 +70,12 @@ https://osinside.github.io/kiwi/installation.html
 If all software components are installed, Keg can be utilized like
 the following example shows:
 
-.. code::
+.. code:: shell-session
 
     $ git clone https://github.com/SUSE-Enceladus/keg-recipes.git
 
-    $ keg --recipes-root keg-recipes --dest-dir sles_description sles/byos/15-sp2
+    $ keg --recipes-root keg-recipes --dest-dir sles_description \
+          sles/byos/15-sp2
 
-    $ sudo kiwi-ng system build --description sles_description --target-dir kiwi_image
+    $ sudo kiwi-ng system build --description sles_description \
+          --target-dir kiwi_image

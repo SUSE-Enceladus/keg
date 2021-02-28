@@ -95,16 +95,29 @@
                 <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/installation.html"/></para>
       <para>If all software components are installed, Keg can be utilized like
                 the following example shows:</para>
-      <screen language="default">$ git clone https://github.com/SUSE-Enceladus/keg-recipes.git
+      <screen language="shell-session">$ git clone https://github.com/SUSE-Enceladus/keg-recipes.git
 
-$ keg --recipes-root keg-recipes --dest-dir sles_description sles/byos/15-sp2
+$ keg --recipes-root keg-recipes --dest-dir sles_description \
+      sles/byos/15-sp2
 
-$ sudo kiwi-ng system build --description sles_description --target-dir kiwi_image</screen>
+$ sudo kiwi-ng system build --description sles_description \
+      --target-dir kiwi_image</screen>
     </section>
   </chapter>
   <chapter xml:id="installation" xml:base="installation">
     <title>Installation</title>
-    <para># TODO</para>
+    <note>
+      <para>This document describes how to install Keg. Currently keg is
+                provided from <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://pypi.org/project/kiwi_keg/">PyPi</link> and
+                further install methods for Linux distributions will follow
+                soon.</para>
+    </note>
+    <section xml:id="installation-from-pypi">
+      <title>Installation from PyPI</title>
+      <para>Keg can be obtained from the Python Package Index (PyPi) via Python’s
+                package manager pip:</para>
+      <screen language="shell-session">$ pip install kiwi_keg</screen>
+    </section>
   </chapter>
   <chapter xml:id="command-line" xml:base="commands">
     <title>Command Line</title>
