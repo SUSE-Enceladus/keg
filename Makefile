@@ -8,14 +8,14 @@ LC = LC_MESSAGES
 
 version := $(shell \
     $(python) -c \
-    'from keg.version import __version__; print(__version__)'\
+    'from kiwi_keg.version import __version__; print(__version__)'\
 )
 
 install_package_docs:
 	install -m 644 LICENSE \
-		${buildroot}${docdir}/python-keg/LICENSE
+		${buildroot}${docdir}/python-kiwi_keg/LICENSE
 	install -m 644 README.rst \
-		${buildroot}${docdir}/python-keg/README
+		${buildroot}${docdir}/python-kiwi_keg/README
 
 install:
 	# manual pages
@@ -33,12 +33,12 @@ tox:
 git_attributes:
 	# the following is required to update the $Format:%H$ git attribute
 	# for details on when this target is called see setup.py
-	git archive HEAD keg/version.py | tar -x
+	git archive HEAD kiwi_keg/version.py | tar -x
 
 clean_git_attributes:
 	# cleanup version.py to origin state
 	# for details on when this target is called see setup.py
-	git checkout keg/version.py
+	git checkout kiwi_keg/version.py
 
 build: clean tox
 	# create setup.py variant for rpm build.
@@ -51,17 +51,17 @@ build: clean tox
 	# restore original setup.py backed up from sed
 	mv setup.pye setup.py
 	# provide rpm source tarball
-	mv dist/keg-${version}.tar.gz dist/python-keg.tar.gz
+	mv dist/kiwi_keg-${version}.tar.gz dist/python-kiwi_keg.tar.gz
 	# update rpm changelog using reference file
-	helper/update_changelog.py --since package/python-keg.changes > \
-		dist/python-keg.changes
-	helper/update_changelog.py --file package/python-keg.changes >> \
-		dist/python-keg.changes
+	helper/update_changelog.py --since package/python-kiwi_keg.changes > \
+		dist/python-kiwi_keg.changes
+	helper/update_changelog.py --file package/python-kiwi_keg.changes >> \
+		dist/python-kiwi_keg.changes
 	# update package version in spec file
-	cat package/python-keg-spec-template | sed -e s'@%%VERSION@${version}@' \
-		> dist/python-keg.spec
+	cat package/python-kiwi_keg-spec-template | \
+		sed -e s'@%%VERSION@${version}@' > dist/python-kiwi_keg.spec
 	# provide rpm rpmlintrc
-	cp package/python-keg-rpmlintrc dist
+	cp package/python-kiwi_keg-rpmlintrc dist
 
 pypi: clean tox
 	$(python) setup.py sdist upload

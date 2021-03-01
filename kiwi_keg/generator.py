@@ -19,12 +19,12 @@ import logging
 from jinja2 import Environment, FileSystemLoader
 import os
 
-from keg.image_definition import KegImageDefinition
-from keg.kiwi_description import KiwiDescription
-from keg import (
+from kiwi_keg.image_definition import KegImageDefinition
+from kiwi_keg.kiwi_description import KiwiDescription
+from kiwi_keg import (
     template_functions, utils
 )
-from keg.exceptions import KegError
+from kiwi_keg.exceptions import KegError
 
 log = logging.getLogger('keg')
 

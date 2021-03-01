@@ -3,8 +3,8 @@ from mock import (
 )
 from pytest import raises
 
-from keg.image_definition import KegImageDefinition
-from keg.exceptions import KegError
+from kiwi_keg.image_definition import KegImageDefinition
+from kiwi_keg.exceptions import KegError
 
 
 class TestKegImageDefinition:
@@ -22,7 +22,7 @@ class TestKegImageDefinition:
             '../data/data', 'data2', 'data3'
         ]
 
-    @patch('keg.image_definition.utils.parse_yaml_tree')
+    @patch('kiwi_keg.image_definition.utils.parse_yaml_tree')
     def test_populate_raises_on_parse_yaml_tree(
         self, mock_utils_parse_yaml_tree
     ):
@@ -30,7 +30,7 @@ class TestKegImageDefinition:
         with raises(KegError):
             self.keg_definition.populate()
 
-    @patch('keg.image_definition.datetime')
+    @patch('kiwi_keg.image_definition.datetime')
     def test_populate_composed_image(self, mock_datetime):
         utc_now = Mock()
         utc_now.strftime.return_value = 'time-string'
@@ -131,7 +131,7 @@ class TestKegImageDefinition:
             'include-paths': ['base/jeos/leap']
         }
 
-    @patch('keg.image_definition.datetime')
+    @patch('kiwi_keg.image_definition.datetime')
     def test_populate_single_build(self, mock_datetime):
         utc_now = Mock()
         utc_now.strftime.return_value = 'time-string'

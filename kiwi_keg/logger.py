@@ -19,7 +19,7 @@ import logging
 import sys
 
 # project
-from keg.logger_filter import (
+from kiwi_keg.logger_filter import (
     LoggerSchedulerFilter,
     InfoFilter,
     DebugFilter,
@@ -27,7 +27,7 @@ from keg.logger_filter import (
     WarningFilter
 )
 
-from keg.exceptions import KegLogFileSetupFailed
+from kiwi_keg.exceptions import KegLogFileSetupFailed
 
 
 class Logger(logging.Logger):

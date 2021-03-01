@@ -6,9 +6,9 @@ from pytest import (
 from mock import (
     patch, Mock
 )
-from keg.keg import main
+from kiwi_keg.keg import main
 
-from keg.exceptions import KegError
+from kiwi_keg.exceptions import KegError
 
 
 class TestKeg:
@@ -23,8 +23,8 @@ class TestKeg:
             '--dest-dir', 'some-target', '../data/images/leap/15.2'
         ]
 
-    @patch('keg.keg.KegImageDefinition')
-    @patch('keg.keg.KegGenerator')
+    @patch('kiwi_keg.keg.KegImageDefinition')
+    @patch('kiwi_keg.keg.KegGenerator')
     def test_keg(self, mock_KegGenerator, mock_KegImageDefinition):
         image_definition = Mock()
         mock_KegImageDefinition.return_value = image_definition
@@ -47,7 +47,7 @@ class TestKeg:
                 False
             )
 
-    @patch('keg.keg.KegImageDefinition')
+    @patch('kiwi_keg.keg.KegImageDefinition')
     @patch('sys.exit')
     def test_keg_error_conditions(
         self, mock_exit, mock_KegImageDefinition

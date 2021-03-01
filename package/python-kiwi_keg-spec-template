@@ -1,5 +1,5 @@
 #
-# spec file for package python-keg
+# spec file for package python-kiwi_keg
 #
 # Copyright (c) 2020 SUSE Software Solutions Germany GmbH, Nuernberg, Germany.
 #
@@ -42,7 +42,7 @@
 %global develsuffix devel
 %endif
 
-Name:           python-keg
+Name:           python-kiwi_keg
 Version:        %%VERSION
 Release:        0
 Url:            https://github.com/SUSE-Enceladus/keg
@@ -64,8 +64,8 @@ BuildArch:      noarch
 %description
 KEG is an image composition tool for KIWI image descriptions
 
-# python3-keg
-%package -n python%{python3_pkgversion}-keg
+# python3-kiwi_keg
+%package -n python%{python3_pkgversion}-kiwi_keg
 Summary:        KEG - Image Composition Tool
 Group:          Development/Languages/Python
 Requires:       python%{python3_pkgversion}-docopt
@@ -82,11 +82,11 @@ Requires:       python%{python3_pkgversion}-Cerberus
 Requires:       python%{python3_pkgversion}-cerberus
 %endif
 
-%description -n python%{python3_pkgversion}-keg
+%description -n python%{python3_pkgversion}-kiwi_keg
 KEG is an image composition tool for KIWI image descriptions
 
 %prep
-%setup -q -n keg-%{version}
+%setup -q -n kiwi_keg-%{version}
 
 %build
 # Build Python 3 version
@@ -99,11 +99,11 @@ python3 setup.py install --prefix=%{_prefix} --root=%{buildroot} %{?is_deb:--ins
 # Install man pages and package documentation
 make buildroot=%{buildroot}/ docdir=%{_defaultdocdir}/ install
 
-%files -n python%{python3_pkgversion}-keg
-%dir %{_defaultdocdir}/python-keg
-%{python3_sitelib}/keg*
-%{_defaultdocdir}/python-keg/LICENSE
-%{_defaultdocdir}/python-keg/README
+%files -n python%{python3_pkgversion}-kiwi_keg
+%dir %{_defaultdocdir}/python-kiwi_keg
+%{python3_sitelib}/kiwi_keg*
+%{_defaultdocdir}/python-kiwi_keg/LICENSE
+%{_defaultdocdir}/python-kiwi_keg/README
 %doc %{_mandir}/man8/*
 
 %changelog

@@ -8,14 +8,14 @@ from setuptools.command import sdist as setuptools_sdist
 import distutils
 import subprocess
 
-from keg.version import __version__
+from kiwi_keg.version import __version__
 
 here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as readme:
     long_description = readme.read()
 
 config = {
-    'name': 'keg',
+    'name': 'kiwi_keg',
     'long_description': long_description,
     'long_description_content_type': 'text/x-rst',
     'description': 'KEG - Image Composition Tool',
@@ -31,10 +31,10 @@ config = {
         'kiwi>=9.21.21',
         'PyYAML'
     ],
-    'packages': ['keg'],
+    'packages': ['kiwi_keg'],
     'entry_points': {
         'console_scripts': [
-            'keg=keg.keg:main'
+            'keg=kiwi_keg.keg:main'
         ]
     },
     'include_package_data': True,

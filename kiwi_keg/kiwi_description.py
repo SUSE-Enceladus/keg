@@ -23,7 +23,7 @@ import logging
 from kiwi.xml_description import XMLDescription
 
 # from KEG
-from keg.exceptions import (
+from kiwi_keg.exceptions import (
     KegDescriptionNotFound,
     KegKiwiValidationError,
     KegKiwiDescriptionError
