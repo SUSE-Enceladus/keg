@@ -3,6 +3,7 @@ from mock import (
 )
 from pytest import raises
 
+from kiwi_keg import version
 from kiwi_keg.image_definition import KegImageDefinition
 from kiwi_keg.exceptions import KegError
 
@@ -39,7 +40,7 @@ class TestKegImageDefinition:
         self.keg_definition.populate()
 
         assert self.keg_definition.data == {
-            'generator': 'keg 0.0.1',
+            'generator': 'keg {0}'.format(version.__version__),
             'timestamp': 'time-string',
             'image source path': 'leap/15.2',
             'schema': 'vm',

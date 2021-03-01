@@ -37,9 +37,11 @@ class TestKegGenerator:
 
     @patch('kiwi_keg.generator.KiwiDescription')
     @patch('kiwi_keg.image_definition.datetime')
+    @patch('kiwi_keg.image_definition.version')
     def test_create_kiwi_description_by_keg(
-        self, mock_datetime, mock_KiwiDescription
+        self, mock_keg_version, mock_datetime, mock_KiwiDescription
     ):
+        mock_keg_version.__version__ = 'keg_version'
         utc_now = Mock()
         utc_now.strftime.return_value = 'time-string'
         mock_datetime.now.return_value = utc_now
