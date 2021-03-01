@@ -57,7 +57,19 @@ def _get_source_files(root, src_path, ext, include_paths=None):
 
 
 def rmerge(src: Dict[str, str], dest: Dict[str, str]) -> Dict[str, str]:
-    """Merge two dictionaries."""
+    """
+    Merge two dictionaries recursively,
+    preserving all properties found in src.
+    Updating 'dest' to the latest value, if property is not a dict
+    or adding them in the right key, if it is while keeping the existing
+    key-values.
+
+    Example:
+    src = {'a': 'foo', 'b': {'c': 'bar'}}
+    dest = {'a': 'baz', 'b': {'d': 'more_bar'}}
+
+    Result: {'a': 'foo', 'b': {'d': 'more_bar', 'c': 'bar'}}
+    """
     for key, value in src.items():
         if isinstance(value, dict):
             node = dest.setdefault(key, {})
