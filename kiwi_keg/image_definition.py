@@ -38,7 +38,7 @@ class KegImageDefinition:
         """
         Init ImageDefintion with image_name and recipes root path
         """
-        self._data = {}
+        self._data: Dict = {}
         self._recipes_root = recipes_root
         self._image_name = image_name
         self._image_root = os.path.join(recipes_root, 'images')
@@ -82,7 +82,7 @@ class KegImageDefinition:
         # load profile sections
         if 'profiles' in self._data:
             for profile_name, profile_data in self._data['profiles'].items():
-                profile = {}
+                profile: Dict = {}
                 for item, value in profile_data.items():
                     if item == 'include':
                         for inc in value:
@@ -100,7 +100,7 @@ class KegImageDefinition:
 
         # expand unprofiled contents section (for single build)
         if 'contents' in self._data:
-            contents = {}
+            contents: Dict = {}
             for inc in self._data['contents'].get('include'):
                 utils.rmerge(
                     utils.parse_yaml_tree(
