@@ -24,3 +24,6 @@ flake8
 # for building documentation
 sphinx
 sphinx_rtd_theme
+
+# Python static type checker
+mypy
