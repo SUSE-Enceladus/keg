@@ -1,0 +1,118 @@
+{% macro print_sysconf_cmds(vars, indent) -%}
+{% for var in vars -%}
+{{ indent }}baseUpdateSysConfig {{ var['file'] }} {{ var['name'] }} "{{ var['value'] }}"
+{% endfor -%}
+{% endmacro -%}
+{% macro print_service_cmds(vars, indent) -%}
+{% for var in vars -%}
+{%   if var is string -%}
+{%     set service_name = var -%}
+{%     if service_name.endswith(".timer") -%}
+{%       set cmd = "systemctl enable" -%}
+{%     else -%}
+{%       set cmd = "suseInsertService" -%}
+{%     endif -%}
+{%   else -%}
+{%     set service_name = var['name'] -%}
+{%     if var['enable'] -%}
+{%       set cmd = "suseInsertService" -%}
+{%     else -%}
+{%       set cmd = "suseRemoveService" -%}
+{%     endif -%}
+{%   endif -%}
+{{ indent }}{{ cmd }} {{ service_name }}
+{% endfor -%}
+{% endmacro -%}
+#!/bin/bash
+#================
+# FILE          : config.sh
+#----------------
+# PROJECT       : openSUSE KIWI Image System
+# COPYRIGHT     : (c) 2020 SUSE LLC. All rights reserved
+#               : 
+# AUTHOR        : {{ data['image']['author'] }} {{ data['image']['contact'] }}
+#               :
+# BELONGS TO    : Operating System images
+#               :
+# DESCRIPTION   : OS configuration script
+#               :
+#               :
+# STATUS        : Production
+#----------------
+#======================================
+# Functions...
+#--------------------------------------
+test -f /.kconfig && . /.kconfig
+test -f /.profile && . /.profile
+
+
+#======================================
+# Fail build on error
+#--------------------------------------
+set -e
+
+#======================================
+# Greeting...
+#--------------------------------------
+echo "Configure image: [$kiwi_iname]..."
+
+#======================================
+# Setup the build keys
+#--------------------------------------
+suseImportBuildKey
+
+{% set common_profile = data['profiles']['common'] %}
+{%- if common_profile and common_profile['config'] %}
+{%- for ns in common_profile['config']['sysconfig'] %}
+# keg: included from {{ ns }}
+{{ print_sysconf_cmds(common_profile['config']['sysconfig'][ns], "") }}
+{%- endfor %}
+{%- for ns in common_profile['config']['files'] %}
+# keg: included from {{ ns }}
+{%- for filespec in common_profile['config']['files'][ns] %}
+cat >{{ keg_funcs.ternary(filespec['append'], '>') }} {{ filespec['path'] }} <<EOF
+{{ filespec['content'] }}
+EOF
+{% endfor %}
+{%- endfor %}
+{%- for ns in common_profile['config']['scripts'] %}
+# keg: included from {{ ns }}
+{%- for script_name in common_profile['config']['scripts'][ns] %}
+{{ scripts[script_name] }}
+{%- endfor -%}
+{%- endfor %}
+{%- for ns in common_profile['config']['services'] %}
+# keg: included from {{ ns }}
+{{ print_service_cmds(common_profile['config']['services'][ns], "") }}
+{%- endfor -%}
+{%- endif -%}
+
+{%- for profile, profile_data in data['profiles'].items() %}
+{%- if profile != "common" and profile_data['config'] %}
+if [[ $kiwi_profiles = {{ profile }} ]]; then
+    {%- for ns in profile_data['config']['sysconfig'] %}
+    # keg: included from {{ ns }}
+{{ print_sysconf_cmds(profile_data['config']['sysconfig'][ns], "    ") }}
+    {%- endfor %}
+    {%- for ns in profile_data['config']['files'] %}
+    # keg: included from {{ ns }}
+    {%- for filespec in profile_data['config']['files'][ns] %}
+    cat >{{ keg_funcs.ternary(filespec['append'], '>') }} {{ filespec['path'] }} <<EOF
+{{ filespec['content'] }}
+EOF
+    {% endfor %}
+    {%- endfor %}
+    {%- for ns in profile_data['config']['scripts'] %}
+    # keg: included from {{ ns }}
+    {%- for script_name in profile_data['config']['scripts'][ns] %}
+{{ scripts[script_name]|string|indent(4, true) }}
+    {%- endfor %}
+    {%- endfor %}
+    {%- for ns in profile_data['config']['services'] %}
+    # keg: included from {{ ns }}
+{{ print_service_cmds(profile_data['config']['services'][ns], "    ") }}
+    {%- endfor -%}
+fi
+{% endif -%}
+{%- endfor -%}
+exit 0 

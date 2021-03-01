@@ -38,11 +38,25 @@ class KegImageDefinition:
         """
         Init ImageDefintion with image_name and recipes root path
         """
+        self._data = {}
+        self._recipes_root = recipes_root
         self._image_name = image_name
         self._image_root = os.path.join(recipes_root, 'images')
         self._data_roots = [os.path.join(recipes_root, 'data')]
         if data_roots:
             self._data_roots += data_roots
+
+    @property
+    def data(self) -> Dict:
+        return self._data
+
+    @property
+    def recipes_root(self) -> str:
+        return self._recipes_root
+
+    @property
+    def data_roots(self) -> List[str]:
+        return self._data_roots
 
     def populate(self) -> None:
         """
@@ -97,6 +111,3 @@ class KegImageDefinition:
                     contents
                 )
             self._data['contents'].update(contents)
-
-    def get_data(self) -> Dict:
-        return self._data

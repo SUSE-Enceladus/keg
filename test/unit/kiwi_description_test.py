@@ -41,3 +41,10 @@ class TestKiwiDescription:
         call_arguments = mock_shutil_copy.call_args[0]
         assert call_arguments[0].startswith('/tmp/xslt-') is True
         assert call_arguments[1] == '/tmp/outfile'
+
+    @patch('shutil.copy')
+    def test_create_YAML_description(self, mock_shutil_copy):
+        self.kiwi.create_YAML_description('/tmp/outfile')
+        call_arguments = mock_shutil_copy.call_args[0]
+        assert call_arguments[0].startswith('/tmp/xslt-') is True
+        assert call_arguments[1] == '/tmp/outfile'

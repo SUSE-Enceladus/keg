@@ -56,12 +56,20 @@ class KiwiDescription:
             )
         return description
 
+    def create_YAML_description(self, output_file: str):
+        self._create_description(output_file, 'yaml')
+
     def create_XML_description(self, output_file: str):
+        self._create_description(output_file, 'xml')
+
+    def _create_description(self, output_file, markup):
         description = self.validate_description()
         try:
-            shutil.copy(
-                description.markup.get_xml_description(), output_file
-            )
+            if markup == 'xml':
+                document = description.markup.get_xml_description()
+            else:
+                document = description.markup.get_yaml_description()
+            shutil.copy(document, output_file)
         except Exception as issue:
             raise KegKiwiDescriptionError(
                 'Failed to create image description: {0}'.format(issue)
