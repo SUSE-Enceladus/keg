@@ -73,6 +73,19 @@ class TestKegGenerator:
                 tmpdirname + '/config.kiwi'
             )
 
+    @patch('keg.generator.KiwiDescription')
+    def test_create_kiwi_description_unsupported_markup(
+        self, mock_KiwiDescription
+    ):
+        kiwi = Mock()
+        mock_KiwiDescription.return_value = kiwi
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            generator = KegGenerator(self.image_definition, tmpdirname)
+            with raises(KegError):
+                generator.create_kiwi_description(
+                    markup='artificial', override=True
+                )
+
     def test_create_custom_scripts(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
             generator = KegGenerator(self.image_definition, tmpdirname)

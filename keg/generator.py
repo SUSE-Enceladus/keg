@@ -80,8 +80,12 @@ class KegGenerator:
         kiwi = KiwiDescription(outfile)
         if markup == 'xml':
             kiwi.create_XML_description(outfile)
-        if markup == 'yaml':
+        elif markup == 'yaml':
             kiwi.create_YAML_description(outfile)
+        else:
+            raise KegError(
+                'Unsupported markup type: {name}'.format(name=markup)
+            )
 
     def create_custom_scripts(self, override: bool = False):
         """
