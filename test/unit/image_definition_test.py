@@ -23,11 +23,11 @@ class TestKegImageDefinition:
             '../data/data', 'data2', 'data3'
         ]
 
-    @patch('kiwi_keg.image_definition.utils.parse_yaml_tree')
-    def test_populate_raises_on_parse_yaml_tree(
-        self, mock_utils_parse_yaml_tree
+    @patch('kiwi_keg.image_definition.utils.get_yaml_tree')
+    def test_populate_raises_on_get_yaml_tree(
+        self, mock_utils_get_yaml_tree
     ):
-        mock_utils_parse_yaml_tree.side_effect = Exception
+        mock_utils_get_yaml_tree.side_effect = Exception
         with raises(KegError):
             self.keg_definition.populate()
 
