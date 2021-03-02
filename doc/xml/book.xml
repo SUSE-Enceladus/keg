@@ -28,14 +28,17 @@
     <section xml:id="conceptual-overview">
       <title>Conceptual Overview</title>
       <para>Keg is a tool which helps to create and manage image descriptions suitable
-                for the <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/">KIWI</link> appliance builder. Its
-                main use case is to keep control over a larger amount of image descriptions
-                and prevent duplication of description data.</para>
+                for the <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/">KIWI</link> appliance builder.
+                While keg can be used to manage a single image definition the tool provides
+                no considerable advantage in such a use case. The primary use case for keg
+                are situations where many image descriptions must be managed and the
+                image descriptions have considerable over lap with respect to content
+                and setup.</para>
       <para>The key component for Keg is a data structure called <literal>image definition tree</literal>.
-                This data structure contains all information to create KIWI image
-                descriptions and provides data in a way that no or as little as possible
-                duplication exists. The <literal>image definition tree</literal> consists out of three
-                major components:</para>
+                This data structure is expected to contain all information necessary to
+                create KIWI image descriptions. Keg is implemented such that data inheritance
+                is possible to reduce data duplication in the <literal>image definition tree</literal>.</para>
+      <para>The <literal>image definition tree</literal> consists of three major components:</para>
       <variablelist>
         <varlistentry>
           <term>Data Building Blocks: <literal>data</literal></term>
@@ -65,20 +68,13 @@
         </varlistentry>
       </variablelist>
       <para>The setup of the <literal>image definition tree</literal> is the most time consuming
-                part when using Keg. Because of this reason it’s part of the Keg
-                project to provide one implementation of such a tree as a service to
-                our users. The provided information will be done with the scope set
-                on <emphasis role="bold">Public Clouds</emphasis>. As we from the public cloud development team
-                use Keg to manage our own image descriptions it’s natural that the
-                provided data in the open source project is aligned to cloud
-                environments. However, this is not a limitation and we welcome any
-                contributions independent of the target they serve. Please find
-                our <literal>image definition tree</literal> here:
+                part when using Keg. Example definitions for the <literal>image definition tree</literal>
+                can be found here:
                 <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://github.com/SUSE-Enceladus/keg-recipes">Public Cloud Image Definition Tree</link></para>
     </section>
     <section xml:id="working-with-keg">
       <title>Working With Keg</title>
-      <para>Using Keg is done in three steps:</para>
+      <para>Using Keg is a two step process:</para>
       <procedure>
         <step>
           <para>Fetch or create an <literal>image definition tree</literal></para>
@@ -86,22 +82,24 @@
         <step>
           <para>Call the <literal>keg</literal> commandline utility to create a KIWI image description</para>
         </step>
-        <step>
-          <para>Call <literal>kiwi-ng</literal> and create an appliance from the description</para>
-        </step>
       </procedure>
       <para>For the above to work, Keg needs to be installed as described in
-                <xref linkend="installation"/>. In addition install KIWI as described here:
+                <xref linkend="installation"/>. In addition install KIWI:
                 <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/installation.html"/></para>
       <para>If all software components are installed, Keg can be utilized like
                 the following example shows:</para>
       <screen language="shell-session">$ git clone https://github.com/SUSE-Enceladus/keg-recipes.git
 
-$ keg --recipes-root keg-recipes --dest-dir sles_description \
-      sles/byos/15-sp2
-
-$ sudo kiwi-ng system build --description sles_description \
-      --target-dir kiwi_image</screen>
+$ keg --recipes-root keg-recipes --dest-dir leap_description \
+      leap/jeos/15.2</screen>
+      <para>After the keg command completes the destination directory specified
+                with <literal>--dest-dir</literal> contains and image description that can be processed
+                with kiwi to build an image. For more details about kiwi image descriptions
+                see: <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/image_description.html"/></para>
+      <para>With kiwi installed you can build the image with the keg created image
+                description as follows:</para>
+      <screen language="shell-session">$ sudo kiwi-ng system build --description leap_description \
+      --target-dir leap_image</screen>
     </section>
   </chapter>
   <chapter xml:id="installation" xml:base="installation">
@@ -134,13 +132,16 @@ keg -h | --help</screen>
       <section xml:id="description">
         <title>DESCRIPTION</title>
         <para>Keg is a tool which helps to create and manage image descriptions suitable
-                for the <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/">KIWI</link> appliance builder. Its
-                main use case is to keep control over a larger amount of image descriptions
-                and prevent duplication of description data.</para>
+                for the <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/">KIWI</link> appliance builder.
+                While keg can be used to manage a single image definition the tool provides
+                no considerable advantage in such a use case. The primary use case for keg
+                are situations where many image descriptions must be managed and the
+                image descriptions have considerable over lap with respect to content
+                and setup.</para>
         <para>The key component for Keg is a data structure called <literal>image definition tree</literal>.
-                This data structure contains all information to create KIWI image
-                descriptions and provides data in a way that no or as little as possible
-                duplication exists.</para>
+                This data structure is expected to contain all information necessary to
+                create KIWI image descriptions. Keg is implemented such that data inheritance
+                is possible to reduce data duplication in the <literal>image definition tree</literal>.</para>
         <para>Please find an implementation of an <literal>image definition tree</literal> with
                 a focus on Public Cloud images here:
                 <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://github.com/SUSE-Enceladus/keg-recipes">Public Cloud Image Definition Tree</link></para>
@@ -204,7 +205,7 @@ keg -h | --help</screen>
         <title>EXAMPLE</title>
         <screen language="bash">$ git clone https://github.com/SUSE-Enceladus/keg-recipes.git
 
-$ keg --recipes-root keg-recipes --dest-dir sles_description sles/byos/15-sp2</screen>
+$ keg --recipes-root keg-recipes --dest-dir leap_description leap/jeos/15.2</screen>
       </section>
     </section>
   </chapter>

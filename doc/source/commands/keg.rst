@@ -18,14 +18,17 @@ DESCRIPTION
 -----------
 
 Keg is a tool which helps to create and manage image descriptions suitable
-for the `KIWI <https://osinside.github.io/kiwi/>`__ appliance builder. Its
-main use case is to keep control over a larger amount of image descriptions
-and prevent duplication of description data.
+for the `KIWI <https://osinside.github.io/kiwi/>`__ appliance builder.
+While keg can be used to manage a single image definition the tool provides
+no considerable advantage in such a use case. The primary use case for keg
+are situations where many image descriptions must be managed and the
+image descriptions have considerable over lap with respect to content
+and setup.
 
 The key component for Keg is a data structure called `image definition tree`.
-This data structure contains all information to create KIWI image
-descriptions and provides data in a way that no or as little as possible
-duplication exists.
+This data structure is expected to contain all information necessary to
+create KIWI image descriptions. Keg is implemented such that data inheritance
+is possible to reduce data duplication in the `image definition tree`.
 
 Please find an implementation of an `image definition tree` with
 a focus on Public Cloud images here:
