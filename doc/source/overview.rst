@@ -74,8 +74,8 @@ the following example shows:
 
     $ git clone https://github.com/SUSE-Enceladus/keg-recipes.git
 
-    $ keg --recipes-root keg-recipes --dest-dir sles_description \
-          sles/byos/15-sp2
+    $ keg --recipes-root keg-recipes --dest-dir leap_description \
+          leap/jeos/15.2
 
-    $ sudo kiwi-ng system build --description sles_description \
-          --target-dir kiwi_image
+    $ sudo kiwi-ng system build --description leap_description \
+          --target-dir leap_image

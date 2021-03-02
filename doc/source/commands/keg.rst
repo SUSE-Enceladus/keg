@@ -70,4 +70,4 @@ EXAMPLE
 
    $ git clone https://github.com/SUSE-Enceladus/keg-recipes.git
 
-   $ keg --recipes-root keg-recipes --dest-dir sles_description sles/byos/15-sp2
+   $ keg --recipes-root keg-recipes --dest-dir leap_description leap/jeos/15.2
