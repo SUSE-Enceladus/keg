@@ -23,6 +23,12 @@ class TestKegImageDefinition:
             '../data/data', 'data2', 'data3'
         ]
 
+    def test_setup_raises_recipes_root_not_existing(self):
+        with raises(KegError):
+            KegImageDefinition(
+                image_name='leap/15.2', recipes_root='artificial'
+            )
+
     @patch('kiwi_keg.utils.KegUtils.get_recipes')
     def test_populate_raises_on_get_recipes(
         self, mock_utils_get_recipes

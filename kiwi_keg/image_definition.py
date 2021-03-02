@@ -46,6 +46,12 @@ class KegImageDefinition:
         self._data_roots = [os.path.join(recipes_root, 'data')]
         if data_roots:
             self._data_roots += data_roots
+        if not os.path.isdir(recipes_root):
+            raise KegError(
+                'Recipes Root: {root} does not exist'.format(
+                    root=recipes_root
+                )
+            )
 
     @property
     def data(self) -> Dict:

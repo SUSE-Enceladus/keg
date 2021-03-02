@@ -18,6 +18,7 @@
 import os
 import shutil
 import logging
+from typing import Any
 
 # from KIWI
 from kiwi.xml_description import XMLDescription
@@ -42,8 +43,8 @@ class KiwiDescription:
             raise KegDescriptionNotFound(
                 'No such file {0}'.format(description_file)
             )
-        kiwi_logger = logging.getLogger('kiwi')
-        kiwi_logger.disabled = True
+        kiwi_logger: Any = logging.getLogger('kiwi')
+        kiwi_logger.setLogLevel(logging.INFO)
         self.description_file = description_file
 
     def validate_description(self) -> XMLDescription:
