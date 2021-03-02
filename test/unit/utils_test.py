@@ -1,6 +1,4 @@
-from kiwi_keg.utils import (
-    get_yaml_tree, load_scripts
-)
+from kiwi_keg.utils import KegUtils
 
 
 class TestUtils:
@@ -27,12 +25,12 @@ class TestUtils:
                 'include': ['base/jeos']
             }
         }
-        assert get_yaml_tree(
-            'leap_single_build', ['../data/images'], ['base/jeos/leap']
+        assert KegUtils.get_recipes(
+            ['../data/images'], 'leap_single_build', ['base/jeos/leap']
         ) == expected_output
 
     def test_load_scripts(self):
         expected_output = {'foo': 'bar\n'}
-        assert load_scripts(
-            'scripts', ['../data/data'], ['base/jeos/leap']
+        assert KegUtils.load_scripts(
+            ['../data/data'], 'scripts', ['base/jeos/leap']
         ) == expected_output
