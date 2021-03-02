@@ -74,10 +74,10 @@ def main():
             dest_dir=args['--dest-dir']
         )
         image_generator.create_kiwi_description(
-            args['--force']
+            markup='xml', override=args['--force']
         )
         image_generator.create_custom_scripts(
-            args['--force']
+            override=args['--force']
         )
     except KegError as issue:
         # known exception, log information and exit

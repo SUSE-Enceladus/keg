@@ -41,10 +41,10 @@ class TestKeg:
                 image_definition=image_definition, dest_dir='some-target'
             )
             image_generator.create_kiwi_description.assert_called_once_with(
-                False
+                markup='xml', override=False
             )
             image_generator.create_custom_scripts.assert_called_once_with(
-                False
+                override=False
             )
 
     @patch('kiwi_keg.keg.KegImageDefinition')
