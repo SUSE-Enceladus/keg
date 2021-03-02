@@ -18,6 +18,9 @@
 
 from glob import glob
 from pathlib import Path
+from typing import (
+    List, Dict
+)
 import os
 import yaml
 
@@ -53,7 +56,20 @@ def _get_source_files(root, src_path, ext, include_paths=None):
     return src_files
 
 
-def rmerge(src, dest):
+def rmerge(src: Dict[str, str], dest: Dict[str, str]) -> Dict[str, str]:
+    """
+    Merge two dictionaries recursively,
+    preserving all properties found in src.
+    Updating 'dest' to the latest value, if property is not a dict
+    or adding them in the right key, if it is while keeping the existing
+    key-values.
+
+    Example:
+    src = {'a': 'foo', 'b': {'c': 'bar'}}
+    dest = {'a': 'baz', 'b': {'d': 'more_bar'}}
+
+    Result: {'a': 'foo', 'b': {'d': 'more_bar', 'c': 'bar'}}
+    """
     for key, value in src.items():
         if isinstance(value, dict):
             node = dest.setdefault(key, {})
@@ -63,11 +79,21 @@ def rmerge(src, dest):
     return dest
 
 
-def parse_yaml_tree(sub_dir, roots, include_paths=None):
+def get_yaml_tree(
+    sub_dir: str, roots: List[str], include_paths: bool = None
+) -> Dict[str, str]:
+    """
+    Return a new yaml tree including the data of all the source files for
+    a given list of root directories and a sub directory
+
+    :param: str sub_dir: subdirectory path to get the files from
+    :param: list roots: list of root directory paths to get the files from
+    :param: list include_paths: list of paths to be included
+    """
     desc_files = []
     for root_dir in roots:
         desc_files += _get_source_files(root_dir, sub_dir, 'yaml', include_paths)
-    merged_tree = {}
+    merged_tree: Dict[str, str] = {}
     for df in desc_files:
         with open(df, 'r') as f:
             desc_yaml = yaml.safe_load(f.read())
@@ -75,11 +101,25 @@ def parse_yaml_tree(sub_dir, roots, include_paths=None):
     return merged_tree
 
 
-def load_scripts(sub_dir, roots, include_paths=None):
+def load_scripts(
+    sub_dir: str, roots: List[str], include_paths: List[str] = None
+) -> Dict[str, str]:
+    """
+    Return a dict containing the name of the scripts and its content for
+    a given list of root directories and a sub directory
+
+    :param: str sub_dir: subdirectory path to load the scripts from
+    :param: list roots: list of root directory paths to load the scripts from
+    :param: list include_paths: list of paths to be included
+
+    :return: dict with the name of the scripts (without the ext) and their content
+
+    :rtype: dict
+    """
     src_files = []
     for root_dir in roots:
         src_files += _get_source_files(root_dir, sub_dir, 'sh', include_paths)
-    script_lib = {}
+    script_lib: Dict[str, str] = {}
     for sf in src_files:
         with open(sf, 'r') as f:
             script_source = f.read()

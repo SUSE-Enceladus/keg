@@ -71,7 +71,7 @@ class KegImageDefinition:
         }
         try:
             self._data.update(
-                utils.parse_yaml_tree(self._image_name, [self._image_root])
+                utils.get_yaml_tree(self._image_name, [self._image_root])
             )
         except Exception as issue:
             raise KegError(
@@ -87,7 +87,7 @@ class KegImageDefinition:
                     if item == 'include':
                         for inc in value:
                             utils.rmerge(
-                                utils.parse_yaml_tree(
+                                utils.get_yaml_tree(
                                     inc,
                                     self._data_roots,
                                     include_paths
@@ -103,7 +103,7 @@ class KegImageDefinition:
             contents = {}
             for inc in self._data['contents'].get('include'):
                 utils.rmerge(
-                    utils.parse_yaml_tree(
+                    utils.get_yaml_tree(
                         inc,
                         self._data_roots,
                         include_paths
