@@ -77,7 +77,6 @@ class KegImageDefinition:
     def image_root(self) -> str:
         return self._image_root
 
-
     def populate(self) -> None:
         """
         Parse recipes data and construct wanted image definition
