@@ -16,6 +16,13 @@ class TestKegGenerator:
             image_name='leap/15.2', recipes_root='../data'
         )
 
+    @patch('os.path.isdir')
+    def test_setup_raises_no_kiwi_schema_configured(self, mock_os_path_is_dir):
+        mock_os_path_is_dir.return_value = True
+        self.image_definition.populate = Mock()
+        with raises(KegError):
+            KegGenerator(self.image_definition, 'dest-dir')
+
     @patch('os.path.exists')
     @patch('os.path.isdir')
     def test_raises_on_dest_dir_data_exists(
@@ -34,6 +41,20 @@ class TestKegGenerator:
             KegGenerator(self.image_definition, 'dest-dir')
         assert "Given destination directory: 'dest-dir' does not exist" in \
             str(exception_info.value)
+
+    @patch('kiwi_keg.generator.KiwiDescription')
+    def test_create_kiwi_description_raises_template_not_found(
+        self, mock_KiwiDescription
+    ):
+        kiwi = Mock()
+        mock_KiwiDescription.return_value = kiwi
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            generator = KegGenerator(self.image_definition, tmpdirname)
+            generator.image_schema = 'non-existent-schema'
+            with raises(KegError):
+                generator.create_kiwi_description(
+                    markup='xml', override=True
+                )
 
     @patch('kiwi_keg.generator.KiwiDescription')
     @patch('kiwi_keg.image_definition.datetime')

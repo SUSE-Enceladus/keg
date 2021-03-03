@@ -25,6 +25,8 @@ from kiwi_keg.utils import KegUtils
 from kiwi_keg import template_functions
 from kiwi_keg.exceptions import KegError
 
+from jinja2.exceptions import TemplateNotFound
+
 log = logging.getLogger('keg')
 
 
@@ -56,6 +58,17 @@ class KegGenerator:
 
         self.image_definition.populate()
 
+        self.image_schema = self.image_definition.data.get('schema')
+        if not self.image_schema:
+            raise KegError(
+                'No KIWI schema configured in image definition'
+            )
+        log.info(
+            'Using KIWI schema: {keg_schema}'.format(
+                keg_schema=self.image_schema
+            )
+        )
+
     def create_kiwi_description(
         self, markup: str = 'xml', override: bool = False
     ):
@@ -68,8 +81,8 @@ class KegGenerator:
         outfile = os.path.join(self.dest_dir, 'config.kiwi')
         self._validate_outfile(outfile, override)
 
-        kiwi_template = self.env.get_template(
-            '{}.kiwi.templ'.format(self.image_definition.data['schema'])
+        kiwi_template = self._read_template(
+            '{}.kiwi.templ'.format(self.image_schema)
         )
         kiwi_document = kiwi_template.render(
             data=self.image_definition.data
@@ -97,10 +110,10 @@ class KegGenerator:
         self._validate_outfile(outfile, override)
         script_lib = KegUtils.load_scripts(
             self.image_definition.data_roots, 'scripts',
-            self.image_definition.data['include-paths']
+            self.image_definition.data.get('include-paths')
         )
-        config_template = self.env.get_template(
-            '{}.config.sh.templ'.format(self.image_definition.data['schema'])
+        config_template = self._read_template(
+            '{}.config.sh.templ'.format(self.image_schema)
         )
         config_sh = config_template.render(
             data=self.image_definition.data, scripts=script_lib
@@ -114,5 +127,18 @@ class KegGenerator:
             raise KegError(
                 '{target} exists, use force to overwrite.'.format(
                     target=outfile
+                )
+            )
+
+    def _read_template(self, template_name):
+        try:
+            return self.env.get_template(
+                template_name
+            )
+        except TemplateNotFound:
+            raise KegError(
+                'Template {name} not found in: {location}'.format(
+                    name=repr(template_name),
+                    location=self.description_schemas
                 )
             )
