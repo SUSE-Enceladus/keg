@@ -24,6 +24,7 @@ flake8
 # for building documentation
 sphinx
 sphinx_rtd_theme
+git+https://github.com/openSUSE/rstxml2docbook.git@feature/kiwi
 
 # Python static type checker
 mypy

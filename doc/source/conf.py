@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# KEG documentation build configuration file
+# Keg documentation build configuration file
 #
 import sys
 from os.path import abspath, dirname, join, normpath
@@ -40,7 +40,7 @@ master_doc = 'index'
 default_role="py:obj"
 
 # General information about the project.
-project = 'KEG - Image Composition Tool'
+project = 'Keg - Image Composition Tool'
 copyright = '2020, SUSE - Public Cloud Team'
 author = 'public-cloud-dev@suse.de'
 
@@ -73,7 +73,7 @@ todo_include_todos = True
 extlinks = {
     'issue': ('https://github.com/SUSE-Enceladus/keg/issues/%s', '#'),
     'pr': ('https://github.com/SUSE-Enceladus/keg/pull/%s', 'PR #'),
-    'ghkeg': ('https://github.com/SUSE-Enceladus/keg/blob/master/%s', '')
+    'ghkeg': ('https://github.com/SUSE-Enceladus/keg/blob/main/%s', '')
 }
 
 
