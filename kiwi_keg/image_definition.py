@@ -57,6 +57,10 @@ class KegImageDefinition:
     def data(self) -> Dict:
         return self._data
 
+    @data.setter
+    def data(self, new_data: Dict):
+        self._data = new_data
+
     @property
     def recipes_root(self) -> str:
         return self._recipes_root
@@ -65,21 +69,29 @@ class KegImageDefinition:
     def data_roots(self) -> List[str]:
         return self._data_roots
 
+    @property
+    def image_name(self) -> str:
+        return self._image_name
+
+    @property
+    def image_root(self) -> str:
+        return self._image_root
+
     def populate(self) -> None:
         """
         Parse recipes data and construct wanted image definition
         """
         utc_now = datetime.now(timezone.utc)
         utc_now_str = utc_now.strftime("%Y-%m-%d %H:%M:%S")
-        self._data = {
+        self.data = {
             'generator': 'keg {}'.format(version.__version__),
             'timestamp': '{}'.format(utc_now_str),
-            'image source path': '{}'.format(self._image_name)
+            'image source path': '{}'.format(self.image_name)
         }
         try:
             self._data.update(
                 KegUtils.get_recipes(
-                    [self._image_root], self._image_name
+                    [self.image_root], self._image_name
                 )
             )
         except Exception as issue:
@@ -87,17 +99,21 @@ class KegImageDefinition:
                 'Error parsing image data: {error}'.format(error=issue)
             )
 
-        include_paths = self._data.get('include-paths')
         # load profile sections
-        if 'profiles' in self._data:
-            for profile_name, profile_data in self._data['profiles'].items():
+        self.update_profiles(self.data.get('include-paths'))
+        # expand unprofiled contents section (for single build)
+        self.update_contents(self.data.get('include-paths'))
+
+    def update_profiles(self, include_paths):
+        if 'profiles' in self.data:
+            for profile_name, profile_data in self.data['profiles'].items():
                 profile: Dict = {}
                 for item, value in profile_data.items():
                     if item == 'include':
                         for inc in value:
                             KegUtils.rmerge(
                                 KegUtils.get_recipes(
-                                    self._data_roots,
+                                    self.data_roots,
                                     inc,
                                     include_paths
                                 ),
@@ -105,18 +121,18 @@ class KegImageDefinition:
                             )
                     else:
                         KegUtils.rmerge({item: value}, profile_data)
-                self._data['profiles'][profile_name].update(profile)
+                self.data['profiles'][profile_name].update(profile)
 
-        # expand unprofiled contents section (for single build)
-        if 'contents' in self._data:
+    def update_contents(self, include_paths):
+        if 'contents' in self.data:
             contents: Dict = {}
-            for inc in self._data['contents'].get('include'):
+            for inc in self.data['contents'].get('include'):
                 KegUtils.rmerge(
                     KegUtils().get_recipes(
-                        self._data_roots,
+                        self.data_roots,
                         inc,
                         include_paths
                     ),
                     contents
                 )
-            self._data['contents'].update(contents)
+            self.data['contents'].update(contents)
