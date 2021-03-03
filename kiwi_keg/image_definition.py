@@ -24,7 +24,8 @@ from datetime import (
 )
 
 # project
-from kiwi_keg import version, utils
+from kiwi_keg.utils import KegUtils
+from kiwi_keg import version
 from kiwi_keg.exceptions import KegError
 
 
@@ -71,7 +72,9 @@ class KegImageDefinition:
         }
         try:
             self._data.update(
-                utils.get_yaml_tree(self._image_name, [self._image_root])
+                KegUtils.get_recipes(
+                    [self._image_root], self._image_name
+                )
             )
         except Exception as issue:
             raise KegError(
@@ -86,26 +89,26 @@ class KegImageDefinition:
                 for item, value in profile_data.items():
                     if item == 'include':
                         for inc in value:
-                            utils.rmerge(
-                                utils.get_yaml_tree(
-                                    inc,
+                            KegUtils.rmerge(
+                                KegUtils.get_recipes(
                                     self._data_roots,
+                                    inc,
                                     include_paths
                                 ),
                                 profile
                             )
                     else:
-                        utils.rmerge({item: value}, profile_data)
+                        KegUtils.rmerge({item: value}, profile_data)
                 self._data['profiles'][profile_name].update(profile)
 
         # expand unprofiled contents section (for single build)
         if 'contents' in self._data:
             contents: Dict = {}
             for inc in self._data['contents'].get('include'):
-                utils.rmerge(
-                    utils.get_yaml_tree(
-                        inc,
+                KegUtils.rmerge(
+                    KegUtils().get_recipes(
                         self._data_roots,
+                        inc,
                         include_paths
                     ),
                     contents

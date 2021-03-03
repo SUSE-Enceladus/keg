@@ -21,9 +21,8 @@ import os
 
 from kiwi_keg.image_definition import KegImageDefinition
 from kiwi_keg.kiwi_description import KiwiDescription
-from kiwi_keg import (
-    template_functions, utils
-)
+from kiwi_keg.utils import KegUtils
+from kiwi_keg import template_functions
 from kiwi_keg.exceptions import KegError
 
 log = logging.getLogger('keg')
@@ -96,9 +95,8 @@ class KegGenerator:
         """
         outfile = os.path.join(self.dest_dir, 'config.sh')
         self._validate_outfile(outfile, override)
-
-        script_lib = utils.load_scripts(
-            'scripts', self.image_definition.data_roots,
+        script_lib = KegUtils.load_scripts(
+            self.image_definition.data_roots, 'scripts',
             self.image_definition.data['include-paths']
         )
         config_template = self.env.get_template(
