@@ -6,7 +6,7 @@ Overview
 .. note:: **Abstract**
 
    This document provides a conceptual overview about the steps of creating
-   an image description with keg which can be used to build an appliance
+   an image description with `keg` which can be used to build an appliance
    with the `KIWI <https://osinside.github.io/kiwi/>`__ appliance builder.
 
 Conceptual Overview
@@ -14,15 +14,15 @@ Conceptual Overview
 
 Keg is a tool which helps to create and manage image descriptions suitable
 for the `KIWI <https://osinside.github.io/kiwi/>`__ appliance builder. 
-While keg can be used to manage a single image definition the tool provides
+While `keg` can be used to manage a single image definition the tool provides
 no considerable advantage in such a use case. The primary use case for keg
 are situations where many image descriptions must be managed and the
 image descriptions have considerable over lap with respect to content
 and setup.
 
-The key component for Keg is a data structure called `image definition tree`.
+The key component for `keg` is a data structure called `image definition tree`.
 This data structure is expected to contain all information necessary to
-create KIWI image descriptions. Keg is implemented such that data inheritance 
+create KIWI image descriptions. `keg` is implemented such that data inheritance 
 is possible to reduce data duplication in the `image definition tree`.
 
 The `image definition tree` consists of three major components:
@@ -52,7 +52,7 @@ can be found here:
 Working With Keg
 ----------------
 
-Using Keg is a two step process:
+Using `keg` is a two step process:
 
 1. Fetch or create an `image definition tree`
 
@@ -62,7 +62,7 @@ For the above to work, Keg needs to be installed as described in
 :ref:`installation`. In addition install KIWI:
 https://osinside.github.io/kiwi/installation.html
 
-If all software components are installed, Keg can be utilized like
+If all software components are installed, `keg` can be utilized like
 the following example shows:
 
 .. code:: shell-session
@@ -72,12 +72,12 @@ the following example shows:
     $ keg --recipes-root keg-recipes --dest-dir leap_description \
           leap/jeos/15.2
 
-After the keg command completes the destination directory specified
+After the `keg` command completes the destination directory specified
 with `--dest-dir` contains and image description that can be processed
 with kiwi to build an image. For more details about kiwi image descriptions
 see: https://osinside.github.io/kiwi/image_description.html
 
-With kiwi installed you can build the image with the keg created image
+With kiwi installed you can build the image with the `keg` created image
 description as follows:
 
 .. code:: shell-session

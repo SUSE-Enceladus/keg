@@ -19,7 +19,7 @@ DESCRIPTION
 
 Keg is a tool which helps to create and manage image descriptions suitable
 for the `KIWI <https://osinside.github.io/kiwi/>`__ appliance builder.
-While keg can be used to manage a single image definition the tool provides
+While `keg` can be used to manage a single image definition the tool provides
 no considerable advantage in such a use case. The primary use case for keg
 are situations where many image descriptions must be managed and the
 image descriptions have considerable over lap with respect to content
@@ -48,7 +48,7 @@ OPTIONS
 
 -r RECIPES_ROOT, --recipes-root=RECIPES_ROOT
 
-  Root directory of keg recipes
+  Root directory of Keg recipes
 
 -a ADD_DATA_ROOT, --add-data-root=ADD_DATA_ROOT
 

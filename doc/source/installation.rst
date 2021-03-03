@@ -5,7 +5,7 @@ Installation
 
 .. note::
 
-    This document describes how to install Keg. Currently keg is
+    This document describes how to install Keg. Currently `keg` is
     provided from `PyPi <https://pypi.org/project/kiwi_keg/>`__ and
     further install methods for Linux distributions will follow
     soon.
