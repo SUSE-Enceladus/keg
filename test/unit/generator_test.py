@@ -42,72 +42,58 @@ class TestKegGenerator:
         assert "Given destination directory: 'dest-dir' does not exist" in \
             str(exception_info.value)
 
-    @patch('kiwi_keg.generator.KiwiDescription')
-    def test_create_kiwi_description_raises_template_not_found(
-        self, mock_KiwiDescription
-    ):
-        kiwi = Mock()
-        mock_KiwiDescription.return_value = kiwi
+    def test_create_kiwi_description_raises_template_not_found(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
             generator = KegGenerator(self.image_definition, tmpdirname)
             generator.image_schema = 'non-existent-schema'
             with raises(KegError):
                 generator.create_kiwi_description(
-                    markup='xml', override=True
+                    override=True
                 )
 
     @patch('kiwi_keg.generator.KiwiDescription')
+    def test_validate_kiwi_description(self, mock_KiwiDescription):
+        kiwi = Mock()
+        mock_KiwiDescription.return_value = kiwi
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            generator = KegGenerator(self.image_definition, tmpdirname)
+            generator.validate_kiwi_description()
+            kiwi.validate_description.assert_called_once_with()
+
     @patch('kiwi_keg.image_definition.datetime')
     @patch('kiwi_keg.image_definition.version')
     def test_create_kiwi_description_by_keg(
-        self, mock_keg_version, mock_datetime, mock_KiwiDescription
+        self, mock_keg_version, mock_datetime
     ):
         mock_keg_version.__version__ = 'keg_version'
         utc_now = Mock()
         utc_now.strftime.return_value = 'time-string'
         mock_datetime.now.return_value = utc_now
-        kiwi = Mock()
-        mock_KiwiDescription.return_value = kiwi
         with tempfile.TemporaryDirectory() as tmpdirname:
             generator = KegGenerator(self.image_definition, tmpdirname)
             generator.create_kiwi_description(
-                markup='xml', override=True
+                override=True
             )
             assert filecmp.cmp(
                 '../data/keg_output/config.kiwi', tmpdirname + '/config.kiwi'
             ) is True
 
     @patch('kiwi_keg.generator.KiwiDescription')
-    def test_create_kiwi_description_markup(self, mock_KiwiDescription):
+    def test_format_kiwi_description(self, mock_KiwiDescription):
         kiwi = Mock()
         mock_KiwiDescription.return_value = kiwi
         with tempfile.TemporaryDirectory() as tmpdirname:
             generator = KegGenerator(self.image_definition, tmpdirname)
-            generator.create_kiwi_description(
-                markup='xml', override=True
-            )
+            generator.format_kiwi_description('xml')
             kiwi.create_XML_description.assert_called_once_with(
                 tmpdirname + '/config.kiwi'
             )
-            generator.create_kiwi_description(
-                markup='yaml', override=True
-            )
+            generator.format_kiwi_description('yaml')
             kiwi.create_YAML_description.assert_called_once_with(
                 tmpdirname + '/config.kiwi'
             )
-
-    @patch('kiwi_keg.generator.KiwiDescription')
-    def test_create_kiwi_description_unsupported_markup(
-        self, mock_KiwiDescription
-    ):
-        kiwi = Mock()
-        mock_KiwiDescription.return_value = kiwi
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            generator = KegGenerator(self.image_definition, tmpdirname)
             with raises(KegError):
-                generator.create_kiwi_description(
-                    markup='artificial', override=True
-                )
+                generator.format_kiwi_description('artificial')
 
     def test_create_custom_scripts(self):
         with tempfile.TemporaryDirectory() as tmpdirname:

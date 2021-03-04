@@ -9,6 +9,7 @@ SYNOPSIS
 .. code:: bash
 
    keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
+       [--format-xml|--format-yaml]
        [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
        SOURCE
    keg -h | --help
@@ -61,6 +62,29 @@ OPTIONS
 -f, --force
 
   Force mode (ignore errors, overwrite files)
+
+--format-yaml
+
+  Format/Update Keg written image description to installed
+  KIWI schema and write the result description in YAML markup.
+
+  .. note::
+
+     Currently no translation of comment blocks from the Keg
+     generated KIWI description to the YAML markup will be
+     performed
+
+--format-xml
+
+  Format/Update Keg written image description to installed
+  KIWI schema and write the result description in XML markup
+
+  .. note::
+
+     Currently only toplevel header comments from the Keg
+     written image description will be preserved into the
+     formatted/updated KIWI XML file. Inline comments will
+     not be preserved.
 
 -v, --verbose
 

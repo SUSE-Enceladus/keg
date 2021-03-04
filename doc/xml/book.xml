@@ -124,6 +124,7 @@ $ keg --recipes-root keg-recipes --dest-dir leap_description \
       <section xml:id="keg-synopsis">
         <title>SYNOPSIS</title>
         <screen language="bash">keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
+    [--format-xml|--format-yaml]
     [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
     SOURCE
 keg -h | --help
@@ -188,6 +189,35 @@ keg -h | --help</screen>
             </term>
             <listitem>
               <para>Force mode (ignore errors, overwrite files)</para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>
+              <option>--format-yaml</option>
+            </term>
+            <listitem>
+              <para>Format/Update Keg written image description to installed
+                            KIWI schema and write the result description in YAML markup.</para>
+              <note>
+                <para>Currently no translation of comment blocks from the Keg
+                                generated KIWI description to the YAML markup will be
+                                performed</para>
+              </note>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>
+              <option>--format-xml</option>
+            </term>
+            <listitem>
+              <para>Format/Update Keg written image description to installed
+                            KIWI schema and write the result description in XML markup</para>
+              <note>
+                <para>Currently only toplevel header comments from the Keg
+                                written image description will be preserved into the
+                                formatted/updated KIWI XML file. Inline comments will
+                                not be preserved.</para>
+              </note>
             </listitem>
           </varlistentry>
           <varlistentry>

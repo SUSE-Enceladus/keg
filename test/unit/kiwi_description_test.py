@@ -1,3 +1,5 @@
+import tempfile
+import filecmp
 from pytest import raises
 from mock import patch
 
@@ -11,40 +13,36 @@ from kiwi_keg.exceptions import (
 
 
 class TestKiwiDescription:
-    def setup(self):
-        # OK to test
-        self.kiwi = KiwiDescription(
-            '../data/keg_description/config.kiwi'
-        )
-        # Failed to validate schema and/or schematron rules
-        self.kiwi_invalid = KiwiDescription(
-            '../data/keg_description/config_invalid.kiwi'
-        )
-
     def test_init_raises(self):
         with raises(KegDescriptionNotFound):
             KiwiDescription('does-not-exist')
 
-    def test_create_XML_description_invalid_XML(self):
+    def test_validate_description_from_Keg_invalid_XML(self):
+        kiwi_invalid = KiwiDescription(
+            '../data/keg_output_invalid/config_invalid.xml'
+        )
         with raises(KegKiwiValidationError):
-            self.kiwi_invalid.create_XML_description('/tmp/outfile')
+            kiwi_invalid.validate_description()
 
     @patch('shutil.copy')
-    def test_create_XML_description_failed(self, mock_shutil_copy):
+    def test_create_description_failed(self, mock_shutil_copy):
         mock_shutil_copy.side_effect = Exception
+        kiwi = KiwiDescription('../data/keg_output_xml/config.xml')
         with raises(KegKiwiDescriptionError):
-            self.kiwi.create_XML_description('/tmp/outfile')
+            kiwi._create_description('/tmp/outfile', 'xml')
 
-    @patch('shutil.copy')
-    def test_create_XML_description(self, mock_shutil_copy):
-        self.kiwi.create_XML_description('/tmp/outfile')
-        call_arguments = mock_shutil_copy.call_args[0]
-        assert call_arguments[0].startswith('/tmp/xslt-') is True
-        assert call_arguments[1] == '/tmp/outfile'
+    def test_create_XML_description(self):
+        kiwi = KiwiDescription('../data/keg_output_xml/config.kiwi')
+        with tempfile.NamedTemporaryFile() as tmpfile:
+            kiwi.create_XML_description(tmpfile.name)
+            assert filecmp.cmp(
+                '../data/keg_output_xml/config.xml', tmpfile.name
+            ) is True
 
-    @patch('shutil.copy')
-    def test_create_YAML_description(self, mock_shutil_copy):
-        self.kiwi.create_YAML_description('/tmp/outfile')
-        call_arguments = mock_shutil_copy.call_args[0]
-        assert call_arguments[0].startswith('/tmp/xslt-') is True
-        assert call_arguments[1] == '/tmp/outfile'
+    def test_create_YAML_description(self):
+        kiwi = KiwiDescription('../data/keg_output_yaml/config.kiwi')
+        with tempfile.NamedTemporaryFile() as tmpfile:
+            kiwi.create_YAML_description(tmpfile.name)
+            assert filecmp.cmp(
+                '../data/keg_output_yaml/config.yaml', tmpfile.name
+            ) is True

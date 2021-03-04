@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-
+<!--
+some comment
+-->
+<!-- some other comment -->
+<!--
+Some long text
+and more text-->
 <image schemaversion="7.3" name="KEG">
     <description type="system">
         <author>Public Cloud Team</author>
         <contact>pubcloud-dev@suse.com</contact>
-        <specification>
-            KEG written image
-        </specification>
+        <specification>KEG written image</specification>
     </description>
     <preferences>
         <version>1.2.3</version>
@@ -14,7 +18,7 @@
         <locale>en_US</locale>
         <keytable>us.map.gz</keytable>
         <timezone>UTC</timezone>
-        <type image="oem" filesystem="btrfs" firmware="efi" unknown="uups">
+        <type image="oem" filesystem="btrfs" firmware="efi">
             <oemconfig>
                 <oem-multipath-scan>false</oem-multipath-scan>
                 <oem-swap>true</oem-swap>

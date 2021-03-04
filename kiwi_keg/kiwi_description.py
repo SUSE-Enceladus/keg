@@ -30,6 +30,8 @@ from kiwi_keg.exceptions import (
     KegKiwiDescriptionError
 )
 
+log = logging.getLogger('keg')
+
 
 class KiwiDescription:
     """
@@ -57,11 +59,25 @@ class KiwiDescription:
             )
         return description
 
-    def create_YAML_description(self, output_file: str):
+    def create_YAML_description(self, output_file: str) -> None:
+        self._read_YAML_comments()
         self._create_description(output_file, 'yaml')
 
-    def create_XML_description(self, output_file: str):
+    def create_XML_description(self, output_file: str) -> None:
+        comments = self._read_XML_comments()
         self._create_description(output_file, 'xml')
+        if comments:
+            # KIWI does not preserve comment blocks after validation.
+            # However, for OBS the comments are no comments but effective
+            # project config data. Questionable design but we can't
+            # influence this and will add back at least the toplevel
+            # header comments.
+            with open(output_file, 'r') as xml:
+                xml_data = xml.read()
+
+            with open(output_file, 'w') as xml:
+                xml.write(''.join(comments))
+                xml.write(xml_data)
 
     def _create_description(self, output_file, markup):
         description = self.validate_description()
@@ -75,3 +91,42 @@ class KiwiDescription:
             raise KegKiwiDescriptionError(
                 'Failed to create image description: {0}'.format(issue)
             )
+
+    def _read_YAML_comments(self):
+        # Currently this method does not translate XML comments to
+        # YAML because I think OBS is expecting the comments in XML
+        # comment syntax and does not support anything else. If this
+        # turns out to be an issue in the future and people start
+        # to use YAML markup for KIWI images in OBS this method needs
+        # to be adapted
+        log.warn(
+            'Comments from Keg KIWI description will not be preserved'
+        )
+
+    def _read_XML_comments(self):
+        comments = []
+        multiline_comment = False
+        with open(self.description_file, 'r') as keg_description:
+            description_lines = keg_description.readlines()
+
+        for comment in description_lines:
+            if multiline_comment:
+                # within a multiline comment
+                comments.append(comment)
+                if comment.endswith('-->\n'):
+                    multiline_comment = False
+            elif comment.startswith('<?'):
+                # toplevel XML processing instruction
+                comments.append(comment)
+            elif comment.startswith('<!--') and comment.endswith('-->\n'):
+                # toplevel comment
+                comments.append(comment)
+            elif comment.startswith('<!--'):
+                # toplevel start of multiline comment
+                multiline_comment = True
+                comments.append(comment)
+
+        log.warn(
+            'Inline comments from Keg KIWI description will not be preserved !'
+        )
+        return comments

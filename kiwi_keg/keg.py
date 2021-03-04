@@ -17,6 +17,7 @@
 #
 """
 Usage: keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
+           [--format-xml|--format-yaml]
            [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
            SOURCE
        keg -h | --help
@@ -37,6 +38,14 @@ Options:
 
     -f, --force
        Force mode (ignore errors, overwrite files)
+
+    --format-yaml
+       Format/Update Keg written image description to installed
+       KIWI schema and write the result description in YAML markup
+
+    --format-xml
+       Format/Update Keg written image description to installed
+       KIWI schema and write the result description in XML markup
 
     -v, --verbose
         Enable verbose output
@@ -74,8 +83,14 @@ def main():
             dest_dir=args['--dest-dir']
         )
         image_generator.create_kiwi_description(
-            markup='xml', override=args['--force']
+            override=args['--force']
         )
+        if args['--format-yaml']:
+            image_generator.format_kiwi_description('yaml')
+        elif args['--format-xml']:
+            image_generator.format_kiwi_description('xml')
+        else:
+            image_generator.validate_kiwi_description()
         image_generator.create_custom_scripts(
             override=args['--force']
         )
