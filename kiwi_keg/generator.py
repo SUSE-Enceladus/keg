@@ -18,6 +18,7 @@
 import logging
 from jinja2 import Environment, FileSystemLoader
 import os
+import shutil
 
 from kiwi_keg.image_definition import KegImageDefinition
 from kiwi_keg.kiwi_description import KiwiDescription
@@ -120,6 +121,27 @@ class KegGenerator:
         )
         with open(outfile, 'w') as custom_script:
             custom_script.write(config_sh)
+
+    def create_overlays(self):
+        """
+        Copy all the files and the overlay tree structure from overlays section
+        into destination directory.
+        """
+        if self.image_definition.data.get('overlay-include-paths'):
+            overlay_include_paths = self.image_definition.data.get('overlay-include-paths')
+            for overlay_include in overlay_include_paths:
+                overlay_path = os.path.join(
+                    self.image_definition.overlay_root,
+                    overlay_include
+                )
+                # loop all the file paths of overlay sub directory 'overlay_path'
+                for name in KegUtils.get_overlay_files(overlay_path):
+                    rel_path = os.path.relpath(name, overlay_path)
+                    new_dir = os.path.dirname(rel_path)
+                    if new_dir:
+                        os.makedirs(new_dir, exist_ok=True)
+                    dest_file = os.path.join(self.dest_dir, rel_path)
+                    shutil.copy(name, dest_file)
 
     @staticmethod
     def _validate_outfile(outfile, override):

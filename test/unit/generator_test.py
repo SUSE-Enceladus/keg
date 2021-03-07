@@ -1,7 +1,8 @@
 import filecmp
 import tempfile
+import os
 from mock import (
-    patch, Mock
+    patch, Mock, call
 )
 from pytest import raises
 
@@ -116,3 +117,38 @@ class TestKegGenerator:
             assert filecmp.cmp(
                 '../data/keg_output/config.sh', tmpdirname + '/config.sh'
             ) is True
+
+    @patch('os.makedirs')
+    @patch('shutil.copy')
+    def test_create_overlays(self, mock_shutil_copy, mock_os_makedirs):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            generator = KegGenerator(self.image_definition, tmpdirname)
+            generator.create_overlays()
+            dest_file = {}
+            dest_file['base'] = os.path.join(tmpdirname, 'etc', 'hosts')
+            dest_file['csp_aws'] = os.path.join(tmpdirname, 'etc', 'resolv.conf')
+            dest_file['product'] = os.path.join(tmpdirname, 'etc', 'motd')
+
+            assert mock_shutil_copy.call_args_list == [
+                call('../data/overlays/base/etc/hosts', dest_file.get('base')),
+                call('../data/overlays/csp/aws/etc/resolv.conf', dest_file.get('csp_aws')),
+                call('../data/overlays/products/leap/15.2/etc/motd', dest_file.get('product'))
+            ]
+
+            dest_base_dir = os.path.relpath(dest_file.get('base'), tmpdirname)
+            dest_csp_dir = os.path.relpath(dest_file.get('csp_aws'), tmpdirname)
+            dest_prod_dir = os.path.relpath(dest_file.get('product'), tmpdirname)
+            assert mock_os_makedirs.call_args_list == [
+                call(
+                    os.path.dirname(dest_base_dir),
+                    exist_ok=True
+                ),
+                call(
+                    os.path.dirname(dest_csp_dir),
+                    exist_ok=True
+                ),
+                call(
+                    os.path.dirname(dest_prod_dir),
+                    exist_ok=True
+                )
+            ]

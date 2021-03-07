@@ -1,6 +1,8 @@
 schema: vm_singlebuild
 include-paths:
   - jeos/leap
+overlay-include-paths:
+  - base
 image:
   name: Leap15.2-JeOS
   specification: "Leap 15.2 guest image"

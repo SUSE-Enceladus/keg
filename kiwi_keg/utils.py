@@ -19,7 +19,7 @@
 from glob import glob
 from pathlib import Path
 from typing import (
-    List, Dict
+    List, Dict, Generator
 )
 import os
 import yaml
@@ -100,6 +100,24 @@ class KegUtils:
                 script_source = f.read()
                 script_lib[os.path.basename(script_file[:-3])] = script_source
         return script_lib
+
+    @staticmethod
+    def get_overlay_files(base_dir: str) -> Generator[str, None, None]:
+        """
+        Return a generator containing all the files paths in the sub directories
+        of a given path.
+
+        :param: str base_dir: directory path to get all the files from.
+
+        :return: generator with all the file paths inside that directory.
+
+        :rtype: generator
+        """
+        for sub_dir in os.scandir(base_dir):
+            if sub_dir.is_dir():
+                yield from KegUtils.get_overlay_files(sub_dir.path)
+            elif sub_dir.is_file():
+                yield sub_dir.path
 
     @staticmethod
     def _get_source_files(roots, sub_dir, ext, include_paths):

@@ -1,5 +1,9 @@
 include-paths:
   - base/jeos/leap
+overlay-include-paths:
+  - base
+  - csp/aws
+  - products/leap/15.2
 image:
   name: Leap15.2-JeOS
   specification: "Leap 15.2 guest image"

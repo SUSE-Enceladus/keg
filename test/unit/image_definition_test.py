@@ -135,7 +135,8 @@ class TestKegImageDefinition:
                     'description': 'Some Other Profile'
                 }
             },
-            'include-paths': ['base/jeos/leap']
+            'include-paths': ['base/jeos/leap'],
+            'overlay-include-paths': ['base', 'csp/aws', 'products/leap/15.2']
         }
 
     @patch('kiwi_keg.image_definition.datetime')

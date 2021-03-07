@@ -79,6 +79,7 @@ def main():
         image_generator.create_custom_scripts(
             override=args['--force']
         )
+        image_generator.create_overlays()
     except KegError as issue:
         # known exception, log information and exit
         log.error('%s: %s', type(issue).__name__, format(issue))
