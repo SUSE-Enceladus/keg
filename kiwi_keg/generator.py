@@ -139,6 +139,7 @@ class KegGenerator:
                     rel_path = os.path.relpath(name, overlay_path)
                     new_dir = os.path.dirname(rel_path)
                     if new_dir:
+                        new_dir = os.path.join(self.dest_dir, new_dir)
                         os.makedirs(new_dir, exist_ok=True)
                     dest_file = os.path.join(self.dest_dir, rel_path)
                     shutil.copy(name, dest_file)

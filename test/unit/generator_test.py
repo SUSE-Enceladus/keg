@@ -127,17 +127,26 @@ class TestKegGenerator:
             dest_file = {}
             dest_file['base'] = os.path.join(tmpdirname, 'etc', 'hosts')
             dest_file['csp_aws'] = os.path.join(tmpdirname, 'etc', 'resolv.conf')
-            dest_file['product'] = os.path.join(tmpdirname, 'etc', 'motd')
+            dest_file['product'] = {
+                'etc': os.path.join(tmpdirname, 'etc', 'motd'),
+                'usr': os.path.join(tmpdirname, 'usr', 'lib', 'systemd', 'system', 'foo.service')
+            }
 
             assert mock_shutil_copy.call_args_list == [
                 call('../data/overlays/base/etc/hosts', dest_file.get('base')),
                 call('../data/overlays/csp/aws/etc/resolv.conf', dest_file.get('csp_aws')),
-                call('../data/overlays/products/leap/15.2/etc/motd', dest_file.get('product'))
+                call('../data/overlays/products/leap/15.2/etc/motd', dest_file.get('product').get('etc')),
+                call(
+                    '../data/overlays/products/leap/15.2/usr/lib/systemd/system/foo.service',
+                    dest_file.get('product').get('usr')
+                )
             ]
 
-            dest_base_dir = os.path.relpath(dest_file.get('base'), tmpdirname)
-            dest_csp_dir = os.path.relpath(dest_file.get('csp_aws'), tmpdirname)
-            dest_prod_dir = os.path.relpath(dest_file.get('product'), tmpdirname)
+            dest_base_dir = dest_file.get('base')
+            dest_csp_dir = dest_file.get('csp_aws')
+            dest_prod_dir_etc = dest_file.get('product').get('etc')
+            dest_prod_dir_usr = dest_file.get('product').get('usr')
+
             assert mock_os_makedirs.call_args_list == [
                 call(
                     os.path.dirname(dest_base_dir),
@@ -148,7 +157,12 @@ class TestKegGenerator:
                     exist_ok=True
                 ),
                 call(
-                    os.path.dirname(dest_prod_dir),
+                    os.path.dirname(dest_prod_dir_etc),
+                    exist_ok=True
+                ),
+                call(
+                    os.path.dirname(dest_prod_dir_usr),
                     exist_ok=True
                 )
+
             ]
