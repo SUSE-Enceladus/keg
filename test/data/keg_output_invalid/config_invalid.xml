@@ -14,7 +14,7 @@
         <locale>en_US</locale>
         <keytable>us.map.gz</keytable>
         <timezone>UTC</timezone>
-        <type image="oem" filesystem="btrfs" firmware="efi">
+        <type image="oem" filesystem="btrfs" firmware="efi" invalid_attr="uups">
             <oemconfig>
                 <oem-multipath-scan>false</oem-multipath-scan>
                 <oem-swap>true</oem-swap>
