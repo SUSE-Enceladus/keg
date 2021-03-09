@@ -1,0 +1,6 @@
+include-paths:
+  - base/jeos/leap
+image:
+  name: Leap15.1-JeOS
+  specification: "Leap 15.1 guest image"
+  version: 1.0.42

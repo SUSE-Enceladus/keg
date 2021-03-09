@@ -46,6 +46,9 @@ class TestKeg:
             image_generator.create_custom_scripts.assert_called_once_with(
                 override=False
             )
+            image_generator.create_overlays.assert_called_once_with(
+                tarball=False
+            )
 
     @patch('kiwi_keg.keg.KegImageDefinition')
     @patch('sys.exit')

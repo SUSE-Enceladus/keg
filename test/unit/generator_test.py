@@ -118,18 +118,29 @@ class TestKegGenerator:
                 '../data/keg_output/config.sh', tmpdirname + '/config.sh'
             ) is True
 
+    @patch('shutil.rmtree')
+    @patch("os.path.basename")
+    @patch('tarfile.open')
     @patch('os.makedirs')
     @patch('shutil.copy')
-    def test_create_overlays(self, mock_shutil_copy, mock_os_makedirs):
+    def test_create_overlays(
+        self, mock_shutil_copy, mock_os_makedirs, mock_tarfile_open,
+        mock_os_basename, mock_shutil_rmtree
+    ):
+        mock_add = Mock()
+        mock_tarfile_open.return_value.__enter__.return_value.add = mock_add
+
         with tempfile.TemporaryDirectory() as tmpdirname:
+            mock_os_basename.return_value = tmpdirname
             generator = KegGenerator(self.image_definition, tmpdirname)
-            generator.create_overlays()
+            generator.create_overlays(True)
+
             dest_file = {}
-            dest_file['base'] = os.path.join(tmpdirname, 'etc', 'hosts')
-            dest_file['csp_aws'] = os.path.join(tmpdirname, 'etc', 'resolv.conf')
+            dest_file['base'] = os.path.join(tmpdirname, 'root', 'etc', 'hosts')
+            dest_file['csp_aws'] = os.path.join(tmpdirname, 'root', 'etc', 'resolv.conf')
             dest_file['product'] = {
-                'etc': os.path.join(tmpdirname, 'etc', 'motd'),
-                'usr': os.path.join(tmpdirname, 'usr', 'lib', 'systemd', 'system', 'foo.service')
+                'etc': os.path.join(tmpdirname, 'root', 'etc', 'motd'),
+                'usr': os.path.join(tmpdirname, 'root', 'usr', 'lib', 'systemd', 'system', 'foo.service')
             }
 
             assert mock_shutil_copy.call_args_list == [
@@ -164,5 +175,21 @@ class TestKegGenerator:
                     os.path.dirname(dest_prod_dir_usr),
                     exist_ok=True
                 )
-
             ]
+            tarball_dir = os.path.join(tmpdirname, 'root.tar.gz')
+            tarball_src_dir = os.path.join(tmpdirname, 'root')
+            mock_tarfile_open.assert_called_with(tarball_dir, "w:gz")
+            mock_os_basename.assert_called_with(tarball_src_dir)
+            mock_add.assert_called_with(
+                tarball_src_dir, arcname=tmpdirname
+            )
+
+    @patch('shutil.copy')
+    def test_create_no_overlays_provided(self, mock_shutil_copy):
+        image_definition = KegImageDefinition(
+            image_name='leap/15.1', recipes_root='../data'
+        )
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            generator = KegGenerator(image_definition, tmpdirname)
+            generator.create_overlays(True)
+            assert not mock_shutil_copy.called

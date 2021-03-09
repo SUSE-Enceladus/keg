@@ -19,6 +19,7 @@ import logging
 from jinja2 import Environment, FileSystemLoader
 import os
 import shutil
+import tarfile
 
 from kiwi_keg.image_definition import KegImageDefinition
 from kiwi_keg.kiwi_description import KiwiDescription
@@ -122,13 +123,17 @@ class KegGenerator:
         with open(outfile, 'w') as custom_script:
             custom_script.write(config_sh)
 
-    def create_overlays(self):
+    def create_overlays(self, tarball: bool = False):
         """
-        Copy all the files and the overlay tree structure from overlays section
-        into destination directory.
+        Copy all the files and the overlay tree structure from overlays section  under root inside destination directory.
+
+        :param: bool tarball:
+            Flag to create tarball
         """
-        if self.image_definition.data.get('overlay-include-paths'):
-            overlay_include_paths = self.image_definition.data.get('overlay-include-paths')
+        overlay_paths = self.image_definition.data.get('overlay-include-paths')
+        if overlay_paths:
+            overlay_include_paths = overlay_paths
+            overlay_dest_root_dir = os.path.join(self.dest_dir, 'root')
             for overlay_include in overlay_include_paths:
                 overlay_path = os.path.join(
                     self.image_definition.overlay_root,
@@ -139,10 +144,31 @@ class KegGenerator:
                     rel_path = os.path.relpath(name, overlay_path)
                     new_dir = os.path.dirname(rel_path)
                     if new_dir:
-                        new_dir = os.path.join(self.dest_dir, new_dir)
+                        new_dir = os.path.join(overlay_dest_root_dir, new_dir)
                         os.makedirs(new_dir, exist_ok=True)
-                    dest_file = os.path.join(self.dest_dir, rel_path)
+                    dest_file = os.path.join(overlay_dest_root_dir, rel_path)
                     shutil.copy(name, dest_file)
+
+            if tarball:
+                self._create_tarball(
+                    os.path.join(self.dest_dir, 'root.tar.gz'),
+                    overlay_dest_root_dir
+                )
+                shutil.rmtree(overlay_dest_root_dir)
+
+        if tarball and not overlay_paths:
+            log.warn(
+                'Attempt to create a tarball but not overlay paths were provided.'
+            )
+
+    @staticmethod
+    def _create_tarball(tarball_dir, dest_root_dir):
+
+        with tarfile.open(tarball_dir, 'w:gz') as tar:
+            tar.add(
+                dest_root_dir,
+                arcname=os.path.basename(dest_root_dir)
+            )
 
     @staticmethod
     def _validate_outfile(outfile, override):

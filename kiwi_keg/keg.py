@@ -17,7 +17,7 @@
 #
 """
 Usage: keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
-           [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
+           [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-tfv]
            SOURCE
        keg -h | --help
        keg --version
@@ -35,8 +35,12 @@ Options:
     -d DEST_DIR, --dest-dir=DEST_DIR
         Destination directory for generated description, default cwd
 
+    -t, --tarball
+        Option to create a tarball root.tar.gz in destination directory
+        [default: false]
+
     -f, --force
-       Force mode (ignore errors, overwrite files)
+        Force mode (ignore errors, overwrite files)
 
     -v, --verbose
         Enable verbose output
@@ -79,7 +83,9 @@ def main():
         image_generator.create_custom_scripts(
             override=args['--force']
         )
-        image_generator.create_overlays()
+        image_generator.create_overlays(
+            tarball=args['--tarball']
+        )
     except KegError as issue:
         # known exception, log information and exit
         log.error('%s: %s', type(issue).__name__, format(issue))
