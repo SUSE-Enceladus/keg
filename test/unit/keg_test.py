@@ -41,13 +41,42 @@ class TestKeg:
                 image_definition=image_definition, dest_dir='some-target'
             )
             image_generator.create_kiwi_description.assert_called_once_with(
-                markup='xml', override=False
+                override=False
             )
+            image_generator.validate_kiwi_description.assert_called_once_with()
             image_generator.create_custom_scripts.assert_called_once_with(
                 override=False
             )
             image_generator.create_overlays.assert_called_once_with(
                 tarball=False
+            )
+
+    @patch('kiwi_keg.keg.KegImageDefinition')
+    @patch('kiwi_keg.keg.KegGenerator')
+    def test_keg_format_xml(self, mock_KegGenerator, mock_KegImageDefinition):
+        sys.argv += ['--format-xml']
+        image_definition = Mock()
+        mock_KegImageDefinition.return_value = image_definition
+        image_generator = Mock()
+        mock_KegGenerator.return_value = image_generator
+        with self._caplog.at_level(logging.DEBUG):
+            main()
+            image_generator.format_kiwi_description.assert_called_once_with(
+                'xml'
+            )
+
+    @patch('kiwi_keg.keg.KegImageDefinition')
+    @patch('kiwi_keg.keg.KegGenerator')
+    def test_keg_format_yaml(self, mock_KegGenerator, mock_KegImageDefinition):
+        sys.argv += ['--format-yaml']
+        image_definition = Mock()
+        mock_KegImageDefinition.return_value = image_definition
+        image_generator = Mock()
+        mock_KegGenerator.return_value = image_generator
+        with self._caplog.at_level(logging.DEBUG):
+            main()
+            image_generator.format_kiwi_description.assert_called_once_with(
+                'yaml'
             )
 
     @patch('kiwi_keg.keg.KegImageDefinition')

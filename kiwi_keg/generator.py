@@ -48,6 +48,12 @@ class KegGenerator:
                     target=repr(dest_dir)
                 )
             )
+        self.kiwi_description = os.path.join(
+            dest_dir, 'config.kiwi'
+        )
+        self.kiwi_config_script = os.path.join(
+            dest_dir, 'config.sh'
+        )
         self.image_definition = image_definition
         self.description_schemas = os.path.join(
             image_definition.recipes_root, 'schemas'
@@ -71,17 +77,14 @@ class KegGenerator:
             )
         )
 
-    def create_kiwi_description(
-        self, markup: str = 'xml', override: bool = False
-    ):
+    def create_kiwi_description(self, override: bool = False) -> None:
         """
         Creates KIWI config.xml from a KegImageDefinition.
 
         :param bool override:
             Override destination contents, default is: False
         """
-        outfile = os.path.join(self.dest_dir, 'config.kiwi')
-        self._validate_outfile(outfile, override)
+        self._check_file(self.kiwi_description, override)
 
         kiwi_template = self._read_template(
             '{}.kiwi.templ'.format(self.image_schema)
@@ -89,17 +92,30 @@ class KegGenerator:
         kiwi_document = kiwi_template.render(
             data=self.image_definition.data
         )
-        with open(outfile, 'w') as kiwi_config:
+        with open(self.kiwi_description, 'w') as kiwi_config:
             kiwi_config.write(kiwi_document)
-        kiwi = KiwiDescription(outfile)
-        if markup == 'xml':
-            kiwi.create_XML_description(outfile)
-        elif markup == 'yaml':
-            kiwi.create_YAML_description(outfile)
-        else:
+
+    def validate_kiwi_description(self) -> None:
+        kiwi = KiwiDescription(self.kiwi_description)
+        kiwi.validate_description()
+
+    def format_kiwi_description(self, markup: str = 'xml') -> None:
+        supported_markup_languages = ['xml', 'yaml']
+        kiwi = KiwiDescription(self.kiwi_description)
+        if markup not in supported_markup_languages:
             raise KegError(
                 'Unsupported markup type: {name}'.format(name=markup)
             )
+        log.info(
+            'Formatting Keg KIWI description to installed KIWI schema'
+        )
+        log.info(
+            f'--> Writing description in {markup!r} markup'
+        )
+        if markup == 'xml':
+            kiwi.create_XML_description(self.kiwi_description)
+        if markup == 'yaml':
+            kiwi.create_YAML_description(self.kiwi_description)
 
     def create_custom_scripts(self, override: bool = False):
         """
@@ -108,8 +124,7 @@ class KegGenerator:
         :param bool override:
             Override destination contents, default is: False
         """
-        outfile = os.path.join(self.dest_dir, 'config.sh')
-        self._validate_outfile(outfile, override)
+        self._check_file(self.kiwi_config_script, override)
         script_lib = KegUtils.load_scripts(
             self.image_definition.data_roots, 'scripts',
             self.image_definition.data.get('include-paths')
@@ -120,7 +135,7 @@ class KegGenerator:
         config_sh = config_template.render(
             data=self.image_definition.data, scripts=script_lib
         )
-        with open(outfile, 'w') as custom_script:
+        with open(self.kiwi_config_script, 'w') as custom_script:
             custom_script.write(config_sh)
 
     def create_overlays(self, tarball: bool = False):
@@ -171,11 +186,11 @@ class KegGenerator:
             )
 
     @staticmethod
-    def _validate_outfile(outfile, override):
-        if not override and os.path.exists(outfile):
+    def _check_file(filename, override):
+        if not override and os.path.exists(filename):
             raise KegError(
                 '{target} exists, use force to overwrite.'.format(
-                    target=outfile
+                    target=filename
                 )
             )
 
