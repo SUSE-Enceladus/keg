@@ -52,6 +52,9 @@ class KegGenerator:
         self.kiwi_config_script = os.path.join(
             dest_dir, 'config.sh'
         )
+        self.kiwi_images_script = os.path.join(
+            dest_dir, 'images.sh'
+        )
         self.image_definition = image_definition
         self.description_schemas = os.path.join(
             image_definition.recipes_root, 'schemas'
@@ -117,24 +120,45 @@ class KegGenerator:
 
     def create_custom_scripts(self, override: bool = False):
         """
-        Creates custom KIWI config.sh script from a KegImageDefinition.
+        Creates custom KIWI config.sh/images.sh script(s) from a
+        KegImageDefinition.
 
         :param bool override:
             Override destination contents, default is: False
         """
-        self._check_file(self.kiwi_config_script, override)
         script_lib = KegUtils.load_scripts(
             self.image_definition.data_roots, 'scripts',
             self.image_definition.data.get('include-paths')
         )
-        config_template = self._read_template(
-            '{}.config.sh.templ'.format(self.image_schema)
-        )
-        config_sh = config_template.render(
-            data=self.image_definition.data, scripts=script_lib
-        )
-        with open(self.kiwi_config_script, 'w') as custom_script:
-            custom_script.write(config_sh)
+
+        if self._has_script_data('config_script'):
+            self._check_file(self.kiwi_config_script, override)
+            config_template = self._read_template(
+                '{}.config.sh.templ'.format(self.image_schema)
+            )
+            config_sh = config_template.render(
+                data=self.image_definition.data, scripts=script_lib
+            )
+            with open(self.kiwi_config_script, 'w') as custom_script:
+                custom_script.write(config_sh)
+
+        if self._has_script_data('image_script'):
+            self._check_file(self.kiwi_images_script, override)
+            images_template = self._read_template(
+                '{}.images.sh.templ'.format(self.image_schema)
+            )
+            images_sh = images_template.render(
+                data=self.image_definition.data, scripts=script_lib
+            )
+            with open(self.kiwi_images_script, 'w') as custom_script:
+                custom_script.write(images_sh)
+
+    def _has_script_data(self, script_key):
+        profiles = self.image_definition.data.get('profiles')
+        for profile in profiles.values():
+            config = profile.get('config')
+            if config and config.get(script_key):
+                return True
 
     @staticmethod
     def _check_file(filename, override):

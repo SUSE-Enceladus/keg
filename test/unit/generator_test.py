@@ -102,3 +102,6 @@ class TestKegGenerator:
             assert filecmp.cmp(
                 '../data/keg_output/config.sh', tmpdirname + '/config.sh'
             ) is True
+            assert filecmp.cmp(
+                '../data/keg_output/images.sh', tmpdirname + '/images.sh'
+            ) is True
