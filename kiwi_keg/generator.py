@@ -138,7 +138,7 @@ class KegGenerator:
         with open(self.kiwi_config_script, 'w') as custom_script:
             custom_script.write(config_sh)
 
-    def create_overlays(self, tarball: bool = False):
+    def create_overlays(self, tar_overlays: bool = False):
         """
         Copy all the files and the overlay tree structure from overlays section  under root inside destination directory.
 
@@ -164,14 +164,14 @@ class KegGenerator:
                     dest_file = os.path.join(overlay_dest_root_dir, rel_path)
                     shutil.copy(name, dest_file)
 
-            if tarball:
+            if tar_overlays:
                 self._create_tarball(
                     os.path.join(self.dest_dir, 'root.tar.gz'),
                     overlay_dest_root_dir
                 )
                 shutil.rmtree(overlay_dest_root_dir)
 
-        if tarball and not overlay_paths:
+        if tar_overlays and not overlay_paths:
             log.warn(
                 'Attempt to create a tarball but not overlay paths were provided.'
             )
@@ -180,10 +180,11 @@ class KegGenerator:
     def _create_tarball(tarball_dir, dest_root_dir):
 
         with tarfile.open(tarball_dir, 'w:gz') as tar:
-            tar.add(
-                dest_root_dir,
-                arcname=os.path.basename(dest_root_dir)
-            )
+            for overlay_dir in os.scandir(dest_root_dir):
+                tar.add(
+                    overlay_dir.path,
+                    arcname=overlay_dir.name
+                )
 
     @staticmethod
     def _check_file(filename, override):

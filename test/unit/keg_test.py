@@ -48,7 +48,7 @@ class TestKeg:
                 override=False
             )
             image_generator.create_overlays.assert_called_once_with(
-                tarball=False
+                tar_overlays=False
             )
 
     @patch('kiwi_keg.keg.KegImageDefinition')

@@ -17,8 +17,8 @@
 #
 """
 Usage: keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
-           [--format-xml|--format-yaml]
-           [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-tfv]
+           [--format-xml|--format-yaml] [--tar-overlays]
+           [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
            SOURCE
        keg -h | --help
        keg --version
@@ -36,7 +36,7 @@ Options:
     -d DEST_DIR, --dest-dir=DEST_DIR
         Destination directory for generated description, default cwd
 
-    -t, --tarball
+    --tar-overlays
         Option to create a tarball root.tar.gz in destination directory
         [default: false]
 
@@ -44,12 +44,12 @@ Options:
         Force mode (ignore errors, overwrite files)
 
     --format-yaml
-       Format/Update Keg written image description to installed
-       KIWI schema and write the result description in YAML markup
+        Format/Update Keg written image description to installed
+        KIWI schema and write the result description in YAML markup
 
     --format-xml
-       Format/Update Keg written image description to installed
-       KIWI schema and write the result description in XML markup
+        Format/Update Keg written image description to installed
+        KIWI schema and write the result description in XML markup
 
     -v, --verbose
         Enable verbose output
@@ -99,7 +99,7 @@ def main():
             override=args['--force']
         )
         image_generator.create_overlays(
-            tarball=args['--tarball']
+            tar_overlays=args['--tar-overlays']
         )
     except KegError as issue:
         # known exception, log information and exit
