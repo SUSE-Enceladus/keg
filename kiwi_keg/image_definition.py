@@ -153,4 +153,5 @@ class KegImageDefinition:
                     self.image_root
                 )
                 images_recipes.append(rel_path)
+        images_recipes.sort()
         return images_recipes

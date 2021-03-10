@@ -154,7 +154,7 @@ class TestKegImageDefinition:
 
     def test_list_recipes(self):
         assert self.keg_definition.list_recipes() == [
-            'leap/15.2',
             'leap/15.1',
+            'leap/15.2',
             'leap_single_build'
         ]
