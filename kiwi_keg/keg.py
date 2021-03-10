@@ -16,7 +16,9 @@
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
 """
-Usage: keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
+
+Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
+       keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
            [--format-xml|--format-yaml] [--tar-overlays]
            [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
            SOURCE
@@ -39,6 +41,9 @@ Options:
     --tar-overlays
         Option to create a tarball root.tar.gz in destination directory
         [default: false]
+
+    -l. --list-recipes
+        List available images that can be created with the current recipes
 
     -f, --force
         Force mode (ignore errors, overwrite files)
@@ -77,6 +82,15 @@ def main():
         log.setLevel(logging.DEBUG)
 
     try:
+        if args['--list-recipes']:
+            image_definition = KegImageDefinition(
+                image_name='',
+                recipes_root=args['--recipes-root'],
+                data_roots=[]
+            )
+            print('\n'.join(image_definition.list_recipes()))
+            return
+
         image_definition = KegImageDefinition(
             image_name=args['SOURCE'],
             recipes_root=args['--recipes-root'],

@@ -155,7 +155,7 @@ class KegGenerator:
                     overlay_include
                 )
                 # loop all the file paths of overlay sub directory 'overlay_path'
-                for name in KegUtils.get_overlay_files(overlay_path):
+                for name in KegUtils.get_all_files(overlay_path):
                     rel_path = os.path.relpath(name, overlay_path)
                     new_dir = os.path.dirname(rel_path)
                     if new_dir:

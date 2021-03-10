@@ -97,3 +97,21 @@ class TestKeg:
             with raises(Exception):
                 main()
             assert 'Unexpected error' in self._caplog.text
+
+    @patch('kiwi_keg.keg.KegImageDefinition')
+    def test_keg_list_recipes(self, mock_KegImageDefinition):
+        sys.argv = [
+            sys.argv[0], '--list-recipes',
+            '--recipes-root', '../data'
+        ]
+        image_definition = Mock()
+        image_definition.list_recipes.return_value = []
+        mock_KegImageDefinition.return_value = image_definition
+        with self._caplog.at_level(logging.ERROR):
+            main()
+            mock_KegImageDefinition.assert_called_once_with(
+                image_name='',
+                recipes_root='../data',
+                data_roots=[]
+            )
+            assert image_definition.list_recipes.called
