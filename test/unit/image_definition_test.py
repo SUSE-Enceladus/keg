@@ -150,3 +150,9 @@ class TestKegImageDefinition:
         keg_definition.populate()
 
         assert keg_definition.data['schema'] == 'vm_singlebuild'
+
+    def test_list_recipes(self):
+        assert self.keg_definition.list_recipes() == [
+            'leap/15.2',
+            'leap_single_build'
+        ]
