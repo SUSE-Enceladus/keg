@@ -16,7 +16,6 @@
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
 import os
-import yaml
 from typing import (
     List, Dict
 )
@@ -139,17 +138,14 @@ class KegImageDefinition:
             self.data['contents'].update(contents)
 
     def list_recipes(self):
-        images_names = []
+        images_recipes = []
         images_files = KegUtils.get_all_files(self.image_root)
 
         for image_file in images_files:
             if os.path.basename(image_file) == 'image.yaml':
-                with open(image_file, 'r') as img_stream:
-                    image_section = yaml.safe_load(img_stream).get('image')
-                    image_info = \
-                        f"{image_section.get('name')}-" \
-                        f"{image_section.get('version')} " \
-                        f"({image_section.get('specification')})"
-                    if image_info not in images_names:
-                        images_names.append(image_info)
-        return images_names
+                rel_path = os.path.relpath(
+                    os.path.dirname(image_file),
+                    self.image_root
+                )
+                images_recipes.append(rel_path)
+        return images_recipes
