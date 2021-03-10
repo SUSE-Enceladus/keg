@@ -150,3 +150,8 @@ class TestKegImageDefinition:
         keg_definition.populate()
 
         assert keg_definition.data['schema'] == 'vm_singlebuild'
+
+    def test_list_recipes(self):
+        assert self.keg_definition.list_recipes() == [
+            'Leap15.2-JeOS-1.0.42 (Leap 15.2 guest image)'
+        ]

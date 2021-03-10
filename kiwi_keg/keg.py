@@ -16,7 +16,8 @@
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
 """
-Usage: keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
+Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
+       keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
            [--format-xml|--format-yaml]
            [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
            SOURCE
@@ -36,16 +37,19 @@ Options:
     -d DEST_DIR, --dest-dir=DEST_DIR
         Destination directory for generated description, default cwd
 
+    -l. --list-recipes
+        List available images that can be created with the current recipes
+
     -f, --force
-       Force mode (ignore errors, overwrite files)
+        Force mode (ignore errors, overwrite files)
 
     --format-yaml
-       Format/Update Keg written image description to installed
-       KIWI schema and write the result description in YAML markup
+        Format/Update Keg written image description to installed
+        KIWI schema and write the result description in YAML markup
 
     --format-xml
-       Format/Update Keg written image description to installed
-       KIWI schema and write the result description in XML markup
+        Format/Update Keg written image description to installed
+        KIWI schema and write the result description in XML markup
 
     -v, --verbose
         Enable verbose output
@@ -73,6 +77,15 @@ def main():
         log.setLevel(logging.DEBUG)
 
     try:
+        if args['--list-recipes']:
+            image_definition = KegImageDefinition(
+                image_name='',
+                recipes_root=args['--recipes-root'],
+                data_roots=[]
+            )
+            print('\n'.join(image_definition.list_recipes()))
+            return
+
         image_definition = KegImageDefinition(
             image_name=args['SOURCE'],
             recipes_root=args['--recipes-root'],
