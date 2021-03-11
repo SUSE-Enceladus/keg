@@ -30,7 +30,7 @@ class TestUtils:
         ) == expected_output
 
     def test_load_scripts(self):
-        expected_output = {'foo': 'bar\n'}
+        expected_output = {'foo': 'bar\n', 'name': 'bob\n'}
         assert KegUtils.load_scripts(
             ['../data/data'], 'scripts', ['base/jeos/leap']
         ) == expected_output
