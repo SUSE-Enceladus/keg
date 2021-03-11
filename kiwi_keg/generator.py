@@ -134,7 +134,7 @@ class KegGenerator:
         if self._has_script_data('config_script'):
             self._check_file(self.kiwi_config_script, override)
             config_template = self._read_template(
-                '{}.config.sh.templ'.format(self.image_schema)
+                'config.sh.templ'
             )
             config_sh = config_template.render(
                 data=self.image_definition.data, scripts=script_lib
@@ -145,7 +145,7 @@ class KegGenerator:
         if self._has_script_data('image_script'):
             self._check_file(self.kiwi_images_script, override)
             images_template = self._read_template(
-                '{}.images.sh.templ'.format(self.image_schema)
+                'images.sh.templ'
             )
             images_sh = images_template.render(
                 data=self.image_definition.data, scripts=script_lib
