@@ -81,34 +81,37 @@ class TestKegImageDefinition:
                         }
                     },
                     'config': {
-                        'files': {
-                            'JeOS-sysconfig': [
-                                {
-                                    'path': '/etc/sysconfig/console',
-                                    'append': True,
-                                    'content': 'CONSOLE_ENCODING="UTF-8"'
-                                }
-                            ]
+                        'config_script': {
+                            'JeOS-config': ['foo', 'name'],
+                            'files': {
+                                'JeOS-files': [
+                                    {
+                                        'path': '/etc/sysconfig/console',
+                                        'append': True,
+                                        'content': 'CONSOLE_ENCODING="UTF-8"'
+                                    }
+                                ]
+                            },
+                            'sysconfig': {
+                                'JeOS-sysconfig': [
+                                    {
+                                        'file': '/etc/sysconfig/language',
+                                        'name': 'INSTALLED_LANGUAGES',
+                                        'value': ''
+                                    }
+                                ]
+                            },
+                            'services': {
+                                'JeOS-services': [
+                                    'sshd', {
+                                        'name': 'kbd',
+                                        'enable': False
+                                    }
+                                ]
+                            }
                         },
-                        'scripts': {
-                            'JeOS-config': ['remove-root-pw']
-                        },
-                        'services': {
-                            'JeOS-services': [
-                                'sshd', {
-                                    'name': 'kbd',
-                                    'enable': False
-                                }
-                            ]
-                        },
-                        'sysconfig': {
-                            'JeOS-sysconfig': [
-                                {
-                                    'file': '/etc/sysconfig/language',
-                                    'name': 'INSTALLED_LANGUAGES',
-                                    'value': ''
-                                }
-                            ]
+                        'image_script': {
+                            'JeOS-image': ['name']
                         }
                     },
                     'profile': {
