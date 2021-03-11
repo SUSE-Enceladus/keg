@@ -5,7 +5,7 @@
 {%- endmacro -%}
 {% macro print_sysconf_cmds(vars, indent, ns) -%}
 {% if vars -%}
-# keg: included from {{ ns }}
+{{ indent }}# keg: included from {{ ns }}
 {% endif -%}
 {% for var in vars -%}
 {{ indent }}baseUpdateSysConfig {{ var['file'] }} {{ var['name'] }} "{{ var['value'] }}"
@@ -13,7 +13,7 @@
 {% endmacro -%}
 {% macro print_service_cmds(vars, indent, ns) -%}
 {% if vars -%}
-# keg: included from {{ ns }}
+{{ indent }}# keg: included from {{ ns }}
 {% endif -%}
 {% for var in vars -%}
 {%   if var is string -%}
