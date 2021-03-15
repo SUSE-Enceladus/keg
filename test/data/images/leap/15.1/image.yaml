@@ -1,5 +1,5 @@
 include-paths:
-  - base/jeos/leap
+  - base/jeos/leap_no_overlay_structure
 image:
   name: Leap15.1-JeOS
   specification: "Leap 15.1 guest image"

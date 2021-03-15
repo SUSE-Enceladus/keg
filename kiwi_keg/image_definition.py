@@ -44,7 +44,7 @@ class KegImageDefinition:
         self._image_name = image_name
         self._image_root = os.path.join(recipes_root, 'images')
         self._data_roots = [os.path.join(recipes_root, 'data')]
-        self._overlay_root = os.path.join(recipes_root, 'overlays')
+        self._overlay_root = os.path.join(recipes_root, 'data', 'overlayfiles')
         if data_roots:
             self._data_roots += data_roots
         if not os.path.isdir(recipes_root):

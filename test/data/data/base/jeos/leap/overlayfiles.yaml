@@ -1,0 +1,6 @@
+overlayfiles:
+  overlayname: root
+    - base
+    - csp/aws
+  overlayname: leap_15_2
+    - products/leap/15.2

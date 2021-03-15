@@ -1,0 +1,6 @@
+include-paths:
+  - base/jeos/leap_no_overlayname
+image:
+  name: Leap15-JeOS
+  specification: "Leap 15 guest image"
+  version: 1.0.42

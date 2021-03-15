@@ -114,6 +114,12 @@ class TestKegImageDefinition:
                             'JeOS-image': ['name']
                         }
                     },
+                    'overlayfiles': {
+                        'overlayname': {
+                            'root': ['base', 'csp/aws'],
+                            'leap_15_2': ['products/leap/15.2']
+                        }
+                    },
                     'profile': {
                         'bootloader': {
                             'name': 'grub2',
@@ -138,8 +144,7 @@ class TestKegImageDefinition:
                     'description': 'Some Other Profile'
                 }
             },
-            'include-paths': ['base/jeos/leap'],
-            'overlay-include-paths': ['base', 'csp/aws', 'products/leap/15.2']
+            'include-paths': ['base/jeos/leap']
         }
 
     @patch('kiwi_keg.image_definition.datetime')
@@ -157,6 +162,7 @@ class TestKegImageDefinition:
 
     def test_list_recipes(self):
         assert self.keg_definition.list_recipes() == [
+            'leap/15',
             'leap/15.1',
             'leap/15.2',
             'leap_single_build'
