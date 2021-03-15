@@ -37,7 +37,7 @@ Options:
     -d DEST_DIR, --dest-dir=DEST_DIR
         Destination directory for generated description, default cwd
 
-    -l. --list-recipes
+    -l, --list-recipes
         List available images that can be created with the current recipes
 
     -f, --force
