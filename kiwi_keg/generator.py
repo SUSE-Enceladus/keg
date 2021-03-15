@@ -193,10 +193,11 @@ class KegGenerator:
                                     overlay_dest_dir
                                 )
                                 shutil.rmtree(overlay_dest_dir)
-                                self._update_config_kiwi(
-                                    overlay_tarball_name,
-                                    overlay_dest_dir
-                                )
+                                if overlay_name != 'root':
+                                    self._update_config_kiwi(
+                                        overlay_tarball_name,
+                                        overlay_dest_dir
+                                    )
 
             if tar_overlays and not has_overlays:
                 log.warn(

@@ -29,7 +29,6 @@
     <package name="grub2-x86_64-efi" arch="x86_64"/>
     <package name="patterns-base-minimal_base"/>
     <!-- End include from jeos -->
-    <archive name="root.tar.gz"/>
     <archive name="leap_15_2.tar.gz"/>
   </packages>
 </image>
