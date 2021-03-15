@@ -123,11 +123,13 @@ $ keg --recipes-root keg-recipes --dest-dir leap_description \
       <title>keg</title>
       <section xml:id="keg-synopsis">
         <title>SYNOPSIS</title>
-        <screen language="bash">keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
+        <screen language="bash">keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
+
+keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
     [--format-xml|--format-yaml]
     [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
     SOURCE
-keg -h | --help
+
 keg -h | --help</screen>
       </section>
       <section xml:id="description">
@@ -180,6 +182,15 @@ keg -h | --help</screen>
             </term>
             <listitem>
               <para>Destination directory for generated description, default cwd</para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>
+              <option>-l</option>
+              <option>--list-recipes</option>
+            </term>
+            <listitem>
+              <para>List available images that can be created with the current recipes</para>
             </listitem>
           </varlistentry>
           <varlistentry>

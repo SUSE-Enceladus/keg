@@ -8,11 +8,13 @@ SYNOPSIS
 
 .. code:: bash
 
+   keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
+
    keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
        [--format-xml|--format-yaml]
        [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
        SOURCE
-   keg -h | --help
+
    keg -h | --help
 
 DESCRIPTION
@@ -58,6 +60,10 @@ OPTIONS
 -d DEST_DIR, --dest-dir=DEST_DIR
 
   Destination directory for generated description, default cwd
+
+-l, --list-recipes
+
+  List available images that can be created with the current recipes
 
 -f, --force
 

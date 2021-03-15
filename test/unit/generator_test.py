@@ -156,12 +156,12 @@ class TestKegGenerator:
                 call('../data/data/overlayfiles/base/etc/hosts', dest_file.get('base')),
                 call('../data/data/overlayfiles/csp/aws/etc/resolv.conf', dest_file.get('csp_aws')),
                 call(
-                    '../data/data/overlayfiles/products/leap/15.2/usr/lib/systemd/system/foo.service',
-                    dest_file.get('product').get('usr')
-                ),
-                call(
                     '../data/data/overlayfiles/products/leap/15.2/etc/motd',
                     dest_file.get('product').get('etc')
+                ),
+                call(
+                    '../data/data/overlayfiles/products/leap/15.2/usr/lib/systemd/system/foo.service',
+                    dest_file.get('product').get('usr')
                 )
             ]
 
@@ -180,11 +180,11 @@ class TestKegGenerator:
                     exist_ok=True
                 ),
                 call(
-                    os.path.dirname(dest_prod_dir_usr),
+                    os.path.dirname(dest_prod_dir_etc),
                     exist_ok=True
                 ),
                 call(
-                    os.path.dirname(dest_prod_dir_etc),
+                    os.path.dirname(dest_prod_dir_usr),
                     exist_ok=True
                 )
             ]
