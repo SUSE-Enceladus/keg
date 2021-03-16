@@ -19,6 +19,7 @@
 Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
        keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
            [--format-xml|--format-yaml]
+           [--dump]
            [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
            SOURCE
        keg -h | --help
@@ -50,6 +51,10 @@ Options:
     --format-xml
         Format/Update Keg written image description to installed
         KIWI schema and write the result description in XML markup
+
+    --dump
+       Dump generated data dictionary instead of generating anything.
+       Useful for debugging.
 
     -v, --verbose
         Enable verbose output
@@ -95,6 +100,12 @@ def main():
             image_definition=image_definition,
             dest_dir=args['--dest-dir']
         )
+        if args['--dump']:
+            import pprint
+            pp = pprint.PrettyPrinter(indent=2)
+            pp.pprint(image_definition.data)
+            return
+
         image_generator.create_kiwi_description(
             override=args['--force']
         )

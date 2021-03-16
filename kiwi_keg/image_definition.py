@@ -44,6 +44,7 @@ class KegImageDefinition:
         self._image_name = image_name
         self._image_root = os.path.join(recipes_root, 'images')
         self._data_roots = [os.path.join(recipes_root, 'data')]
+        self._archive_ext = 'tar.gz'
         if data_roots:
             self._data_roots += data_roots
         if not os.path.isdir(recipes_root):
@@ -86,7 +87,8 @@ class KegImageDefinition:
         self.data = {
             'generator': 'keg {}'.format(version.__version__),
             'timestamp': '{}'.format(utc_now_str),
-            'image source path': '{}'.format(self.image_name)
+            'image source path': '{}'.format(self.image_name),
+            'archives': {}
         }
         try:
             self._data.update(
@@ -103,6 +105,8 @@ class KegImageDefinition:
         self.update_profiles(self.data.get('include-paths'))
         # expand unprofiled contents section (for single build)
         self.update_contents(self.data.get('include-paths'))
+        # generate overlay info
+        self.generate_overlay_info()
 
     def update_profiles(self, include_paths):
         if 'profiles' in self.data:
@@ -136,6 +140,47 @@ class KegImageDefinition:
                     contents
                 )
             self.data['contents'].update(contents)
+
+    def generate_overlay_info(self):
+        for profile_name, profile_data in self._data['profiles'].items():
+            if not profile_data.get('overlayfiles'):
+                continue
+            self._data['profiles'][profile_name]['archives'] = []
+
+            if profile_name == 'common':
+                default_archive_name = 'root'
+            else:
+                default_archive_name = profile_name
+                self._data['profiles'][profile_name]['archives'].append(
+                    '{}.{}'.format(default_archive_name, self._archive_ext)
+                )
+
+            for namespace, content in profile_data['overlayfiles'].items():
+                if content.get('archivename'):
+                    archive_name = content['archivename']
+                    self._data['profiles'][profile_name]['archives'].append(
+                        '{}.{}'.format(archive_name, self._archive_ext)
+                    )
+                else:
+                    archive_name = default_archive_name
+                for inc in content['include']:
+                    self.add_filelist_to_archive(archive_name, inc)
+
+    def add_filelist_to_archive(self, archive_name, overlay_module_name):
+        src_dir = None
+        for data_root in self._data_roots:
+            comp_dir = os.path.join(data_root, 'overlayfiles', overlay_module_name)
+            if os.path.exists(comp_dir):
+                src_dir = comp_dir
+        if not src_dir:
+            raise KegError('No such overlay files module "{}"'.format(overlay_module_name))
+        overlay_file_list = [
+            os.path.relpath(os.path.join(dp, f), src_dir)
+            for dp, dn, fn in os.walk(src_dir)
+            for f in fn
+        ]
+        # TOOD: check for file collisions
+        KegUtils.rmerge({ archive_name: { src_dir: overlay_file_list } }, self._data['archives'])
 
     def list_recipes(self):
         images_recipes = []
