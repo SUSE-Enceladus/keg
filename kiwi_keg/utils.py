@@ -48,6 +48,8 @@ class KegUtils:
             if isinstance(value, dict):
                 node = dest.setdefault(key, {})
                 KegUtils.rmerge(value, node)
+            elif value == None:
+                del dest[key]
             else:
                 dest[key] = value
         return dest
