@@ -102,19 +102,19 @@ class KegUtils:
         return script_lib
 
     @staticmethod
-    def get_all_files(base_dir):
+    def get_all_files(base_dir: str) -> List[str]:
         """
-        Return a generator containing all the files paths in the sub directories
-        of a given path.
+        Returns list of files starting at base_dir
+
         :param: str base_dir: directory path to get all the files from.
-        :return: generator with all the file paths inside that directory.
-        :rtype: generator
+        :return: List of file paths
+        :rtype: list
         """
-        for sub_dir in os.scandir(base_dir):
-            if sub_dir.is_dir():
-                yield from KegUtils.get_all_files(sub_dir.path)
-            elif sub_dir.is_file():
-                yield sub_dir.path
+        filelist = []
+        for root, dirs, files in os.walk(base_dir):
+            for name in files:
+                filelist.append(os.path.join(root, name))
+        return filelist
 
     @staticmethod
     def _get_source_files(roots, sub_dir, ext, include_paths):
