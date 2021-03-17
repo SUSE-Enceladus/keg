@@ -1,6 +1,7 @@
 profiles:
   common:
     include:
+      - base/jeos
       - defaults
 
   other:

@@ -69,7 +69,7 @@ class TestKegImageDefinition:
             ],
             'profiles': {
                 'common': {
-                    'include': ['defaults'],
+                    'include': ['base/jeos', 'defaults'],
                     'packages': {
                         'image': {
                             'jeos': [
@@ -139,7 +139,7 @@ class TestKegImageDefinition:
                     'description': 'Some Other Profile'
                 }
             },
-            'include-paths': ['base/jeos/leap']
+            'include-paths': ['leap15/1', 'leap15/2']
         }
 
     @patch('kiwi_keg.image_definition.datetime')
