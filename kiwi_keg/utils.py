@@ -21,10 +21,8 @@ from pathlib import Path
 from typing import (
     List, Dict, Generator
 )
-from collections import defaultdict
 import os
 import yaml
-import sys
 import logging
 
 log = logging.getLogger('keg')
@@ -75,10 +73,7 @@ class KegUtils:
         merged_tree: Dict[str, str] = {}
         for desc_file in desc_files:
             with open(desc_file, 'r') as f:
-                if 'overlayfiles' in desc_file:
-                    desc_yaml = KegUtils._parse_preserving_duplicates(f.read())
-                else:
-                    desc_yaml = yaml.safe_load(f.read())
+                desc_yaml = yaml.safe_load(f.read())
             KegUtils.rmerge(desc_yaml, merged_tree)
         return merged_tree
 
@@ -157,42 +152,3 @@ class KegUtils:
                         )
                         scanned_dirs.append(current_dir)
         return ver_src_files
-
-    @staticmethod
-    def _parse_preserving_duplicates(src):
-        # We deliberately define a fresh class inside the function,
-        # because add_constructor is a class method and we don't want to
-        # mutate pyyaml classes.
-        class PreserveDuplicatesLoader(yaml.loader.Loader):
-            pass
-
-        def map_constructor(loader, node, deep=False):
-            """
-            Walk the mapping, recording any duplicate keys.
-            """
-            mapping = defaultdict(dict)
-            for key_node, value_node in node.value:
-                key = loader.construct_object(key_node, deep=deep)
-                value = loader.construct_object(value_node, deep=deep)
-                # validate overlayname is present
-                if isinstance(value, list):
-                    # means there is no overlayname key, abort
-                    log.error(
-                        'Overlayfile contains an overlayname without name. '
-                        'Can not continue processing.'
-                    )
-                    sys.exit(0)
-                elif not isinstance(value, dict):
-                    overlayname = value.split(' - ')[0]
-                    overlay_paths = value.split(' - ')[1:]
-                    value = {}
-                    value[overlayname] = overlay_paths
-                mapping[key].update(value)
-
-            return mapping
-
-        PreserveDuplicatesLoader.add_constructor(
-            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-            map_constructor
-        )
-        return yaml.load(src, PreserveDuplicatesLoader)

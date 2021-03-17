@@ -1,0 +1,4 @@
+overlayfiles:
+  other-profile:
+    include:
+      - base

@@ -162,47 +162,59 @@ class KegGenerator:
         :param: bool tarball:
             Flag to create tarball
         """
+        has_overlays = False
         if 'profiles' in self.image_definition.data:
-            has_overlays = False
             for profile_name, profile_data in self.image_definition.data['profiles'].items():
                 if 'overlayfiles' in profile_data:
                     has_overlays = True
                     overlay_files_paths = profile_data['overlayfiles']
+                    tarball_data: dict = {}
                     for overlay_key, overlay_content in overlay_files_paths.items():
-                        for overlay_name, overlay_include in overlay_content.items():
-                            overlay_dest_dir = os.path.join(self.dest_dir, overlay_name)
-                            for overlay_path in overlay_include:
-                                overlay_full_path = os.path.join(
-                                    self.image_definition.overlay_root,
-                                    overlay_path
-                                )
-                                # loop all the file paths of overlay sub directory 'overlay_path'
-                                for name in KegUtils.get_all_files(overlay_full_path):
-                                    rel_path = os.path.relpath(name, overlay_full_path)
-                                    new_dir = os.path.dirname(rel_path)
-                                    if new_dir:
-                                        new_dir = os.path.join(overlay_dest_dir, new_dir)
-                                        os.makedirs(new_dir, exist_ok=True)
-                                    dest_file = os.path.join(overlay_dest_dir, rel_path)
-                                    shutil.copy(name, dest_file)
+                        overlay_dest_dir = ''
+                        if 'name' in overlay_content.keys():
+                            overlay_dest_dir = os.path.join(self.dest_dir, overlay_content.get('name'))
+                        elif profile_name == 'common':
+                            overlay_dest_dir = os.path.join(self.dest_dir, 'root')
+                        else:
+                            overlay_dest_dir = os.path.join(self.dest_dir, profile_name)
 
-                            if tar_overlays:
-                                overlay_tarball_name = '{}.tar.gz'.format(overlay_name)
-                                self._create_tarball(
-                                    os.path.join(self.dest_dir, overlay_tarball_name),
+                        overlay_name = os.path.basename(overlay_dest_dir)
+                        for overlay_path in overlay_content.get('include'):
+                            overlay_full_path = os.path.join(
+                                self.image_definition.overlay_root,
+                                overlay_path
+                            )
+                            # loop all the file paths of overlay sub directory 'overlay_path'
+                            for name in KegUtils.get_all_files(overlay_full_path):
+                                rel_path = os.path.relpath(name, overlay_full_path)
+                                new_dir = os.path.dirname(rel_path)
+                                if new_dir:
+                                    new_dir = os.path.join(overlay_dest_dir, new_dir)
+                                    os.makedirs(new_dir, exist_ok=True)
+                                dest_file = os.path.join(overlay_dest_dir, rel_path)
+                                shutil.copy(name, dest_file)
+
+                        tarball_data[overlay_name] = {}
+                        tarball_data[overlay_name] = overlay_dest_dir
+
+                    if tar_overlays:
+                        for overlay_name, overlay_dest_dir in tarball_data.items():
+                            overlay_tarball_name = '{}.tar.gz'.format(overlay_name)
+                            self._create_tarball(
+                                os.path.join(self.dest_dir, overlay_tarball_name),
+                                overlay_dest_dir
+                            )
+                            shutil.rmtree(overlay_dest_dir)
+                            if overlay_name != 'root':
+                                self._update_config_kiwi(
+                                    overlay_tarball_name,
                                     overlay_dest_dir
                                 )
-                                shutil.rmtree(overlay_dest_dir)
-                                if overlay_name != 'root':
-                                    self._update_config_kiwi(
-                                        overlay_tarball_name,
-                                        overlay_dest_dir
-                                    )
 
-            if tar_overlays and not has_overlays:
-                log.warn(
-                    'Attempt to create a tarball but not overlay paths were provided.'
-                )
+        if tar_overlays and not has_overlays:
+            log.warn(
+                'Attempt to create a tarball but not overlay paths were provided.'
+            )
 
     @staticmethod
     def _create_tarball(tarball_dir, dest_dir):

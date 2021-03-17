@@ -4,4 +4,6 @@ profiles:
       - defaults
 
   other:
-      description: Some Other Profile
+    description: Some Other Profile
+    include:
+      - foo_profile

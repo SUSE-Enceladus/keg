@@ -33,4 +33,10 @@
         <package name="patterns-base-minimal_base"/>
         <!-- End include from jeos -->
     </packages>
+    <packages type="image" profiles="other">
+        <!-- Begin include from jeos -->
+        <package name="grub2-x86_64-efi" arch="x86_64"/>
+        <package name="patterns-base-minimal_base"/>
+        <!-- End include from jeos -->
+    </packages>
 </image>

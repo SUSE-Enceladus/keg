@@ -6,8 +6,8 @@ from mock import (
 )
 from pytest import raises
 import shutil
-from kiwi_keg.generator import KegGenerator
 
+from kiwi_keg.generator import KegGenerator
 from kiwi_keg.image_definition import KegImageDefinition
 from kiwi_keg.exceptions import KegError
 
@@ -128,9 +128,12 @@ class TestKegGenerator:
             sub_root_etc = os.path.join(fake_root, 'etc')
             sub_root_usr = os.path.join(fake_root, 'usr')
 
+            fake_other = os.path.join(tmpdirname, 'other')
+
             os.mkdir(fake_root)
             os.mkdir(sub_root_etc)
             os.mkdir(sub_root_usr)
+            os.mkdir(fake_other)
 
             fake_leap_15_2 = os.path.join(tmpdirname, 'leap_15_2')
             sub_leap_15_2_etc = os.path.join(fake_leap_15_2, 'etc')
@@ -139,36 +142,51 @@ class TestKegGenerator:
             os.mkdir(fake_leap_15_2)
             os.mkdir(sub_leap_15_2_etc)
             os.mkdir(sub_leap_15_2_usr)
+
             new_kiwi = os.path.join(tmpdirname, 'config.kiwi')
             shutil.copyfile('../data/keg_output_overlay/config_before.kiwi', new_kiwi)
 
             generator = KegGenerator(self.image_definition, tmpdirname)
             generator.create_overlays(True)
             dest_file = {}
-            dest_file['base'] = os.path.join(tmpdirname, 'root', 'etc', 'hosts')
-            dest_file['csp_aws'] = os.path.join(tmpdirname, 'root', 'etc', 'resolv.conf')
-            dest_file['product'] = {
+            dest_file['root_base'] = os.path.join(tmpdirname, 'root', 'etc', 'hosts')
+            dest_file['root_csp_aws'] = os.path.join(tmpdirname, 'root', 'etc', 'resolv.conf')
+            dest_file['named_product'] = {
                 'etc': os.path.join(tmpdirname, 'leap_15_2', 'etc', 'motd'),
                 'usr': os.path.join(tmpdirname, 'leap_15_2', 'usr', 'lib', 'systemd', 'system', 'foo.service')
             }
+            dest_file['other'] = os.path.join(tmpdirname, 'other', 'etc', 'hosts')
+            dest_file['other_aws'] = os.path.join(tmpdirname, 'other', 'etc', 'resolv.conf')
 
             assert mock_shutil_copy.call_args_list == [
-                call('../data/data/overlayfiles/base/etc/hosts', dest_file.get('base')),
-                call('../data/data/overlayfiles/csp/aws/etc/resolv.conf', dest_file.get('csp_aws')),
+                call('../data/data/overlayfiles/base/etc/hosts', dest_file.get('root_base')),
+                call('../data/data/overlayfiles/csp/aws/etc/resolv.conf', dest_file.get('root_csp_aws')),
                 call(
                     '../data/data/overlayfiles/products/leap/15.2/etc/motd',
-                    dest_file.get('product').get('etc')
+                    dest_file.get('named_product').get('etc')
                 ),
                 call(
                     '../data/data/overlayfiles/products/leap/15.2/usr/lib/systemd/system/foo.service',
-                    dest_file.get('product').get('usr')
-                )
+                    dest_file.get('named_product').get('usr')
+                ),
+                call('../data/data/overlayfiles/base/etc/hosts', dest_file.get('other')),
+                call('../data/data/overlayfiles/csp/aws/etc/resolv.conf', dest_file.get('other_aws')),
+                call(
+                    '../data/data/overlayfiles/products/leap/15.2/etc/motd',
+                    dest_file.get('named_product').get('etc')
+                ),
+                call(
+                    '../data/data/overlayfiles/products/leap/15.2/usr/lib/systemd/system/foo.service',
+                    dest_file.get('named_product').get('usr')
+                ),
+                call('../data/data/overlayfiles/base/etc/hosts', dest_file.get('other')),
             ]
 
-            dest_base_dir = dest_file.get('base')
-            dest_csp_dir = dest_file.get('csp_aws')
-            dest_prod_dir_etc = dest_file.get('product').get('etc')
-            dest_prod_dir_usr = dest_file.get('product').get('usr')
+            dest_base_dir = dest_file.get('root_base')
+            dest_csp_dir = dest_file.get('root_csp_aws')
+            dest_prod_dir_etc = dest_file.get('named_product').get('etc')
+            dest_prod_dir_usr = dest_file.get('named_product').get('usr')
+            dest_other_dir = dest_file.get('other')
 
             assert mock_os_makedirs.call_args_list == [
                 call(
@@ -186,13 +204,41 @@ class TestKegGenerator:
                 call(
                     os.path.dirname(dest_prod_dir_usr),
                     exist_ok=True
+                ),
+                call(
+                    os.path.dirname(dest_other_dir),
+                    exist_ok=True
+                ),
+                call(
+                    os.path.dirname(dest_other_dir),
+                    exist_ok=True
+                ),
+                call(
+                    os.path.dirname(dest_prod_dir_etc),
+                    exist_ok=True
+                ),
+                call(
+                    os.path.dirname(dest_prod_dir_usr),
+                    exist_ok=True
+                ),
+                call(
+                    os.path.dirname(dest_other_dir),
+                    exist_ok=True
                 )
             ]
             root_tarball_dir = os.path.join(tmpdirname, 'root.tar.gz')
             leap_tarball_dir = os.path.join(tmpdirname, 'leap_15_2.tar.gz')
+            other_tarball_dir = os.path.join(tmpdirname, 'other.tar.gz')
+
             assert mock_tarfile_open.call_args_list == [
                 call(
                     root_tarball_dir, "w:gz"
+                ),
+                call(
+                    leap_tarball_dir, "w:gz"
+                ),
+                call(
+                    other_tarball_dir, "w:gz"
                 ),
                 call(
                     leap_tarball_dir, "w:gz"
@@ -211,6 +257,12 @@ class TestKegGenerator:
                 ),
                 call(
                     sub_leap_15_2_usr, arcname='usr'
+                ),
+                call(
+                    sub_leap_15_2_etc, arcname='etc'
+                ),
+                call(
+                    sub_leap_15_2_usr, arcname='usr'
                 )
             ]
 
@@ -221,19 +273,9 @@ class TestKegGenerator:
     @patch('shutil.copy')
     def test_create_no_overlays_configuration_provided(self, mock_shutil_copy):
         image_definition = KegImageDefinition(
-            image_name='leap/15.1', recipes_root='../data'
+            image_name='leap_no_overlays', recipes_root='../data'
         )
         with tempfile.TemporaryDirectory() as tmpdirname:
             generator = KegGenerator(image_definition, tmpdirname)
             generator.create_overlays(True)
             assert not mock_shutil_copy.called
-
-    @patch('sys.exit')
-    def test_create_no_overlayname_provided(self, mock_sys_exit):
-        image_definition = KegImageDefinition(
-            image_name='leap/15', recipes_root='../data'
-        )
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            generator = KegGenerator(image_definition, tmpdirname)
-            assert mock_sys_exit.called
-            generator.create_overlays(True)
