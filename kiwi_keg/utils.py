@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
-
+import logging
 from glob import glob
 from pathlib import Path
 from typing import (
@@ -23,6 +23,8 @@ from typing import (
 )
 import os
 import yaml
+
+log = logging.getLogger('keg')
 
 
 class KegUtils:
@@ -69,6 +71,7 @@ class KegUtils:
         )
         merged_tree: Dict[str, str] = {}
         for desc_file in desc_files:
+            log.debug(f'Reading: {desc_file}')
             with open(desc_file, 'r') as f:
                 desc_yaml = yaml.safe_load(f.read())
             KegUtils.rmerge(desc_yaml, merged_tree)
