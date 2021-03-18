@@ -3,6 +3,8 @@ config:
     JeOS-config:
       - foo
       - name
+    JeOS-config-oldfeature:
+      - onlyinleap15.1
     files:
       JeOS-files:
         - path: /etc/sysconfig/console

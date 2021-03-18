@@ -1,0 +1,3 @@
+config:
+  config_script:
+    JeOS-config-oldfeature: null
