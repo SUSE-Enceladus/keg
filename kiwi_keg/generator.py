@@ -205,11 +205,10 @@ class KegGenerator:
                                 overlay_dest_dir
                             )
                             shutil.rmtree(overlay_dest_dir)
-                            if overlay_name != 'root':
-                                self._update_config_kiwi(
-                                    overlay_tarball_name,
-                                    overlay_dest_dir
-                                )
+                            self._update_config_kiwi(
+                                overlay_tarball_name,
+                                overlay_dest_dir
+                            )
 
         if tar_overlays and not has_overlays:
             log.warn(
@@ -226,22 +225,23 @@ class KegGenerator:
                 )
 
     def _update_config_kiwi(self, archive_name, dest_dir):
-        if os.path.exists(dest_dir) and os.path.exists(self.kiwi_description):
-            etree_parser = etree.XMLParser(remove_blank_text=True)
-            kiwi_xml = etree.parse(self.kiwi_description, parser=etree_parser)
-            kiwi_root = kiwi_xml.getroot()
+        if 'root' != archive_name.partition('.')[0]:
+            if os.path.exists(dest_dir) and os.path.exists(self.kiwi_description):
+                etree_parser = etree.XMLParser(remove_blank_text=True)
+                kiwi_xml = etree.parse(self.kiwi_description, parser=etree_parser)
+                kiwi_root = kiwi_xml.getroot()
 
-            image_element = kiwi_root.find('.//packages[@type="image"]')
+                image_element = kiwi_root.find('.//packages[@type="image"]')
 
-            archive_element = etree.SubElement(image_element, 'archive')
-            archive_element.attrib['name'] = archive_name
-            tree = etree.ElementTree(kiwi_root)
-            tree.write(
-                self.kiwi_description,
-                encoding="utf-8",
-                xml_declaration=True,
-                pretty_print=True
-            )
+                archive_element = etree.SubElement(image_element, 'archive')
+                archive_element.attrib['name'] = archive_name
+                tree = etree.ElementTree(kiwi_root)
+                tree.write(
+                    self.kiwi_description,
+                    encoding="utf-8",
+                    xml_declaration=True,
+                    pretty_print=True
+                )
 
     def _has_script_data(self, script_key):
         profiles = self.image_definition.data.get('profiles')
