@@ -147,7 +147,7 @@ class TestKegGenerator:
             shutil.copyfile('../data/keg_output_overlay/config_before.kiwi', new_kiwi)
 
             generator = KegGenerator(self.image_definition, tmpdirname)
-            generator.create_overlays(True)
+            generator.create_overlays(False)
             dest_file = {}
             dest_file['root_base'] = os.path.join(tmpdirname, 'root', 'etc', 'hosts')
             dest_file['root_csp_aws'] = os.path.join(tmpdirname, 'root', 'etc', 'resolv.conf')
@@ -277,5 +277,5 @@ class TestKegGenerator:
         )
         with tempfile.TemporaryDirectory() as tmpdirname:
             generator = KegGenerator(image_definition, tmpdirname)
-            generator.create_overlays(True)
+            generator.create_overlays(False)
             assert not mock_shutil_copy.called

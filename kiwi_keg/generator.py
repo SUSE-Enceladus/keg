@@ -18,6 +18,7 @@
 import logging
 from jinja2 import Environment, FileSystemLoader
 from lxml import etree
+from typing import Optional
 import os
 import shutil
 import tarfile
@@ -49,20 +50,20 @@ class KegGenerator:
                     target=repr(dest_dir)
                 )
             )
-        self.kiwi_description = os.path.join(
+        self.kiwi_description: str = os.path.join(
             dest_dir, 'config.kiwi'
         )
-        self.kiwi_config_script = os.path.join(
+        self.kiwi_config_script: str = os.path.join(
             dest_dir, 'config.sh'
         )
-        self.kiwi_images_script = os.path.join(
+        self.kiwi_images_script: str = os.path.join(
             dest_dir, 'images.sh'
         )
-        self.image_definition = image_definition
+        self.image_definition: KegImageDefinition = image_definition
         self.description_schemas = os.path.join(
             image_definition.recipes_root, 'schemas'
         )
-        self.dest_dir = dest_dir
+        self.dest_dir: str = dest_dir
         self.env = Environment(
             loader=FileSystemLoader(self.description_schemas)
         )
@@ -70,7 +71,7 @@ class KegGenerator:
 
         self.image_definition.populate()
 
-        self.image_schema = self.image_definition.data.get('schema')
+        self.image_schema: Optional[str] = self.image_definition.data.get('schema')
         if not self.image_schema:
             raise KegError(
                 'No KIWI schema configured in image definition'
@@ -155,7 +156,7 @@ class KegGenerator:
             with open(self.kiwi_images_script, 'w') as custom_script:
                 custom_script.write(images_sh)
 
-    def create_overlays(self, tar_overlays: bool = False):
+    def create_overlays(self, disable_tar_overlays: bool = False) -> None:
         """
         Copy all the files and the overlay tree structure from overlays section under root inside destination directory.
 
@@ -169,7 +170,7 @@ class KegGenerator:
                     has_overlays = True
                     overlay_files_paths = profile_data['overlayfiles']
                     tarball_data: dict = {}
-                    for overlay_key, overlay_content in overlay_files_paths.items():
+                    for _, overlay_content in overlay_files_paths.items():
                         overlay_dest_dir = ''
                         if 'name' in overlay_content.keys():
                             overlay_dest_dir = os.path.join(self.dest_dir, overlay_content.get('name'))
@@ -197,7 +198,7 @@ class KegGenerator:
                         tarball_data[overlay_name] = {}
                         tarball_data[overlay_name] = overlay_dest_dir
 
-                    if tar_overlays:
+                    if not disable_tar_overlays:
                         for overlay_name, overlay_dest_dir in tarball_data.items():
                             overlay_tarball_name = '{}.tar.gz'.format(overlay_name)
                             self._create_tarball(
@@ -210,7 +211,7 @@ class KegGenerator:
                                 overlay_dest_dir
                             )
 
-        if tar_overlays and not has_overlays:
+        if not disable_tar_overlays and not has_overlays:
             log.warn(
                 'Attempt to create a tarball but not overlay paths were provided.'
             )
