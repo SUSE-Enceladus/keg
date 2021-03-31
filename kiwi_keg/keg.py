@@ -19,7 +19,7 @@
 
 Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
        keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
-           [--format-xml|--format-yaml] [--disable-tar-overlays]
+           [--format-xml|--format-yaml] [--disable-root-tar]
            [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
            SOURCE
        keg -h | --help
@@ -38,8 +38,8 @@ Options:
     -d DEST_DIR, --dest-dir=DEST_DIR
         Destination directory for generated description, default cwd
 
-    --disable-tar-overlays
-        Option to disable the creation of a tarball <name>.tar.gz in destination directory.
+    --disable-root-tar
+        Option to disable the creation of a tarball root.tar.gz in destination directory.
         If present, an overlay tree would be created instead.
         [default: false]
 
@@ -114,7 +114,7 @@ def main():
             override=args['--force']
         )
         image_generator.create_overlays(
-            tar_overlays=args['--disable-tar-overlays']
+            disable_root_tar=args['--disable-root-tar']
         )
     except KegError as issue:
         # known exception, log information and exit

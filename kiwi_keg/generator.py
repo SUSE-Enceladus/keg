@@ -156,7 +156,7 @@ class KegGenerator:
             with open(self.kiwi_images_script, 'w') as custom_script:
                 custom_script.write(images_sh)
 
-    def create_overlays(self, disable_tar_overlays: bool = False) -> None:
+    def create_overlays(self, disable_root_tar: bool = False) -> None:
         """
         Copy all the files and the overlay tree structure from overlays section under root inside destination directory.
 
@@ -198,32 +198,35 @@ class KegGenerator:
                         tarball_data[overlay_name] = {}
                         tarball_data[overlay_name] = overlay_dest_dir
 
-                    if not disable_tar_overlays:
-                        for overlay_name, overlay_dest_dir in tarball_data.items():
-                            overlay_tarball_name = '{}.tar.gz'.format(overlay_name)
-                            self._create_tarball(
-                                os.path.join(self.dest_dir, overlay_tarball_name),
-                                overlay_dest_dir
-                            )
+                    for overlay_name, overlay_dest_dir in tarball_data.items():
+                        self._create_tarball(
+                            disable_root_tar,
+                            overlay_name,
+                            overlay_dest_dir
+                        )
+                        if (overlay_name == 'root' and not disable_root_tar) or overlay_name != 'root':
                             shutil.rmtree(overlay_dest_dir)
-                            self._update_config_kiwi(
-                                overlay_tarball_name,
-                                overlay_dest_dir
-                            )
+                        self._update_config_kiwi(
+                            '{}.tar.gz'.format(overlay_name),
+                            overlay_dest_dir
+                        )
 
-        if not disable_tar_overlays and not has_overlays:
+        if not has_overlays:
             log.warn(
-                'Attempt to create a tarball but not overlay paths were provided.'
+                'Attempt to create a tarball or an overlay tree but '
+                'not overlay paths were provided.'
             )
 
-    @staticmethod
-    def _create_tarball(tarball_dir, dest_dir):
-        with tarfile.open(tarball_dir, 'w:gz') as tar:
-            for overlay_dir in os.scandir(dest_dir):
-                tar.add(
-                    overlay_dir.path,
-                    arcname=overlay_dir.name
-                )
+    def _create_tarball(self, disable_root_tar, overlay_name, dest_dir):
+        overlay_tarball_name = '{}.tar.gz'.format(overlay_name)
+        tarball_dir = os.path.join(self.dest_dir, overlay_tarball_name)
+        if (overlay_name == 'root' and not disable_root_tar) or overlay_name != 'root':
+            with tarfile.open(tarball_dir, 'w:gz') as tar:
+                for overlay_dir in os.scandir(dest_dir):
+                    tar.add(
+                        overlay_dir.path,
+                        arcname=overlay_dir.name
+                    )
 
     def _update_config_kiwi(self, archive_name, dest_dir):
         if 'root' != archive_name.partition('.')[0]:
