@@ -124,6 +124,7 @@ class TestKegGenerator:
         mock_datetime.now.return_value = utc_now
 
         with tempfile.TemporaryDirectory() as tmpdirname:
+            shutil.copyfile('../data/keg_output/config.kiwi', tmpdirname + '/config.kiwi')
             fake_root = os.path.join(tmpdirname, 'root')
             sub_root_etc = os.path.join(fake_root, 'etc')
             sub_root_usr = os.path.join(fake_root, 'usr')
@@ -143,9 +144,6 @@ class TestKegGenerator:
             os.mkdir(sub_leap_15_2_etc)
             os.mkdir(sub_leap_15_2_usr)
 
-            new_kiwi = os.path.join(tmpdirname, 'config.kiwi')
-            shutil.copyfile('../data/keg_output_overlay/config_before.kiwi', new_kiwi)
-
             generator = KegGenerator(self.image_definition, tmpdirname)
             generator.create_overlays(False)
             dest_file = {}
@@ -161,16 +159,6 @@ class TestKegGenerator:
             assert mock_shutil_copy.call_args_list == [
                 call('../data/data/overlayfiles/base/etc/hosts', dest_file.get('root_base')),
                 call('../data/data/overlayfiles/csp/aws/etc/resolv.conf', dest_file.get('root_csp_aws')),
-                call(
-                    '../data/data/overlayfiles/products/leap/15.2/etc/motd',
-                    dest_file.get('named_product').get('etc')
-                ),
-                call(
-                    '../data/data/overlayfiles/products/leap/15.2/usr/lib/systemd/system/foo.service',
-                    dest_file.get('named_product').get('usr')
-                ),
-                call('../data/data/overlayfiles/base/etc/hosts', dest_file.get('other')),
-                call('../data/data/overlayfiles/csp/aws/etc/resolv.conf', dest_file.get('other_aws')),
                 call(
                     '../data/data/overlayfiles/products/leap/15.2/etc/motd',
                     dest_file.get('named_product').get('etc')
@@ -208,22 +196,6 @@ class TestKegGenerator:
                 call(
                     os.path.dirname(dest_other_dir),
                     exist_ok=True
-                ),
-                call(
-                    os.path.dirname(dest_other_dir),
-                    exist_ok=True
-                ),
-                call(
-                    os.path.dirname(dest_prod_dir_etc),
-                    exist_ok=True
-                ),
-                call(
-                    os.path.dirname(dest_prod_dir_usr),
-                    exist_ok=True
-                ),
-                call(
-                    os.path.dirname(dest_other_dir),
-                    exist_ok=True
                 )
             ]
             root_tarball_dir = os.path.join(tmpdirname, 'root.tar.gz')
@@ -239,9 +211,6 @@ class TestKegGenerator:
                 ),
                 call(
                     other_tarball_dir, "w:gz"
-                ),
-                call(
-                    leap_tarball_dir, "w:gz"
                 )
             ]
 
@@ -251,12 +220,6 @@ class TestKegGenerator:
                 ),
                 call(
                     sub_root_usr, arcname='usr'
-                ),
-                call(
-                    sub_leap_15_2_etc, arcname='etc'
-                ),
-                call(
-                    sub_leap_15_2_usr, arcname='usr'
                 ),
                 call(
                     sub_leap_15_2_etc, arcname='etc'

@@ -68,7 +68,7 @@ class TestKegImageDefinition:
             ],
             'profiles': {
                 'common': {
-                    'include': ['defaults'],
+                    'include': ['base/jeos', 'defaults'],
                     'packages': {
                         'image': {
                             'jeos': [
@@ -149,53 +149,12 @@ class TestKegImageDefinition:
                 'other': {
                     'description': 'Some Other Profile',
                     'include': ['foo_profile'],
-                    'packages': {
-                        'image': {
-                            'jeos': [
-                                {'name': 'grub2-x86_64-efi', 'arch': 'x86_64'},
-                                'patterns-base-minimal_base',
-                            ]
-                        }
-                    },
-                    'config': {
-                        'config_script': {
-                            'JeOS-config': ['foo', 'name'],
-                            'files': {
-                                'JeOS-files': [
-                                    {
-                                        'path': '/etc/sysconfig/console',
-                                        'append': True,
-                                        'content': 'CONSOLE_ENCODING="UTF-8"',
-                                    }
-                                ]
-                            },
-                            'services': {
-                                'JeOS-services': ['sshd', {'name': 'kbd', 'enable': False}]
-                            },
-                            'sysconfig': {
-                                'JeOS-sysconfig': [
-                                    {
-                                        'file': '/etc/sysconfig/language',
-                                        'name': 'INSTALLED_LANGUAGES',
-                                        'value': '',
-                                    }
-                                ]
-                            },
-                        },
-                        'image_script': {'JeOS-image': ['name']},
-                    },
                     'overlayfiles': {
-                        'azure-common': {'include': ['base']},
-                        'azure-sle15-sp3': {'include': ['csp/aws']},
-                        'azure-extra-stuff': {
-                            'name': 'leap_15_2',
-                            'include': ['products/leap/15.2'],
-                        },
                         'other-profile': {'include': ['base']},
-                    },
+                    }
                 }
             },
-            'include-paths': ['base/jeos/leap']
+            'include-paths': ['leap15/1', 'leap15/2']
         }
 
     @patch('kiwi_keg.image_definition.datetime')

@@ -31,6 +31,5 @@
     <!-- End include from jeos -->
     <archive name="leap_15_2.tar.gz"/>
     <archive name="other.tar.gz"/>
-    <archive name="leap_15_2.tar.gz"/>
   </packages>
 </image>

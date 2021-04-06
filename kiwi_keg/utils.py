@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
-
+import logging
 from glob import glob
 from pathlib import Path
 from typing import (
@@ -23,7 +23,8 @@ from typing import (
 )
 import os
 import yaml
-import logging
+
+log = logging.getLogger('keg')
 
 log = logging.getLogger('keg')
 
@@ -51,6 +52,8 @@ class KegUtils:
             if isinstance(value, dict):
                 node = dest.setdefault(key, {})
                 KegUtils.rmerge(value, node)
+            elif value is None:
+                del dest[key]
             else:
                 dest[key] = value
         return dest
@@ -72,6 +75,7 @@ class KegUtils:
         )
         merged_tree: Dict[str, str] = {}
         for desc_file in desc_files:
+            log.debug(f'Reading: {desc_file}')
             with open(desc_file, 'r') as f:
                 desc_yaml = yaml.safe_load(f.read())
             KegUtils.rmerge(desc_yaml, merged_tree)
@@ -85,12 +89,16 @@ class KegUtils:
         Return a dict containing the name of the scripts and its content for
         a given list of root directories and a sub directory
 
-        :param: str sub_dir: subdirectory path to load the scripts from
-        :param: list roots: list of root directory paths to load the scripts from
-        :param: list include_paths: list of paths to be included
+        :param: str sub_dir:
+            subdirectory path to load the scripts from
+        :param: list roots:
+            list of root directory paths to load the scripts from
+        :param: list include_paths:
+            list of paths to be included
 
-        :return: dict with the name of the scripts (without the ext) and their
-        content
+        :return:
+            dict with the name of the scripts (without the ext)
+            and their content
 
         :rtype: dict
         """

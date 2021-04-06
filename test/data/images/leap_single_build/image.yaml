@@ -1,6 +1,7 @@
 schema: vm_singlebuild
 include-paths:
-  - jeos/leap
+  - leap15/1
+  - leap15/2
 overlay-include-paths:
   - base
 image:

@@ -20,7 +20,7 @@ class TestUtils:
                     'home': '/root', 'password': 'foo'
                 }
             ],
-            'include-paths': ['jeos/leap'],
+            'include-paths': ['leap15/1', 'leap15/2'],
             'overlay-include-paths': ['base'],
             'contents': {
                 'include': ['base/jeos']
