@@ -144,14 +144,12 @@ class KegImageDefinition:
 
     def list_recipes(self):
         images_recipes = []
-        images_files = KegUtils.get_all_files(self.image_root)
-
-        for image_file in images_files:
+        for image_file in KegUtils.get_all_files(self.image_root):
             if os.path.basename(image_file) == 'image.yaml':
                 rel_path = os.path.relpath(
                     os.path.dirname(image_file),
                     self.image_root
                 )
                 images_recipes.append(rel_path)
-        images_recipes.sort()
-        return images_recipes
+
+        return sorted(images_recipes)
