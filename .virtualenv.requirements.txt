@@ -13,3 +13,6 @@ PyYAML
 
 # markup support
 anymarkup
+
+#xml parsing
+lxml

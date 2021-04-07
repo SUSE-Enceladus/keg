@@ -47,6 +47,9 @@ class TestKeg:
             image_generator.create_custom_scripts.assert_called_once_with(
                 override=False
             )
+            image_generator.create_overlays.assert_called_once_with(
+                disable_root_tar=False
+            )
 
     @patch('kiwi_keg.keg.KegImageDefinition')
     @patch('kiwi_keg.keg.KegGenerator')

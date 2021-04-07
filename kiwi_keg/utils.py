@@ -26,6 +26,8 @@ import yaml
 
 log = logging.getLogger('keg')
 
+log = logging.getLogger('keg')
+
 
 class KegUtils:
     """
@@ -114,10 +116,10 @@ class KegUtils:
     def get_all_files(base_dir: str) -> Generator[str, None, None]:
         """
         Return a generator containing all the files paths in the sub directories
-        of a given directory, starting at base_dir.
-
+        of a given path.
         :param: str base_dir: directory path to get all the files from.
-        :return: Generator of file paths
+        :return: generator with all the file paths inside that directory.
+
         :rtype: generator
         """
         for sub_dir in os.scandir(base_dir):

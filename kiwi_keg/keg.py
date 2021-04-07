@@ -16,9 +16,10 @@
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
 """
+
 Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
        keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
-           [--format-xml|--format-yaml]
+           [--format-xml|--format-yaml] [--disable-root-tar]
            [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
            SOURCE
        keg -h | --help
@@ -37,7 +38,12 @@ Options:
     -d DEST_DIR, --dest-dir=DEST_DIR
         Destination directory for generated description, default cwd
 
-    -l, --list-recipes
+    --disable-root-tar
+        Option to disable the creation of a tarball root.tar.gz in destination directory.
+        If present, an overlay tree would be created instead.
+        [default: false]
+
+    -l. --list-recipes
         List available images that can be created with the current recipes
 
     -f, --force
@@ -106,6 +112,9 @@ def main():
             image_generator.validate_kiwi_description()
         image_generator.create_custom_scripts(
             override=args['--force']
+        )
+        image_generator.create_overlays(
+            disable_root_tar=args['--disable-root-tar']
         )
     except KegError as issue:
         # known exception, log information and exit

@@ -44,6 +44,7 @@ class KegImageDefinition:
         self._image_name = image_name
         self._image_root = os.path.join(recipes_root, 'images')
         self._data_roots = [os.path.join(recipes_root, 'data')]
+        self._overlay_root = os.path.join(recipes_root, 'data', 'overlayfiles')
         if data_roots:
             self._data_roots += data_roots
         if not os.path.isdir(recipes_root):
@@ -77,6 +78,10 @@ class KegImageDefinition:
     def image_root(self) -> str:
         return self._image_root
 
+    @property
+    def overlay_root(self) -> str:
+        return self._overlay_root
+
     def populate(self) -> None:
         """
         Parse recipes data and construct wanted image definition
@@ -89,9 +94,9 @@ class KegImageDefinition:
             'image source path': '{}'.format(self.image_name)
         }
         try:
-            self._data.update(
+            self.data.update(
                 KegUtils.get_recipes(
-                    [self.image_root], self._image_name
+                    [self.image_root], self.image_name
                 )
             )
         except Exception as issue:
@@ -128,7 +133,7 @@ class KegImageDefinition:
             contents: Dict = {}
             for inc in self.data['contents'].get('include'):
                 KegUtils.rmerge(
-                    KegUtils().get_recipes(
+                    KegUtils.get_recipes(
                         self.data_roots,
                         inc,
                         include_paths
@@ -146,4 +151,5 @@ class KegImageDefinition:
                     self.image_root
                 )
                 images_recipes.append(rel_path)
+
         return sorted(images_recipes)

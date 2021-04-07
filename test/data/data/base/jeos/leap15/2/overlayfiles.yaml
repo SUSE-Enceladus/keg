@@ -1,0 +1,11 @@
+overlayfiles:
+  azure-common:
+    include:
+      - base
+  azure-sle15-sp3:
+    include:
+      - csp/aws
+  azure-extra-stuff:
+    name: leap_15_2
+    include:
+      - products/leap/15.2

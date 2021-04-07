@@ -1,6 +1,6 @@
 image:
   '@name': KEG
-  '@schemaversion': '7.3'
+  '@schemaversion': '7.4'
   description:
     '@type': system
     author: Public Cloud Team

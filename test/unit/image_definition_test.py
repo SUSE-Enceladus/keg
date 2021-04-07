@@ -45,7 +45,6 @@ class TestKegImageDefinition:
 
         self.keg_definition.populate()
 
-        print(self.keg_definition.data)
         assert self.keg_definition.data == {
             'generator': 'keg {0}'.format(version.__version__),
             'timestamp': 'time-string',
@@ -115,6 +114,18 @@ class TestKegImageDefinition:
                             'JeOS-image': ['name']
                         }
                     },
+                    'overlayfiles': {
+                        'azure-common': {
+                            'include': ['base']
+                        },
+                        'azure-sle15-sp3': {
+                            'include': ['csp/aws']
+                        },
+                        'azure-extra-stuff': {
+                            'name': 'leap_15_2',
+                            'include': ['products/leap/15.2']
+                        }
+                    },
                     'profile': {
                         'bootloader': {
                             'name': 'grub2',
@@ -136,7 +147,11 @@ class TestKegImageDefinition:
                     }
                 },
                 'other': {
-                    'description': 'Some Other Profile'
+                    'description': 'Some Other Profile',
+                    'include': ['foo_profile'],
+                    'overlayfiles': {
+                        'other-profile': {'include': ['base']},
+                    }
                 }
             },
             'include-paths': ['leap15/1', 'leap15/2']
@@ -157,6 +172,9 @@ class TestKegImageDefinition:
 
     def test_list_recipes(self):
         assert self.keg_definition.list_recipes() == [
+            'leap/15',
+            'leap/15.1',
             'leap/15.2',
+            'leap_no_overlays',
             'leap_single_build'
         ]
