@@ -149,6 +149,11 @@ class TestKegImageDefinition:
                 'other': {
                     'description': 'Some Other Profile',
                     'include': ['foo_profile'],
+                    'packages': {
+                        'foo-profile-package': {
+                            'sles': [{'name': 'some-foo', 'arch': 'x86_64'}]
+                        }
+                    },
                     'overlayfiles': {
                         'other-profile': {'include': ['base']},
                     }

@@ -1,0 +1,5 @@
+packages:
+  foo-profile-package:
+    sles:
+      - name: some-foo
+        arch: x86_64

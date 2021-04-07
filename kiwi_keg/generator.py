@@ -17,7 +17,6 @@
 #
 import logging
 from jinja2 import Environment, FileSystemLoader
-from lxml import etree
 from typing import Optional
 import os
 import shutil
@@ -206,10 +205,6 @@ class KegGenerator:
                         )
                         if (overlay_name == 'root' and not disable_root_tar) or overlay_name != 'root':
                             shutil.rmtree(overlay_dest_dir)
-                        self._update_config_kiwi(
-                            '{}.tar.gz'.format(overlay_name),
-                            overlay_dest_dir
-                        )
 
         if not has_overlays:
             log.warn(
@@ -227,25 +222,6 @@ class KegGenerator:
                         overlay_dir.path,
                         arcname=overlay_dir.name
                     )
-
-    def _update_config_kiwi(self, archive_name, dest_dir):
-        if 'root' != archive_name.partition('.')[0]:
-            if os.path.exists(dest_dir) and os.path.exists(self.kiwi_description):
-                etree_parser = etree.XMLParser(remove_blank_text=True)
-                kiwi_xml = etree.parse(self.kiwi_description, parser=etree_parser)
-                kiwi_root = kiwi_xml.getroot()
-
-                image_element = kiwi_root.find('.//packages[@type="image"]')
-
-                archive_element = etree.SubElement(image_element, 'archive')
-                archive_element.attrib['name'] = archive_name
-                tree = etree.ElementTree(kiwi_root)
-                tree.write(
-                    self.kiwi_description,
-                    encoding="utf-8",
-                    xml_declaration=True,
-                    pretty_print=True
-                )
 
     def _has_script_data(self, script_key):
         profiles = self.image_definition.data.get('profiles')
