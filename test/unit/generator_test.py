@@ -213,22 +213,20 @@ class TestKegGenerator:
                     other_tarball_dir, "w:gz"
                 )
             ]
-
-            assert mock_add.call_args_list == [
-                call(
-                    sub_root_etc, arcname='etc'
-                ),
-                call(
-                    sub_root_usr, arcname='usr'
-                ),
+            assert sorted(mock_add.call_args_list) == [
                 call(
                     sub_leap_15_2_etc, arcname='etc'
                 ),
                 call(
                     sub_leap_15_2_usr, arcname='usr'
+                ),
+                call(
+                    sub_root_etc, arcname='etc'
+                ),
+                call(
+                    sub_root_usr, arcname='usr'
                 )
             ]
-
             assert filecmp.cmp(
                 '../data/keg_output_overlay/config.kiwi', tmpdirname + '/config.kiwi'
             ) is True
