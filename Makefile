@@ -12,6 +12,7 @@ version := $(shell \
 )
 
 install_package_docs:
+	install -d -m 755 ${buildroot}${docdir}/python-kiwi_keg
 	install -m 644 LICENSE \
 		${buildroot}${docdir}/python-kiwi_keg/LICENSE
 	install -m 644 README.rst \

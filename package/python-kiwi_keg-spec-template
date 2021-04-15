@@ -96,11 +96,15 @@ python3 setup.py build
 # Install Python 3 version
 python3 setup.py install --prefix=%{_prefix} --root=%{buildroot} %{?is_deb:--install-layout=deb}
 
-# Install man pages and package documentation
+# Install man pages
 make buildroot=%{buildroot}/ docdir=%{_defaultdocdir}/ install
+
+# Install LICENSE and README
+make buildroot=%{buildroot}/ docdir=%{_defaultdocdir}/ install_package_docs
 
 %files -n python%{python3_pkgversion}-kiwi_keg
 %dir %{_defaultdocdir}/python-kiwi_keg
+%{_bindir}/keg
 %{python3_sitelib}/kiwi_keg*
 %{_defaultdocdir}/python-kiwi_keg/LICENSE
 %{_defaultdocdir}/python-kiwi_keg/README
