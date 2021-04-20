@@ -2,11 +2,14 @@
       href="file:/usr/share/xml/docbook/schema/rng/5.1/docbookxi.rnc"
       type="application/relax-ng-compact-syntax"
      ?>
-<book xmlns="http://docbook.org/ns/docbook" xml:lang="en" version="5.1" xml:id="keg-documentation">
-  <title>Keg Documentation</title>
+<book xmlns="http://docbook.org/ns/docbook" xml:lang="en" version="5.1" xml:id="keg-reference-guide">
+  <title>Keg Reference Guide</title>
   <info/>
   <preface>
     <title>Preface</title>
+    <note>
+      <para>Template-Based KIWI Description Builder</para>
+    </note>
     <itemizedlist>
       <listitem>
         <para>

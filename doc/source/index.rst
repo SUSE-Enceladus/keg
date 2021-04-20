@@ -1,7 +1,10 @@
 .. keg documentation master file
 
-Keg Documentation
-=================
+Keg Reference Guide
+===================
+
+.. note::
+   Template-Based KIWI Description Builder
 
 .. toctree::
    :maxdepth: 1
