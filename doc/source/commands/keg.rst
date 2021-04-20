@@ -25,7 +25,7 @@ for the `KIWI <https://osinside.github.io/kiwi/>`__ appliance builder.
 While `keg` can be used to manage a single image definition the tool provides
 no considerable advantage in such a use case. The primary use case for keg
 are situations where many image descriptions must be managed and the
-image descriptions have considerable over lap with respect to content
+image descriptions have considerable overlap with respect to content
 and setup.
 
 The key component for Keg is a data structure called `image definition tree`.
