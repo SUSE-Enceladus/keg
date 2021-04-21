@@ -17,7 +17,7 @@ for the `KIWI <https://osinside.github.io/kiwi/>`__ appliance builder.
 While `keg` can be used to manage a single image definition the tool provides
 no considerable advantage in such a use case. The primary use case for keg
 are situations where many image descriptions must be managed and the
-image descriptions have considerable over lap with respect to content
+image descriptions have considerable overlap with respect to content
 and setup.
 
 The key component for `keg` is a data structure called `image definition tree`.
@@ -59,8 +59,8 @@ Using `keg` is a two step process:
 2. Call the `keg` commandline utility to create a KIWI image description
 
 For the above to work, Keg needs to be installed as described in
-:ref:`installation`. In addition install KIWI:
-https://osinside.github.io/kiwi/installation.html
+:ref:`installation`. In addition install KIWI, see
+https://osinside.github.io/kiwi/installation.html.
 
 If all software components are installed, `keg` can be utilized like
 the following example shows:
@@ -74,10 +74,10 @@ the following example shows:
 
 After the `keg` command completes the destination directory specified
 with `--dest-dir` contains and image description that can be processed
-with kiwi to build an image. For more details about kiwi image descriptions
-see: https://osinside.github.io/kiwi/image_description.html
+with KIWI to build an image. For more details about KIWI image descriptions,
+see https://osinside.github.io/kiwi/image_description.html.
 
-With kiwi installed you can build the image with the `keg` created image
+With KIWI installed you can build the image with the `keg` created image
 description as follows:
 
 .. code:: shell-session
