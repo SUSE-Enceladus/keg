@@ -115,3 +115,28 @@ class TestKeg:
                 data_roots=[]
             )
             assert image_definition.list_recipes.called
+
+    @patch('pprint.pprint')
+    @patch('kiwi_keg.keg.KegImageDefinition')
+    @patch('kiwi_keg.keg.KegGenerator')
+    def test_keg_dump(self, mock_KegGenerator, mock_KegImageDefinition, mock_pprint):
+        sys.argv = [
+            sys.argv[0], '--verbose', '--dump',
+            '--recipes-root', '../data',
+            '--dest-dir', 'some-target', '../data/images/leap/15.2'
+        ]
+        image_definition = Mock()
+        mock_KegImageDefinition.return_value = image_definition
+        image_generator = Mock()
+        mock_KegGenerator.return_value = image_generator
+        with self._caplog.at_level(logging.DEBUG):
+            main()
+            mock_KegImageDefinition.assert_called_once_with(
+                image_name='../data/images/leap/15.2',
+                recipes_root='../data',
+                data_roots=[]
+            )
+            mock_KegGenerator.assert_called_once_with(
+                image_definition=image_definition, dest_dir='some-target'
+            )
+            mock_pprint.assert_called_once_with(image_definition.data, indent=2)

@@ -157,7 +157,7 @@ class TestKegGenerator:
             dest_file['other'] = os.path.join(tmpdirname, 'other', 'etc', 'hosts')
             dest_file['other_aws'] = os.path.join(tmpdirname, 'other', 'etc', 'resolv.conf')
 
-            assert mock_shutil_copy.call_args_list == [
+            assert sorted(mock_shutil_copy.call_args_list) == sorted([
                 call('../data/data/overlayfiles/base/etc/hosts', dest_file.get('root_base')),
                 call('../data/data/overlayfiles/csp/aws/etc/resolv.conf', dest_file.get('root_csp_aws')),
                 call(
@@ -169,7 +169,7 @@ class TestKegGenerator:
                     dest_file.get('named_product').get('usr')
                 ),
                 call('../data/data/overlayfiles/base/etc/hosts', dest_file.get('other')),
-            ]
+            ])
 
             dest_base_dir = dest_file.get('root_base')
             dest_csp_dir = dest_file.get('root_csp_aws')
@@ -177,7 +177,7 @@ class TestKegGenerator:
             dest_prod_dir_usr = dest_file.get('named_product').get('usr')
             dest_other_dir = dest_file.get('other')
 
-            assert mock_os_makedirs.call_args_list == [
+            assert sorted(mock_os_makedirs.call_args_list) == sorted([
                 call(
                     os.path.dirname(dest_base_dir),
                     exist_ok=True
@@ -198,7 +198,7 @@ class TestKegGenerator:
                     os.path.dirname(dest_other_dir),
                     exist_ok=True
                 )
-            ]
+            ])
             root_tarball_dir = os.path.join(tmpdirname, 'root.tar.gz')
             leap_tarball_dir = os.path.join(tmpdirname, 'leap_15_2.tar.gz')
             other_tarball_dir = os.path.join(tmpdirname, 'other.tar.gz')
@@ -214,7 +214,7 @@ class TestKegGenerator:
                     other_tarball_dir, "w:gz"
                 )
             ]
-            assert sorted(mock_add.call_args_list) == [
+            assert sorted(mock_add.call_args_list) == sorted([
                 call(
                     sub_leap_15_2_etc, arcname='etc'
                 ),
@@ -227,7 +227,8 @@ class TestKegGenerator:
                 call(
                     sub_root_usr, arcname='usr'
                 )
-            ]
+            ])
+
             assert filecmp.cmp(
                 '../data/keg_output_overlay/config.kiwi', tmpdirname + '/config.kiwi'
             ) is True

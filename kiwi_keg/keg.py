@@ -20,6 +20,7 @@
 Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
        keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
            [--format-xml|--format-yaml] [--disable-root-tar]
+           [--dump-dict]
            [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
            SOURCE
        keg -h | --help
@@ -42,6 +43,10 @@ Options:
         Option to disable the creation of a tarball root.tar.gz in destination directory.
         If present, an overlay tree would be created instead.
         [default: false]
+
+    --dump-dict
+        Dump generated data dictionary to stdout instead of generating an image
+        description. Useful for debugging.
 
     -l. --list-recipes
         List available images that can be created with the current recipes
@@ -101,6 +106,10 @@ def main():
             image_definition=image_definition,
             dest_dir=args['--dest-dir']
         )
+        if args['--dump-dict']:
+            from pprint import pprint
+            pprint(image_definition.data, indent=2)
+            return
         image_generator.create_kiwi_description(
             override=args['--force']
         )
