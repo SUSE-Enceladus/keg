@@ -56,7 +56,7 @@
     {% if profile != 'common' and profile_data['profile'] -%}
     <preferences{%if multibuild %} profiles="{{ profile }}"{% endif %}>
         <type {%- for key, val in profile_data['profile']['parameters'].items() -%}
-            {%- if val is mapping %} {{ key }}="{{ dict_to_param_string(val) }}" 
+            {%- if val is mapping %} {{ key }}="{{ dict_to_param_string(val) }}"
             {%- else %} {{ key }}="{{ val }}"
             {%- endif -%}
             {%- endfor -%}>
@@ -83,16 +83,23 @@
         {%- if profile != 'common' and multibuild == True %} profiles="{{ profile }}"
         {%- endif -%}
     >
-        {%- for namespace, packages in content['packages'][pkg_type].items() %}
+	{%- if 'overlayfiles' in content.keys() %}
+	{%- for overlay, overlay_content in content['overlayfiles'].items() %}
+    	{%- if 'name' in overlay_content.keys() %}
+        <archive name="{{overlay_content['name']}}.tar.gz"/>
+    	{%- else %}
+	{%- if profile != 'common' %}
+        <archive name="{{profile}}.tar.gz"/>
+	{%- endif %}
+	{%- endif %}
+	{%- endfor %}
+	{%- endif %}
+	{%- for namespace, packages in content['packages'][pkg_type].items() %}
         <!-- Begin include from {{ namespace }} -->
-        {%- if namespace == 'archive' %}
-        <archive name="{{ packages['name'] }}"/>
-        {%- else -%}
-        {% for pkg in packages %}
+        {%- for pkg in packages %}
         <package name="{{ pkg['name']|default(pkg) }}"
         {%- if pkg['arch'] %} arch="{{ pkg['arch'] }}"{% endif %}/>
-        {%- endfor -%}
-        {%- endif %}
+        {%- endfor %}
         <!-- End include from {{ namespace }} -->
         {%- endfor %}
     </packages>

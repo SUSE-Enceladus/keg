@@ -145,6 +145,7 @@ class TestKegGenerator:
             os.mkdir(sub_leap_15_2_usr)
 
             generator = KegGenerator(self.image_definition, tmpdirname)
+            generator.create_kiwi_description(override=True)
             generator.create_overlays(False)
             dest_file = {}
             dest_file['root_base'] = os.path.join(tmpdirname, 'root', 'etc', 'hosts')
