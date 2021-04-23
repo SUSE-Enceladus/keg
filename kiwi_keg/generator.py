@@ -185,7 +185,7 @@ class KegGenerator:
                     shutil.rmtree(overlay_dest_dir)
                 os.makedirs(overlay_dest_dir)
                 for base_dir in dir_list:
-                    shutil.copytree(base_dir, overlay_dest_dir, dirs_exist_ok=True)
+                    self._copytree(base_dir, overlay_dest_dir)
             else:
                 overlay_tarball_path = os.path.join(
                     self.dest_dir,
@@ -205,6 +205,14 @@ class KegGenerator:
         entries = os.scandir(src_dir)
         for entry in entries:
             tar.add(name=entry.path, arcname=entry.name, filter=self._tarinfo_set_root)
+
+    def _copytree(self, src_dir, dest_dir):
+        for entry in os.walk(src_dir):
+            dest_sub = os.path.join(dest_dir, os.path.relpath(entry[0], src_dir))
+            os.makedirs(dest_sub, exist_ok=True)
+            for file in entry[2]:
+                src = os.path.join(entry[0], file)
+                shutil.copy(src, dest_sub, follow_symlinks=False)
 
     def _has_script_data(self, script_key):
         profiles = self.image_definition.data.get('profiles')
