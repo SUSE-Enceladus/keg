@@ -41,14 +41,14 @@ class TestKeg:
                 image_definition=image_definition, dest_dir='some-target'
             )
             image_generator.create_kiwi_description.assert_called_once_with(
-                override=False
+                overwrite=False
             )
             image_generator.validate_kiwi_description.assert_called_once_with()
             image_generator.create_custom_scripts.assert_called_once_with(
-                override=False
+                overwrite=False
             )
             image_generator.create_overlays.assert_called_once_with(
-                disable_root_tar=False
+                disable_root_tar=False, overwrite=False
             )
 
     @patch('kiwi_keg.keg.KegImageDefinition')

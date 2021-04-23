@@ -40,8 +40,8 @@ Options:
         Destination directory for generated description, default cwd
 
     --disable-root-tar
-        Option to disable the creation of a tarball root.tar.gz in destination directory.
-        If present, an overlay tree would be created instead.
+        Option to disable the creation of root.tar.gz in destination directory.
+        If present, an overlay tree will be created instead.
         [default: false]
 
     --dump-dict
@@ -111,7 +111,7 @@ def main():
             pprint(image_definition.data, indent=2)
             return
         image_generator.create_kiwi_description(
-            override=args['--force']
+            overwrite=args['--force']
         )
         if args['--format-yaml']:
             image_generator.format_kiwi_description('yaml')
@@ -120,10 +120,11 @@ def main():
         else:
             image_generator.validate_kiwi_description()
         image_generator.create_custom_scripts(
-            override=args['--force']
+            overwrite=args['--force']
         )
         image_generator.create_overlays(
-            disable_root_tar=args['--disable-root-tar']
+            disable_root_tar=args['--disable-root-tar'],
+            overwrite=args['--force']
         )
     except KegError as issue:
         # known exception, log information and exit

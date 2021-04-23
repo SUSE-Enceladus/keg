@@ -5,4 +5,4 @@ profiles:
   other:
     description: Some Other Profile
     include:
-      - foo_profile/overlay-addon
+      - foo_profile/broken-overlay
