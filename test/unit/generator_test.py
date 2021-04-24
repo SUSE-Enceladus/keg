@@ -112,9 +112,9 @@ class TestKegGenerator:
     @patch('kiwi_keg.generator.shutil.rmtree')
     @patch('kiwi_keg.generator.tarfile.open')
     @patch('kiwi_keg.generator.os.makedirs')
-    @patch('kiwi_keg.generator.shutil.copytree')
+    @patch('kiwi_keg.generator.shutil.copy')
     def test_create_overlays(
-        self, mock_shutil_copytree, mock_os_makedirs, mock_tarfile_open,
+        self, mock_shutil_copy, mock_os_makedirs, mock_tarfile_open,
         mock_shutil_rmtree, mock_keg_version, mock_datetime
     ):
         mock_add = Mock()
@@ -135,13 +135,26 @@ class TestKegGenerator:
             generator.create_kiwi_description(overwrite=True)
             generator.create_overlays(disable_root_tar=True, overwrite=True)
 
-            assert mock_shutil_rmtree.called_once_with(fake_root)
-            assert mock_os_makedirs.call_once_with(fake_root)
-            assert mock_shutil_copytree.call_once_with(
-                os.path.join(overlay_src_root, 'base'),
-                fake_root,
-                dirs_exist_ok=True
-            )
+            mock_shutil_rmtree.assert_called_once_with(fake_root)
+            calls=[
+                call(fake_root),
+                call(os.path.join(fake_root, '.'), exist_ok=True),
+                call(os.path.join(fake_root, 'etc'), exist_ok=True)
+            ]
+            mock_os_makedirs.assert_has_calls(calls)
+            calls=[
+                call(
+                    os.path.join(overlay_src_root, 'base/etc/hosts'),
+                    os.path.join(fake_root, 'etc'),
+                    follow_symlinks=False
+                ),
+                call(
+                    os.path.join(overlay_src_root, 'csp/aws/etc/resolv.conf'),
+                    os.path.join(fake_root, 'etc'),
+                    follow_symlinks=False
+                )
+            ]
+            mock_shutil_copy.assert_has_calls(calls, any_order=True)
 
             leap_tarball_dir = os.path.join(tmpdirname, 'leap_15_2.tar.gz')
             other_tarball_dir = os.path.join(tmpdirname, 'other.tar.gz')
