@@ -162,10 +162,10 @@ class KegGenerator:
                         compression: str = 'gz',
                         ) -> None:
         """
-        Create overlay archives as defines in the 'archives' section of the
-        data dictionay.
+        Create overlay archives as defined in the 'archives' section of the
+        data dictionary.
 
-        :param: bool diasable_root_tar:
+        :param: bool disable_root_tar:
             Flag to disable packing for root overlay
         :param: bool overwrite:
             Flag to enable overwriting of existing archives or root dir
