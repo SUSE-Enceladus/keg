@@ -136,13 +136,13 @@ class TestKegGenerator:
             generator.create_overlays(disable_root_tar=True, overwrite=True)
 
             mock_shutil_rmtree.assert_called_once_with(fake_root)
-            calls=[
+            calls = [
                 call(fake_root),
                 call(os.path.join(fake_root, '.'), exist_ok=True),
                 call(os.path.join(fake_root, 'etc'), exist_ok=True)
             ]
             mock_os_makedirs.assert_has_calls(calls)
-            calls=[
+            calls = [
                 call(
                     os.path.join(overlay_src_root, 'base/etc/hosts'),
                     os.path.join(fake_root, 'etc'),
