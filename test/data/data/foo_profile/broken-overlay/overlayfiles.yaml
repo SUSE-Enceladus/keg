@@ -1,0 +1,4 @@
+overlayfiles:
+  broken:
+    include:
+      - doesnotexist

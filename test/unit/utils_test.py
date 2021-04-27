@@ -21,7 +21,6 @@ class TestUtils:
                 }
             ],
             'include-paths': ['leap15/1', 'leap15/2'],
-            'overlay-include-paths': ['base'],
             'contents': {
                 'include': ['base/jeos']
             }

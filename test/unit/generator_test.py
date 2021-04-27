@@ -1,9 +1,11 @@
+import tarfile
 import filecmp
 import tempfile
 import os
 from mock import (
     patch, Mock, call
 )
+from pathlib import Path
 from pytest import raises
 import shutil
 
@@ -50,7 +52,7 @@ class TestKegGenerator:
             generator.image_schema = 'non-existent-schema'
             with raises(KegError):
                 generator.create_kiwi_description(
-                    override=True
+                    overwrite=True
                 )
 
     @patch('kiwi_keg.generator.KiwiDescription')
@@ -74,7 +76,7 @@ class TestKegGenerator:
         with tempfile.TemporaryDirectory() as tmpdirname:
             generator = KegGenerator(self.image_definition, tmpdirname)
             generator.create_kiwi_description(
-                override=True
+                overwrite=True
             )
             assert filecmp.cmp(
                 '../data/keg_output/config.kiwi', tmpdirname + '/config.kiwi'
@@ -100,7 +102,7 @@ class TestKegGenerator:
     def test_create_custom_scripts(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
             generator = KegGenerator(self.image_definition, tmpdirname)
-            generator.create_custom_scripts(override=True)
+            generator.create_custom_scripts(overwrite=True)
             assert filecmp.cmp(
                 '../data/keg_output/config.sh', tmpdirname + '/config.sh'
             ) is True
@@ -123,111 +125,69 @@ class TestKegGenerator:
         utc_now.strftime.return_value = 'time-string'
         mock_datetime.now.return_value = utc_now
 
+        overlay_src_root = '../data/data/overlayfiles'
         with tempfile.TemporaryDirectory() as tmpdirname:
             shutil.copyfile('../data/keg_output/config.kiwi', tmpdirname + '/config.kiwi')
             fake_root = os.path.join(tmpdirname, 'root')
-            sub_root_etc = os.path.join(fake_root, 'etc')
-            sub_root_usr = os.path.join(fake_root, 'usr')
-
-            fake_other = os.path.join(tmpdirname, 'other')
-
             os.mkdir(fake_root)
-            os.mkdir(sub_root_etc)
-            os.mkdir(sub_root_usr)
-            os.mkdir(fake_other)
-
-            fake_leap_15_2 = os.path.join(tmpdirname, 'leap_15_2')
-            sub_leap_15_2_etc = os.path.join(fake_leap_15_2, 'etc')
-            sub_leap_15_2_usr = os.path.join(fake_leap_15_2, 'usr')
-
-            os.mkdir(fake_leap_15_2)
-            os.mkdir(sub_leap_15_2_etc)
-            os.mkdir(sub_leap_15_2_usr)
 
             generator = KegGenerator(self.image_definition, tmpdirname)
-            generator.create_kiwi_description(override=True)
-            generator.create_overlays(False)
-            dest_file = {}
-            dest_file['root_base'] = os.path.join(tmpdirname, 'root', 'etc', 'hosts')
-            dest_file['root_csp_aws'] = os.path.join(tmpdirname, 'root', 'etc', 'resolv.conf')
-            dest_file['named_product'] = {
-                'etc': os.path.join(tmpdirname, 'leap_15_2', 'etc', 'motd'),
-                'usr': os.path.join(tmpdirname, 'leap_15_2', 'usr', 'lib', 'systemd', 'system', 'foo.service')
-            }
-            dest_file['other'] = os.path.join(tmpdirname, 'other', 'etc', 'hosts')
-            dest_file['other_aws'] = os.path.join(tmpdirname, 'other', 'etc', 'resolv.conf')
+            generator.create_kiwi_description(overwrite=True)
+            generator.create_overlays(disable_root_tar=True, overwrite=True)
 
-            assert mock_shutil_copy.call_args_list == [
-                call('../data/data/overlayfiles/base/etc/hosts', dest_file.get('root_base')),
-                call('../data/data/overlayfiles/csp/aws/etc/resolv.conf', dest_file.get('root_csp_aws')),
-                call(
-                    '../data/data/overlayfiles/products/leap/15.2/etc/motd',
-                    dest_file.get('named_product').get('etc')
-                ),
-                call(
-                    '../data/data/overlayfiles/products/leap/15.2/usr/lib/systemd/system/foo.service',
-                    dest_file.get('named_product').get('usr')
-                ),
-                call('../data/data/overlayfiles/base/etc/hosts', dest_file.get('other')),
+            mock_shutil_rmtree.assert_called_once_with(fake_root)
+            calls = [
+                call(fake_root),
+                call(os.path.join(fake_root, '.'), exist_ok=True),
+                call(os.path.join(fake_root, 'etc'), exist_ok=True)
             ]
-
-            dest_base_dir = dest_file.get('root_base')
-            dest_csp_dir = dest_file.get('root_csp_aws')
-            dest_prod_dir_etc = dest_file.get('named_product').get('etc')
-            dest_prod_dir_usr = dest_file.get('named_product').get('usr')
-            dest_other_dir = dest_file.get('other')
-
-            assert mock_os_makedirs.call_args_list == [
+            mock_os_makedirs.assert_has_calls(calls)
+            calls = [
                 call(
-                    os.path.dirname(dest_base_dir),
-                    exist_ok=True
+                    os.path.join(overlay_src_root, 'base/etc/hosts'),
+                    os.path.join(fake_root, 'etc'),
+                    follow_symlinks=False
                 ),
                 call(
-                    os.path.dirname(dest_csp_dir),
-                    exist_ok=True
-                ),
-                call(
-                    os.path.dirname(dest_prod_dir_etc),
-                    exist_ok=True
-                ),
-                call(
-                    os.path.dirname(dest_prod_dir_usr),
-                    exist_ok=True
-                ),
-                call(
-                    os.path.dirname(dest_other_dir),
-                    exist_ok=True
+                    os.path.join(overlay_src_root, 'csp/aws/etc/resolv.conf'),
+                    os.path.join(fake_root, 'etc'),
+                    follow_symlinks=False
                 )
             ]
-            root_tarball_dir = os.path.join(tmpdirname, 'root.tar.gz')
+            mock_shutil_copy.assert_has_calls(calls, any_order=True)
+
             leap_tarball_dir = os.path.join(tmpdirname, 'leap_15_2.tar.gz')
             other_tarball_dir = os.path.join(tmpdirname, 'other.tar.gz')
 
             assert mock_tarfile_open.call_args_list == [
+                call(leap_tarball_dir, "w:gz"),
+                call(other_tarball_dir, "w:gz")
+            ]
+            calls = [
                 call(
-                    root_tarball_dir, "w:gz"
+                    name=os.path.join(overlay_src_root, 'products/leap/15.2/etc'),
+                    arcname='etc',
+                    filter=KegGenerator._tarinfo_set_root
                 ),
                 call(
-                    leap_tarball_dir, "w:gz"
+                    name=os.path.join(overlay_src_root, 'products/leap/15.2/usr'),
+                    arcname='usr',
+                    filter=KegGenerator._tarinfo_set_root
                 ),
                 call(
-                    other_tarball_dir, "w:gz"
+                    name=os.path.join(overlay_src_root, 'csp/aws/etc'),
+                    arcname='etc',
+                    filter=KegGenerator._tarinfo_set_root
                 )
             ]
-            assert sorted(mock_add.call_args_list) == [
-                call(
-                    sub_leap_15_2_etc, arcname='etc'
-                ),
-                call(
-                    sub_leap_15_2_usr, arcname='usr'
-                ),
-                call(
-                    sub_root_etc, arcname='etc'
-                ),
-                call(
-                    sub_root_usr, arcname='usr'
+            mock_add.assert_has_calls(calls, any_order=True)
+
+            with raises(KegError) as kegerror:
+                generator.create_overlays(disable_root_tar=True, overwrite=False)
+                assert kegerror == KegError(
+                    '{target} exists, use force to overwrite.'.format(target=fake_root)
                 )
-            ]
+
             assert filecmp.cmp(
                 '../data/keg_output_overlay/config.kiwi', tmpdirname + '/config.kiwi'
             ) is True
@@ -241,3 +201,15 @@ class TestKegGenerator:
             generator = KegGenerator(image_definition, tmpdirname)
             generator.create_overlays(False)
             assert not mock_shutil_copy.called
+
+    def test_tarinfo_set_root(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            some_file = os.path.join(tmpdir, 'some_file')
+            Path(some_file).touch()
+            tar_path = os.path.join(tmpdir, 'tmp.tar')
+            with tarfile.open(tar_path, 'w') as tar:
+                tar.add(some_file, filter=KegGenerator._tarinfo_set_root)
+            with tarfile.open(tar_path, 'r') as tar:
+                for tarinfo in tar:
+                    assert tarinfo.uid == tarinfo.gid == 0
+                    assert tarinfo.uname == tarinfo.gname == 'root'

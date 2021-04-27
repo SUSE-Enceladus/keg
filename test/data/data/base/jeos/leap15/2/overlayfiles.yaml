@@ -6,6 +6,6 @@ overlayfiles:
     include:
       - csp/aws
   azure-extra-stuff:
-    name: leap_15_2
+    archivename: leap_15_2
     include:
       - products/leap/15.2

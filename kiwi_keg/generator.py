@@ -81,14 +81,14 @@ class KegGenerator:
             )
         )
 
-    def create_kiwi_description(self, override: bool = False) -> None:
+    def create_kiwi_description(self, overwrite: bool = False) -> None:
         """
         Creates KIWI config.xml from a KegImageDefinition.
 
-        :param bool override:
+        :param bool overwrite:
             Override destination contents, default is: False
         """
-        self._check_file(self.kiwi_description, override)
+        self._check_file(self.kiwi_description, overwrite)
 
         kiwi_template = self._read_template(
             '{}.kiwi.templ'.format(self.image_schema)
@@ -98,6 +98,7 @@ class KegGenerator:
         )
         with open(self.kiwi_description, 'w') as kiwi_config:
             kiwi_config.write(kiwi_document)
+            kiwi_config.write('\n')
 
     def validate_kiwi_description(self) -> None:
         kiwi = KiwiDescription(self.kiwi_description)
@@ -121,12 +122,12 @@ class KegGenerator:
         if markup == 'yaml':
             kiwi.create_YAML_description(self.kiwi_description)
 
-    def create_custom_scripts(self, override: bool = False):
+    def create_custom_scripts(self, overwrite: bool = False):
         """
         Creates custom KIWI config.sh/images.sh script(s) from a
         KegImageDefinition.
-        :param bool override:
-            Override destination contents, default is: False
+        :param bool overwrite:
+            Overwrite destination contents, default is: False
         """
         script_lib = KegUtils.load_scripts(
             self.image_definition.data_roots, 'scripts',
@@ -134,7 +135,7 @@ class KegGenerator:
         )
 
         if self._has_script_data('config_script'):
-            self._check_file(self.kiwi_config_script, override)
+            self._check_file(self.kiwi_config_script, overwrite)
             config_template = self._read_template(
                 'config.sh.templ'
             )
@@ -145,7 +146,7 @@ class KegGenerator:
                 custom_script.write(config_sh)
 
         if self._has_script_data('image_script'):
-            self._check_file(self.kiwi_images_script, override)
+            self._check_file(self.kiwi_images_script, overwrite)
             images_template = self._read_template(
                 'images.sh.templ'
             )
@@ -155,73 +156,63 @@ class KegGenerator:
             with open(self.kiwi_images_script, 'w') as custom_script:
                 custom_script.write(images_sh)
 
-    def create_overlays(self, disable_root_tar: bool = False) -> None:
+    def create_overlays(self,
+                        disable_root_tar: bool = False,
+                        overwrite: bool = False,
+                        compression: str = 'gz',
+                        ) -> None:
         """
-        Copy all the files and the overlay tree structure from overlays section under root inside destination directory.
+        Create overlay archives as defined in the 'archives' section of the
+        data dictionary.
 
-        :param: bool tarball:
-            Flag to create tarball
+        :param: bool disable_root_tar:
+            Flag to disable packing for root overlay
+        :param: bool overwrite:
+            Flag to enable overwriting of existing archives or root dir
+        :param: str compression:
+            Compression to use for packing
         """
-        has_overlays = False
-        if 'profiles' in self.image_definition.data:
-            for profile_name, profile_data in self.image_definition.data['profiles'].items():
-                if 'overlayfiles' in profile_data:
-                    has_overlays = True
-                    overlay_files_paths = profile_data['overlayfiles']
-                    tarball_data: dict = {}
-                    for _, overlay_content in overlay_files_paths.items():
-                        overlay_dest_dir = ''
-                        if 'name' in overlay_content.keys():
-                            overlay_dest_dir = os.path.join(self.dest_dir, overlay_content.get('name'))
-                        elif profile_name == 'common':
-                            overlay_dest_dir = os.path.join(self.dest_dir, 'root')
-                        else:
-                            overlay_dest_dir = os.path.join(self.dest_dir, profile_name)
-
-                        overlay_name = os.path.basename(overlay_dest_dir)
-                        for overlay_path in overlay_content.get('include'):
-                            overlay_full_path = os.path.join(
-                                self.image_definition.overlay_root,
-                                overlay_path
+        for archive_name, dir_list in self.image_definition.data['archives'].items():
+            if archive_name == 'root' and disable_root_tar:
+                overlay_dest_dir = os.path.join(self.dest_dir, 'root')
+                if os.path.exists(overlay_dest_dir):
+                    if not overwrite:
+                        raise KegError(
+                            '{target} exists, use force to overwrite.'.format(
+                                target=overlay_dest_dir
                             )
-                            # loop all the file paths of overlay sub directory 'overlay_path'
-                            for name in KegUtils.get_all_files(overlay_full_path):
-                                rel_path = os.path.relpath(name, overlay_full_path)
-                                new_dir = os.path.dirname(rel_path)
-                                if new_dir:
-                                    new_dir = os.path.join(overlay_dest_dir, new_dir)
-                                    os.makedirs(new_dir, exist_ok=True)
-                                dest_file = os.path.join(overlay_dest_dir, rel_path)
-                                shutil.copy(name, dest_file)
-
-                        tarball_data[overlay_name] = {}
-                        tarball_data[overlay_name] = overlay_dest_dir
-
-                    for overlay_name, overlay_dest_dir in tarball_data.items():
-                        self._create_tarball(
-                            disable_root_tar,
-                            overlay_name,
-                            overlay_dest_dir
                         )
-                        if (overlay_name == 'root' and not disable_root_tar) or overlay_name != 'root':
-                            shutil.rmtree(overlay_dest_dir)
+                    shutil.rmtree(overlay_dest_dir)
+                os.makedirs(overlay_dest_dir)
+                for base_dir in dir_list:
+                    self._copytree(base_dir, overlay_dest_dir)
+            else:
+                overlay_tarball_path = os.path.join(
+                    self.dest_dir,
+                    '{}.tar.{}'.format(archive_name, compression)
+                )
+                with tarfile.open(overlay_tarball_path, 'w:{}'.format(compression)) as tar:
+                    for base_dir in dir_list:
+                        self._add_dir_to_tar(tar, base_dir)
 
-        if not has_overlays:
-            log.warn(
-                'Attempt to create a tarball or an overlay tree but '
-                'not overlay paths were provided.'
-            )
+    @staticmethod
+    def _tarinfo_set_root(tarinfo):
+        tarinfo.uid = tarinfo.gid = 0
+        tarinfo.uname = tarinfo.gname = 'root'
+        return tarinfo
 
-    def _create_tarball(self, disable_root_tar, overlay_name, dest_dir):
-        overlay_tarball_name = '{}.tar.gz'.format(overlay_name)
-        tarball_dir = os.path.join(self.dest_dir, overlay_tarball_name)
-        if (overlay_name == 'root' and not disable_root_tar) or overlay_name != 'root':
-            with tarfile.open(tarball_dir, 'w:gz') as tar:
-                for overlay_dir in os.scandir(dest_dir):
-                    tar.add(
-                        overlay_dir.path,
-                        arcname=overlay_dir.name
-                    )
+    def _add_dir_to_tar(self, tar, src_dir):
+        entries = os.scandir(src_dir)
+        for entry in entries:
+            tar.add(name=entry.path, arcname=entry.name, filter=self._tarinfo_set_root)
+
+    def _copytree(self, src_dir, dest_dir):
+        for entry in os.walk(src_dir):
+            dest_sub = os.path.join(dest_dir, os.path.relpath(entry[0], src_dir))
+            os.makedirs(dest_sub, exist_ok=True)
+            for file in entry[2]:
+                src = os.path.join(entry[0], file)
+                shutil.copy(src, dest_sub, follow_symlinks=False)
 
     def _has_script_data(self, script_key):
         profiles = self.image_definition.data.get('profiles')
@@ -231,8 +222,8 @@ class KegGenerator:
                 return True
 
     @staticmethod
-    def _check_file(filename, override):
-        if not override and os.path.exists(filename):
+    def _check_file(filename, overwrite):
+        if not overwrite and os.path.exists(filename):
             raise KegError(
                 '{target} exists, use force to overwrite.'.format(
                     target=filename

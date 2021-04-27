@@ -83,24 +83,19 @@
         {%- if profile != 'common' and multibuild == True %} profiles="{{ profile }}"
         {%- endif -%}
     >
-	{%- if 'overlayfiles' in content.keys() %}
-	{%- for overlay, overlay_content in content['overlayfiles'].items() %}
-    	{%- if 'name' in overlay_content.keys() %}
-        <archive name="{{overlay_content['name']}}.tar.gz"/>
-    	{%- else %}
-	{%- if profile != 'common' %}
-        <archive name="{{profile}}.tar.gz"/>
-	{%- endif %}
-	{%- endif %}
-	{%- endfor %}
-	{%- endif %}
-	{%- for namespace, packages in content['packages'][pkg_type].items() %}
+        {%- for namespace, packages in content['packages'][pkg_type].items() %}
+        {%- if namespace == 'archive' %}
+        {%- for pkg in packages %}
+        <archive name="{{ pkg['name'] }}"/>
+        {%- endfor %}
+        {%- else %}
         <!-- Begin include from {{ namespace }} -->
         {%- for pkg in packages %}
         <package name="{{ pkg['name']|default(pkg) }}"
         {%- if pkg['arch'] %} arch="{{ pkg['arch'] }}"{% endif %}/>
         {%- endfor %}
         <!-- End include from {{ namespace }} -->
+        {%- endif %}
         {%- endfor %}
     </packages>
     {%- endfor %}

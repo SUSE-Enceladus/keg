@@ -12,6 +12,7 @@
         <specification>Leap 15.2 guest image</specification>
     </description>
     <profiles>
+        <profile name="other" description="Some Other Profile"/>
     </profiles>
     <preferences>
         <version>1.0.42</version>
@@ -24,20 +25,26 @@
     <users>
         <user name="root" groups="root" password="foo" home="/root"/>
     </users>
+    <preferences profiles="other">
+        <type bootpartition="false" firmware="uefi" devicepersistency="by-label" filesystem="xfs" image="vmx" kernelcmdline="console=ttyS0 net.ifnames=0 dis_ucode_ldr">
+            <bootloader name="grub2" timeout="1"/>
+            <size unit="M">10240</size>
+        </type>
+    </preferences>
     <repository type="rpm-md" >
         <source path='obsrepositories:/'/>
     </repository>
     <packages type="image">
-        <archive name="leap_15_2.tar.gz"/>
         <!-- Begin include from jeos -->
         <package name="grub2-x86_64-efi" arch="x86_64"/>
         <package name="patterns-base-minimal_base"/>
         <!-- End include from jeos -->
+        <archive name="leap_15_2.tar.gz"/>
     </packages>
-    <packages type="foo-profile-package" profiles="other">
-        <archive name="other.tar.gz"/>
-        <!-- Begin include from sles -->
+    <packages type="image" profiles="other">
+        <!-- Begin include from foo-profile-package -->
         <package name="some-foo" arch="x86_64"/>
-        <!-- End include from sles -->
+        <!-- End include from foo-profile-package -->
+        <archive name="other.tar.gz"/>
     </packages>
 </image>
