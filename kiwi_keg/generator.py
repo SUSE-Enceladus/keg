@@ -198,19 +198,20 @@ class KegGenerator:
     def create_multibuild_file(self, overwrite: bool = False):
         if not self.image_definition.data.get('contents'):
             profiles = self.image_definition.data.get('profiles')
-            mbuild_file = os.path.join(self.dest_dir, '_multibuild')
-            if os.path.exists(mbuild_file) and not overwrite:
-                raise KegError(
-                    '{target} exists, use force to overwrite.'.format(
-                        target=mbuild_file
+            if profiles:
+                mbuild_file = os.path.join(self.dest_dir, '_multibuild')
+                if os.path.exists(mbuild_file) and not overwrite:
+                    raise KegError(
+                        '{target} exists, use force to overwrite.'.format(
+                            target=mbuild_file
+                        )
                     )
-                )
-            with open(mbuild_file, 'w') as mbuild_obj:
-                mbuild_obj.write('<multibuild>\n')
-                for profile in profiles:
-                    if profile != 'common':
-                        mbuild_obj.write('    <flavor>{}</flavor>\n'.format(profile))
-                mbuild_obj.write('</multibuild>\n')
+                with open(mbuild_file, 'w') as mbuild_obj:
+                    mbuild_obj.write('<multibuild>\n')
+                    for profile in profiles:
+                        if profile != 'common':
+                            mbuild_obj.write('    <flavor>{}</flavor>\n'.format(profile))
+                    mbuild_obj.write('</multibuild>\n')
 
     @staticmethod
     def _tarinfo_set_root(tarinfo):
