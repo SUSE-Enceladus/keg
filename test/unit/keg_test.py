@@ -50,6 +50,9 @@ class TestKeg:
             image_generator.create_overlays.assert_called_once_with(
                 disable_root_tar=False, overwrite=False
             )
+            image_generator.create_multibuild_file.assert_called_once_with(
+                overwrite=False
+            )
 
     @patch('kiwi_keg.keg.KegImageDefinition')
     @patch('kiwi_keg.keg.KegGenerator')

@@ -213,3 +213,13 @@ class TestKegGenerator:
                 for tarinfo in tar:
                     assert tarinfo.uid == tarinfo.gid == 0
                     assert tarinfo.uname == tarinfo.gname == 'root'
+
+    def test_create_multibuild_file(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            generator = KegGenerator(self.image_definition, tmpdir)
+            generator.create_multibuild_file(overwrite=False)
+            assert filecmp.cmp(
+                '../data/keg_output/_multibuild', tmpdir + '/_multibuild'
+            )
+            with raises(KegError):
+                generator.create_multibuild_file(overwrite=False)

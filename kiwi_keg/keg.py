@@ -20,7 +20,7 @@
 Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
        keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
            [--format-xml|--format-yaml] [--disable-root-tar]
-           [--dump-dict]
+           [--disable-multibuild] [--dump-dict]
            [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
            SOURCE
        keg -h | --help
@@ -38,6 +38,10 @@ Options:
 
     -d DEST_DIR, --dest-dir=DEST_DIR
         Destination directory for generated description, default cwd
+
+    --disable-multibuild
+        Option to disable creation of OBS _multibuild file (for image
+        definitions with multiple profiles). [default: false]
 
     --disable-root-tar
         Option to disable the creation of root.tar.gz in destination directory.
@@ -126,6 +130,10 @@ def main():
             disable_root_tar=args['--disable-root-tar'],
             overwrite=args['--force']
         )
+        if not args['--disable-multibuild']:
+            image_generator.create_multibuild_file(
+                overwrite=args['--force']
+            )
     except KegError as issue:
         # known exception, log information and exit
         log.error('%s: %s', type(issue).__name__, format(issue))
