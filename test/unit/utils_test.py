@@ -26,7 +26,7 @@ class TestUtils:
             }
         }
         assert KegUtils.get_recipes(
-            ['../data/images'], 'leap_single_build', ['base/jeos/leap']
+            ['../data/images'], ['leap_single_build'], ['base/jeos/leap']
         ) == expected_output
 
     def test_load_scripts(self):
