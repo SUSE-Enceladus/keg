@@ -60,7 +60,7 @@ class KegUtils:
 
     @staticmethod
     def get_recipes(
-        roots: List[str], sub_dir: str, include_paths: List[str] = None
+        roots: List[str], sub_dirs: List[str], include_paths: List[str] = None
     ) -> Dict[str, str]:
         """
         Return a new yaml tree including the data of all the source files for
@@ -70,15 +70,20 @@ class KegUtils:
         :param: str sub_dir: subdirectory path to get the files from
         :param: list include_paths: list of paths to be included
         """
-        desc_files = KegUtils._get_source_files(
-            roots, sub_dir, 'yaml', include_paths
-        )
+        desc_files = []
+        for sub_dir in sub_dirs:
+            desc_files += KegUtils._get_source_files(
+                roots, sub_dir, 'yaml', include_paths
+            )
         merged_tree: Dict[str, str] = {}
+        files_read = []
         for desc_file in desc_files:
-            log.debug(f'Reading: {desc_file}')
-            with open(desc_file, 'r') as f:
-                desc_yaml = yaml.safe_load(f.read())
-            KegUtils.rmerge(desc_yaml, merged_tree)
+            if desc_file not in files_read:
+                log.debug(f'Reading: {desc_file}')
+                with open(desc_file, 'r') as f:
+                    desc_yaml = yaml.safe_load(f.read())
+                KegUtils.rmerge(desc_yaml, merged_tree)
+                files_read.append(desc_file)
         return merged_tree
 
     @staticmethod
@@ -132,7 +137,7 @@ class KegUtils:
     def _get_source_files(roots, sub_dir, ext, include_paths):
         src_files = []
         for root_dir in roots:
-            src_files = KegUtils._get_versioned_source_files(
+            src_files += KegUtils._get_versioned_source_files(
                 os.path.join(root_dir, sub_dir),
                 ext,
                 include_paths

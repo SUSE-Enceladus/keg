@@ -94,7 +94,7 @@ class KegImageDefinition:
         try:
             self._data.update(
                 KegUtils.get_recipes(
-                    [self.image_root], self.image_name
+                    [self.image_root], [self.image_name]
                 )
             )
         except Exception as issue:
@@ -127,32 +127,24 @@ class KegImageDefinition:
                 profile: Dict = {}
                 for item, value in profile_data.items():
                     if item == 'include':
-                        for inc in value:
-                            KegUtils.rmerge(
-                                KegUtils.get_recipes(
-                                    self.data_roots,
-                                    inc,
-                                    include_paths
-                                ),
-                                profile
-                            )
+                        KegUtils.rmerge(
+                            KegUtils.get_recipes(
+                                self.data_roots,
+                                value,
+                                include_paths
+                            ),
+                            profile
+                        )
                     else:
                         KegUtils.rmerge({item: value}, profile_data)
                 self._data['profiles'][profile_name].update(profile)
 
     def _update_contents(self, include_paths):
         if 'contents' in self._data:
-            contents: Dict = {}
-            for inc in self._data['contents'].get('include'):
-                KegUtils.rmerge(
-                    KegUtils.get_recipes(
-                        self.data_roots,
-                        inc,
-                        include_paths
-                    ),
-                    contents
-                )
-            self._data['contents'].update(contents)
+            includes = self._data['contents'].get('include')
+            self._data['contents'].update(
+                KegUtils.get_recipes(self._data_roots, includes, include_paths)
+            )
 
     def _generate_overlay_info(self):
         if 'contents' in self._data:
