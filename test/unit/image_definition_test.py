@@ -66,26 +66,28 @@ class TestKegImageDefinition:
                       'version': '1.0.42'},
             'image source path': 'leap/15.2',
             'include-paths': ['leap15/1', 'leap15/2'],
-            'profiles': {'common': {'config': {'config_script': {'JeOS-config': ['foo', 'name'],
-                                                                 'files': {'JeOS-files': [{'append': True,
-                                                                                           'content': 'CONSOLE_ENCODING="UTF-8"',
-                                                                                           'path': '/etc/sysconfig/console'}]},
-                                                                 'services': {'JeOS-services': ['sshd', {'enable': False,
-                                                                                                         'name': 'kbd'}]},
-                                                                 'sysconfig': {'JeOS-sysconfig': [{'file': '/etc/sysconfig/language',
-                                                                                                           'name': 'INSTALLED_LANGUAGES',
-                                                                                                           'value': ''}]}},
-                                               'image_script': {'JeOS-image': ['name']}},
+            'profiles': {'common': {'config': {'files': {'JeOS-files': [{'append': True,
+                                                                         'content': 'CONSOLE_ENCODING="UTF-8"',
+                                                                         'path': '/etc/sysconfig/console'}]},
+                                               'scripts': {'JeOS-config': ['foo',
+                                                                           'name']},
+                                               'services': {'JeOS-services': ['sshd', {'enable': False,
+                                                                                       'name': 'kbd'}]},
+                                               'sysconfig': {'JeOS-sysconfig': [{'file': '/etc/sysconfig/language',
+                                                                                 'name': 'INSTALLED_LANGUAGES',
+                                                                                 'value': ''}]}},
                                     'include': ['base/jeos'],
                                     'overlayfiles': {'azure-common': {'include': ['base']},
-                                                     'azure-extra-stuff': {'include': ['products/leap/15.2'],
-                                                                           'archivename': 'leap_15_2'},
+                                                     'azure-extra-stuff': {'archivename': 'leap_15_2',
+                                                                           'include': ['products/leap/15.2']},
                                                      'azure-sle15-sp3': {'include': ['csp/aws']}},
                                     'packages': {'image': {'archive': [{'name': 'leap_15_2.tar.gz'}],
                                                            'jeos': [{'arch': 'x86_64',
                                                                      'name': 'grub2-x86_64-efi'},
-                                                                    'patterns-base-minimal_base']}}},
-                         'other': {'description': 'Some Other Profile',
+                                                                    'patterns-base-minimal_base']}},
+                                    'setup': {'scripts': {'JeOS-image': ['name']}}},
+                         'other': {'config': {'services': {'foo-timer': ['foo.timer']}},
+                                   'description': 'Some Other Profile',
                                    'include': ['foo_profile/overlay-addon'],
                                    'overlayfiles': {'foo-addon': {'include': ['csp/aws']}},
                                    'packages': {'image': {'archive': [{'name': 'other.tar.gz'}],
@@ -105,22 +107,9 @@ class TestKegImageDefinition:
             'schema': 'vm',
             'timestamp': 'time-string',
             'users': [{'groups': ['root'],
-                       'home': '/root',
-                       'name': 'root',
-                       'password': 'foo'}]}
-
-    @patch('kiwi_keg.image_definition.datetime')
-    def test_populate_single_build(self, mock_datetime):
-        utc_now = Mock()
-        utc_now.strftime.return_value = 'time-string'
-        mock_datetime.now.return_value = utc_now
-        keg_definition = KegImageDefinition(
-            image_name='leap_single_build', recipes_root='../data'
-        )
-
-        keg_definition.populate()
-
-        assert keg_definition.data['schema'] == 'vm_singlebuild'
+                         'home': '/root',
+                         'name': 'root',
+                         'password': 'foo'}]}
 
     def test_list_recipes(self):
         assert self.keg_definition.list_recipes() == [

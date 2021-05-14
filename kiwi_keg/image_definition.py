@@ -17,13 +17,14 @@
 #
 import os
 from typing import (
-    List, Dict
+    List, Dict, Optional
 )
 from datetime import (
     datetime, timezone
 )
 
 # project
+from kiwi_keg import script_utils
 from kiwi_keg.utils import KegUtils
 from kiwi_keg import version
 from kiwi_keg.exceptions import KegError
@@ -50,6 +51,8 @@ class KegImageDefinition:
         self._data_roots = [os.path.join(recipes_root, 'data')]
         self._overlay_root = os.path.join(recipes_root, 'data', 'overlayfiles')
         self._archive_ext = archive_ext
+        self._config_script = None
+        self._images_script = None
         if data_roots:
             self._data_roots += data_roots
         if not os.path.isdir(recipes_root):
@@ -79,6 +82,18 @@ class KegImageDefinition:
     def image_root(self) -> str:
         return self._image_root
 
+    @property
+    def archives(self) -> Optional[Dict]:
+        return self._data.get('archives')
+
+    @property
+    def config_script(self) -> Optional[str]:
+        return self._config_script
+
+    @property
+    def images_script(self) -> Optional[str]:
+        return self._images_script
+
     def populate(self) -> None:
         """
         Parse recipes data and construct wanted image definition
@@ -102,11 +117,8 @@ class KegImageDefinition:
                 'Error parsing image data: {error}'.format(error=issue)
             )
 
-        # load profile sections
         self._update_profiles(self._data.get('include-paths'))
-        # expand unprofiled contents section (for single build)
-        self._update_contents(self._data.get('include-paths'))
-        # generate overlay info
+        self._generate_config_scripts()
         self._generate_overlay_info()
 
     def list_recipes(self):
@@ -139,45 +151,19 @@ class KegImageDefinition:
                         KegUtils.rmerge({item: value}, profile_data)
                 self._data['profiles'][profile_name].update(profile)
 
-    def _update_contents(self, include_paths):
-        if 'contents' in self._data:
-            includes = self._data['contents'].get('include')
-            self._data['contents'].update(
-                KegUtils.get_recipes(self._data_roots, includes, include_paths)
-            )
+    def _generate_config_scripts(self):
+        script_dirs = [
+            os.path.join(x, 'scripts') for x in self._data_roots
+            if os.path.exists(os.path.join(x, 'scripts'))
+        ]
+        self._config_script = script_utils.get_config_script(
+            self._data['profiles'], 'config', script_dirs
+        )
+        self._images_script = script_utils.get_config_script(
+            self._data['profiles'], 'setup', script_dirs
+        )
 
     def _generate_overlay_info(self):
-        if 'contents' in self._data:
-            self._generate_overlay_info_single()
-            # NOTE: We stop here and don't generate overlay data for any
-            # defined profiles.
-            # This is based on the assumption that if there is a 'contents'
-            # section that singlebuild is being used and we don't want to
-            # produce superfluous archives. However, it is really up to the
-            # schema what it does with the provided data.
-            return
-        if 'profiles' in self._data:
-            self._generate_overlay_info_profiles()
-
-    def _generate_overlay_info_single(self):
-        default_archive_name = 'root'
-        overlayfiles = self._data['contents'].get('overlayfiles')
-        if overlayfiles:
-            self._data['contents']['archives'] = []
-            archive_list = []
-
-            for overlay, content in overlayfiles.items():
-                archive_name = content.get('archivename')
-                if archive_name:
-                    archive_list.append({'name': '{}.{}'.format(archive_name, self._archive_ext)})
-                else:
-                    archive_name = default_archive_name
-                for inc in content['include']:
-                    self._add_dir_to_archive(archive_name, inc)
-
-            self._add_archive_tag(self._data['contents'], archive_list)
-
-    def _generate_overlay_info_profiles(self):
         for profile_name, profile_data in self._data['profiles'].items():
             if not profile_data.get('overlayfiles'):
                 continue

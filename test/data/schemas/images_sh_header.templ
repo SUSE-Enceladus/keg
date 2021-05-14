@@ -1,11 +1,11 @@
 #!/bin/bash
 #================
-# FILE          : config.sh
+# FILE          : images.sh
 #----------------
 # PROJECT       : openSUSE KIWI Image System
 # COPYRIGHT     : (c) 2020 SUSE LLC. All rights reserved
 #               : 
-# AUTHOR        : The Team bob@example.net
+# AUTHOR        : {{ data['image']['author'] }} {{ data['image']['contact'] }}
 #               :
 # BELONGS TO    : Operating System images
 #               :
@@ -30,29 +30,3 @@ set -e
 #--------------------------------------
 echo "Configure image: [$kiwi_iname]..."
 
-#======================================
-# Setup the build keys
-#--------------------------------------
-suseImportBuildKey
-
-# keg: included from JeOS-sysconfig
-baseUpdateSysConfig /etc/sysconfig/language INSTALLED_LANGUAGES ""
-
-# keg: included from JeOS-files
-cat >> "/etc/sysconfig/console" <<EOF
-CONSOLE_ENCODING="UTF-8"
-EOF
-
-# keg: included from JeOS-config
-bar
-bob
-
-# keg: included from JeOS-services
-baseInsertService sshd
-baseRemoveService kbd
-
-if [[ $kiwi_profiles = other ]]; then
-    # keg: included from foo-timer
-    systemctl enable foo.timer
-
-fi

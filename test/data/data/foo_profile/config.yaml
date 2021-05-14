@@ -1,0 +1,4 @@
+config:
+  services:
+    foo-timer:
+      - foo.timer

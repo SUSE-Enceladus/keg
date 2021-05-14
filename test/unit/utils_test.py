@@ -4,7 +4,7 @@ from kiwi_keg.utils import KegUtils
 class TestUtils:
     def test_create_yaml_tree(self):
         expected_output = {
-            'schema': 'vm_singlebuild',
+            'schema': 'vm',
             'image': {
                 'author': 'The Team',
                 'contact': 'bob@example.net',
@@ -21,8 +21,10 @@ class TestUtils:
                 }
             ],
             'include-paths': ['leap15/1', 'leap15/2'],
-            'contents': {
-                'include': ['base/jeos']
+            'profiles': {
+                'common': {
+                    'include': ['base/jeos']
+                }
             }
         }
         assert KegUtils.get_recipes(

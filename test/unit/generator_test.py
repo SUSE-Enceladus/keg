@@ -107,6 +107,16 @@ class TestKegGenerator:
                 '../data/keg_output/config.sh', tmpdirname + '/config.sh'
             ) is True
 
+    @patch('kiwi_keg.generator.KegGenerator._read_template')
+    def test_create_custom_scripts_no_template(self, mock_read_template):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            mock_read_template.side_effect = KegError('no such teamplate')
+            generator = KegGenerator(self.image_definition, tmpdirname)
+            generator.create_custom_scripts(overwrite=True)
+            assert filecmp.cmp(
+                '../data/keg_output/config_fallback_header.sh', tmpdirname + '/config.sh'
+            ) is True
+
     @patch('kiwi_keg.image_definition.datetime')
     @patch('kiwi_keg.image_definition.version')
     @patch('kiwi_keg.generator.shutil.rmtree')
