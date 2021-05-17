@@ -18,7 +18,7 @@
 import os
 import textwrap
 from typing import (
-    List, Dict
+    List, Dict, Optional
 )
 
 # project
@@ -180,7 +180,7 @@ def get_scripts_section(script_items: Dict, ns: str, script_dirs: List[str]) -> 
     return content
 
 
-def get_script_path(script_dirs: List[str], script_name: str) -> str:
+def get_script_path(script_dirs: List[str], script_name: str) -> Optional[str]:
     """
     Return script location.
 
