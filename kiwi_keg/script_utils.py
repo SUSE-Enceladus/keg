@@ -16,7 +16,7 @@
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
 import os
-from textwrap import indent
+import textwrap
 from typing import (
     List, Dict
 )
@@ -25,7 +25,14 @@ from typing import (
 from kiwi_keg.exceptions import KegError
 
 
-def get_config_script(profiles_dict: Dict, config_key: str, script_dirs: List[str]):
+def get_config_script(profiles_dict: Dict, config_key: str, script_dirs: List[str]) -> str:
+    """
+    Return image configuration script.
+
+    :param: Dict profiles_dict: Dictionary containing profiles structure
+    :param: str config_key: Lookup key for config structure ('config' or 'setup')
+    :param: List[str] script_dirs: Directories to scan for script snippets
+    """
     content = ''
     profile = profiles_dict.get('common')
     if profile:
@@ -38,41 +45,54 @@ def get_config_script(profiles_dict: Dict, config_key: str, script_dirs: List[st
         config_root = profile_data.get(config_key)
         if config_root:
             content += 'if [[ $kiwi_profiles = {profile} ]]; then\n'.format(profile=profile)
-            content += indent(get_profile_section(config_root, script_dirs), '    ')
+            content += get_profile_section(config_root, script_dirs, '    ')
             content += 'fi\n'
     return content
 
 
-def get_profile_section(config_section: Dict, script_dirs: List[str]):
+def get_profile_section(config_section: Dict, script_dirs: List[str], indent: str = '') -> str:
+    """
+    Return scriptlet for given profile.
+
+    :param: Dict config_section: Dictionary containing wanted profile's config section
+    :param: List[str] script_dirs: Directories to scan for script snippets
+    :param: str indent: Indent output with given string
+    """
     content = ''
     config_sysconfig = config_section.get('sysconfig')
     if config_sysconfig:
         for ns, items in config_sysconfig.items():
-            content += '# keg: included from {}\n'.format(ns)
-            content += get_sysconfig_section(items, ns)
+            content += '{indent}# keg: included from {ns}\n'.format(indent=indent, ns=ns)
+            content += textwrap.indent(get_sysconfig_section(items, ns), indent)
             content += '\n'
     config_files = config_section.get('files')
     if config_files:
         for ns, items in config_files.items():
-            content += '# keg: included from {}\n'.format(ns)
-            content += get_files_section(items, ns)
+            content += '{indent}# keg: included from {ns}\n'.format(indent=indent, ns=ns)
+            content += get_files_section(items, ns, indent)
             content += '\n'
     config_scripts = config_section.get('scripts')
     if config_scripts:
         for ns, items in config_scripts.items():
-            content += '# keg: included from {}\n'.format(ns)
-            content += get_scripts_section(items, ns, script_dirs)
+            content += '{indent}# keg: included from {ns}\n'.format(indent=indent, ns=ns)
+            content += textwrap.indent(get_scripts_section(items, ns, script_dirs), indent)
             content += '\n'
     config_services = config_section.get('services')
     if config_services:
         for ns, items in config_services.items():
-            content += '# keg: included from {}\n'.format(ns)
-            content += get_services_section(items, ns)
+            content += '{indent}# keg: included from {ns}\n'.format(indent=indent, ns=ns)
+            content += textwrap.indent(get_services_section(items, ns), indent)
             content += '\n'
     return content
 
 
-def get_sysconfig_section(sysconfig_items: Dict, ns: str):
+def get_sysconfig_section(sysconfig_items: Dict, ns: str) -> str:
+    """
+    Return scriptlet for given sysconfig section.
+
+    :param: Dict config_section: Dictionary containing config section
+    :param: str ns: Namespace the section belongs to
+    """
     content = ''
     try:
         for item in sysconfig_items:
@@ -86,11 +106,18 @@ def get_sysconfig_section(sysconfig_items: Dict, ns: str):
         raise KegError('sysconfig section "{namespace}" malformed'.format(namespace=ns))
 
 
-def get_files_section(files_items: Dict, ns: str):
+def get_files_section(files_items: Dict, ns: str, indent: str = '') -> str:
+    """
+    Return scriptlet for given files section.
+
+    :param: Dict config_section: Dictionary containing config section
+    :param: str ns: Namespace the section belongs to
+    :param: str indent: Prefix 'cat' cmd line with given string. Not applied to content.
+    """
     content = ''
     try:
         for item in files_items:
-            content += 'cat >'
+            content += '{}cat >'.format(indent)
             if item.get('append'):
                 content += '>'
             content += ' "{filename}" <<EOF\n{content}\nEOF\n'.format(
@@ -102,7 +129,13 @@ def get_files_section(files_items: Dict, ns: str):
         raise KegError('files section "{namespace}" malformed'.format(namespace=ns))
 
 
-def get_services_section(service_items: Dict, ns: str):
+def get_services_section(service_items: Dict, ns: str) -> str:
+    """
+    Return scriptlet for given services section.
+
+    :param: Dict config_section: Dictionary containing config section
+    :param: str ns: Namespace the section belongs to
+    """
     content = ''
     try:
         for item in service_items:
@@ -124,7 +157,13 @@ def get_services_section(service_items: Dict, ns: str):
         raise KegError('service section "{namespace}" malformed'.format(namespace=ns))
 
 
-def get_scripts_section(script_items: Dict, ns: str, script_dirs: List[str]):
+def get_scripts_section(script_items: Dict, ns: str, script_dirs: List[str]) -> str:
+    """
+    Return scriptlet for given scripts section.
+
+    :param: Dict config_section: Dictionary containing config section
+    :param: str ns: Namespace the section belongs to
+    """
     content = ''
     for script_name in script_items:
         script_path = get_script_path(script_dirs, script_name)
@@ -141,7 +180,13 @@ def get_scripts_section(script_items: Dict, ns: str, script_dirs: List[str]):
     return content
 
 
-def get_script_path(script_dirs: List[str], script_name: str):
+def get_script_path(script_dirs: List[str], script_name: str) -> str:
+    """
+    Return script location.
+
+    :param: List[str]: List of directories.
+    :param: str script_name: Name of script snippet to find ('.sh' appended automatically)
+    """
     script_path = None
     for script_dir in script_dirs:
         for entry in os.scandir(script_dir):
