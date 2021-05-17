@@ -29,7 +29,7 @@ class TestKegImageDefinition:
                 image_name='leap/15.2', recipes_root='artificial'
             )
 
-    @patch('kiwi_keg.utils.KegUtils.get_recipes')
+    @patch('kiwi_keg.file_utils.get_recipes')
     def test_populate_raises_on_get_recipes(
         self, mock_utils_get_recipes
     ):

@@ -25,7 +25,7 @@ from datetime import (
 
 # project
 from kiwi_keg import script_utils
-from kiwi_keg.utils import KegUtils
+from kiwi_keg import file_utils
 from kiwi_keg import version
 from kiwi_keg.exceptions import KegError
 
@@ -108,7 +108,7 @@ class KegImageDefinition:
         }
         try:
             self._data.update(
-                KegUtils.get_recipes(
+                file_utils.get_recipes(
                     [self.image_root], [self.image_name]
                 )
             )
@@ -123,7 +123,7 @@ class KegImageDefinition:
 
     def list_recipes(self):
         images_recipes = []
-        for image_file in KegUtils.get_all_files(self.image_root):
+        for image_file in file_utils.get_all_files(self.image_root):
             if os.path.basename(image_file) == 'image.yaml':
                 rel_path = os.path.relpath(
                     os.path.dirname(image_file),
@@ -139,8 +139,8 @@ class KegImageDefinition:
                 profile: Dict = {}
                 for item, value in profile_data.items():
                     if item == 'include':
-                        KegUtils.rmerge(
-                            KegUtils.get_recipes(
+                        file_utils.rmerge(
+                            file_utils.get_recipes(
                                 self.data_roots,
                                 value,
                                 include_paths
@@ -148,7 +148,7 @@ class KegImageDefinition:
                             profile
                         )
                     else:
-                        KegUtils.rmerge({item: value}, profile_data)
+                        file_utils.rmerge({item: value}, profile_data)
                 self._data['profiles'][profile_name].update(profile)
 
     def _generate_config_scripts(self):
@@ -188,7 +188,7 @@ class KegImageDefinition:
 
     def _add_archive_tag(self, dict_node, archive_list):
         if archive_list:
-            KegUtils.rmerge(
+            file_utils.rmerge(
                 {
                     'packages': {
                         'image': {

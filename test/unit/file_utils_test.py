@@ -1,4 +1,4 @@
-from kiwi_keg.utils import KegUtils
+from kiwi_keg import file_utils
 
 
 class TestUtils:
@@ -27,12 +27,12 @@ class TestUtils:
                 }
             }
         }
-        assert KegUtils.get_recipes(
+        assert file_utils.get_recipes(
             ['../data/images'], ['leap_single_build'], ['base/jeos/leap']
         ) == expected_output
 
     def test_load_scripts(self):
         expected_output = {'foo': 'bar\n', 'name': 'bob\n'}
-        assert KegUtils.load_scripts(
+        assert file_utils.load_scripts(
             ['../data/data'], 'scripts', ['base/jeos/leap']
         ) == expected_output
