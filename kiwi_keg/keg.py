@@ -83,6 +83,7 @@ from kiwi_keg.generator import KegGenerator
 from kiwi_keg.version import __version__
 
 log = logging.getLogger('keg')
+log.setLevel(logging.INFO)
 
 
 def main():

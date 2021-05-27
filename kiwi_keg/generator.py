@@ -24,8 +24,6 @@ import tarfile
 
 from kiwi_keg.image_definition import KegImageDefinition
 from kiwi_keg.kiwi_description import KiwiDescription
-from kiwi_keg.utils import KegUtils
-from kiwi_keg import template_functions
 from kiwi_keg.exceptions import KegError
 
 from jinja2.exceptions import TemplateNotFound
@@ -66,7 +64,6 @@ class KegGenerator:
         self.env = Environment(
             loader=FileSystemLoader(self.description_schemas)
         )
-        self.env.globals['keg_funcs'] = template_functions
 
         self.image_definition.populate()
 
@@ -129,32 +126,23 @@ class KegGenerator:
         :param bool overwrite:
             Overwrite destination contents, default is: False
         """
-        script_lib = KegUtils.load_scripts(
-            self.image_definition.data_roots, 'scripts',
-            self.image_definition.data.get('include-paths')
-        )
-
-        if self._has_script_data('config_script'):
+        if self.image_definition.config_script:
+            log.debug('Generating config.sh')
             self._check_file(self.kiwi_config_script, overwrite)
-            config_template = self._read_template(
-                'config.sh.templ'
+            self._write_custom_script(
+                self.kiwi_config_script,
+                self.image_definition.config_script,
+                'config_sh_header.templ'
             )
-            config_sh = config_template.render(
-                data=self.image_definition.data, scripts=script_lib
-            )
-            with open(self.kiwi_config_script, 'w') as custom_script:
-                custom_script.write(config_sh)
 
-        if self._has_script_data('image_script'):
+        if self.image_definition.images_script:
+            log.debug('Generating images.sh')
             self._check_file(self.kiwi_images_script, overwrite)
-            images_template = self._read_template(
-                'images.sh.templ'
+            self._write_custom_script(
+                self.kiwi_images_script,
+                self.image_definition.images_script,
+                'images_sh_header.templ'
             )
-            images_sh = images_template.render(
-                data=self.image_definition.data, scripts=script_lib
-            )
-            with open(self.kiwi_images_script, 'w') as custom_script:
-                custom_script.write(images_sh)
 
     def create_overlays(self,
                         disable_root_tar: bool = False,
@@ -172,7 +160,9 @@ class KegGenerator:
         :param: str compression:
             Compression to use for packing
         """
-        for archive_name, dir_list in self.image_definition.data['archives'].items():
+        if not self.image_definition.archives:
+            return
+        for archive_name, dir_list in self.image_definition.archives.items():
             if archive_name == 'root' and disable_root_tar:
                 overlay_dest_dir = os.path.join(self.dest_dir, 'root')
                 if os.path.exists(overlay_dest_dir):
@@ -196,22 +186,20 @@ class KegGenerator:
                         self._add_dir_to_tar(tar, base_dir)
 
     def create_multibuild_file(self, overwrite: bool = False):
-        if not self.image_definition.data.get('contents'):
-            profiles = self.image_definition.data.get('profiles')
-            if profiles:
-                mbuild_file = os.path.join(self.dest_dir, '_multibuild')
-                if os.path.exists(mbuild_file) and not overwrite:
-                    raise KegError(
-                        '{target} exists, use force to overwrite.'.format(
-                            target=mbuild_file
-                        )
+        profiles = [x for x in self.image_definition.data['profiles'] if x != 'common']
+        if profiles:
+            mbuild_file = os.path.join(self.dest_dir, '_multibuild')
+            if os.path.exists(mbuild_file) and not overwrite:
+                raise KegError(
+                    '{target} exists, use force to overwrite.'.format(
+                        target=mbuild_file
                     )
-                with open(mbuild_file, 'w') as mbuild_obj:
-                    mbuild_obj.write('<multibuild>\n')
-                    for profile in profiles:
-                        if profile != 'common':
-                            mbuild_obj.write('    <flavor>{}</flavor>\n'.format(profile))
-                    mbuild_obj.write('</multibuild>\n')
+                )
+            with open(mbuild_file, 'w') as mbuild_obj:
+                mbuild_obj.write('<multibuild>\n')
+                for profile in profiles:
+                    mbuild_obj.write('    <flavor>{}</flavor>\n'.format(profile))
+                mbuild_obj.write('</multibuild>\n')
 
     @staticmethod
     def _tarinfo_set_root(tarinfo):
@@ -232,13 +220,6 @@ class KegGenerator:
                 src = os.path.join(entry[0], file)
                 shutil.copy(src, dest_sub, follow_symlinks=False)
 
-    def _has_script_data(self, script_key):
-        profiles = self.image_definition.data.get('profiles')
-        for profile in profiles.values():
-            config = profile.get('config')
-            if config and config.get(script_key):
-                return True
-
     @staticmethod
     def _check_file(filename, overwrite):
         if not overwrite and os.path.exists(filename):
@@ -247,6 +228,22 @@ class KegGenerator:
                     target=filename
                 )
             )
+
+    def _write_custom_script(self, filename, content, template_name):
+        try:
+            header_template = self._read_template(template_name)
+            header = header_template.render(
+                data=self.image_definition.data,
+                template_target=header_template
+            )
+        except KegError:
+            log.warning('header template {} missing, using fallback header'.format(template_name))
+            header = '#!/bin/bash\n'
+
+        with open(filename, 'w') as custom_script:
+            custom_script.write(header)
+            custom_script.write('\n')
+            custom_script.write(content)
 
     def _read_template(self, template_name):
         try:

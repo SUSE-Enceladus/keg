@@ -1,10 +1,10 @@
-from kiwi_keg.utils import KegUtils
+from kiwi_keg import file_utils
 
 
 class TestUtils:
     def test_create_yaml_tree(self):
         expected_output = {
-            'schema': 'vm_singlebuild',
+            'schema': 'vm',
             'image': {
                 'author': 'The Team',
                 'contact': 'bob@example.net',
@@ -21,16 +21,18 @@ class TestUtils:
                 }
             ],
             'include-paths': ['leap15/1', 'leap15/2'],
-            'contents': {
-                'include': ['base/jeos']
+            'profiles': {
+                'common': {
+                    'include': ['base/jeos']
+                }
             }
         }
-        assert KegUtils.get_recipes(
+        assert file_utils.get_recipes(
             ['../data/images'], ['leap_single_build'], ['base/jeos/leap']
         ) == expected_output
 
     def test_load_scripts(self):
         expected_output = {'foo': 'bar\n', 'name': 'bob\n'}
-        assert KegUtils.load_scripts(
+        assert file_utils.load_scripts(
             ['../data/data'], 'scripts', ['base/jeos/leap']
         ) == expected_output
