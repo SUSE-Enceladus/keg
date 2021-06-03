@@ -19,7 +19,7 @@ import logging
 from glob import glob
 from pathlib import Path
 from typing import (
-    List, Dict, Generator
+    List, Dict
 )
 import os
 import yaml
