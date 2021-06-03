@@ -110,13 +110,3 @@ class TestKegImageDefinition:
                          'home': '/root',
                          'name': 'root',
                          'password': 'foo'}]}
-
-    def test_list_recipes(self):
-        assert self.keg_definition.list_recipes() == [
-            'leap/15',
-            'leap/15.1',
-            'leap/15.2',
-            'leap_broken_overlay',
-            'leap_no_overlays',
-            'leap_single_build'
-        ]

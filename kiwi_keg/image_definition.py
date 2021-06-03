@@ -121,18 +121,6 @@ class KegImageDefinition:
         self._generate_config_scripts()
         self._generate_overlay_info()
 
-    def list_recipes(self):
-        images_recipes = []
-        for image_file in file_utils.get_all_files(self.image_root):
-            if os.path.basename(image_file) == 'image.yaml':
-                rel_path = os.path.relpath(
-                    os.path.dirname(image_file),
-                    self.image_root
-                )
-                images_recipes.append(rel_path)
-
-        return sorted(images_recipes)
-
     def _update_profiles(self, include_paths):
         if 'profiles' in self._data:
             for profile_name, profile_data in self._data['profiles'].items():

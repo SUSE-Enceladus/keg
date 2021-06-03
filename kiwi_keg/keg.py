@@ -17,7 +17,7 @@
 #
 """
 
-Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
+Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT) [-v]
        keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
            [--format-xml|--format-yaml] [--disable-root-tar]
            [--disable-multibuild] [--dump-dict]
@@ -52,7 +52,7 @@ Options:
         Dump generated data dictionary to stdout instead of generating an image
         description. Useful for debugging.
 
-    -l. --list-recipes
+    -l, --list-recipes
         List available images that can be created with the current recipes
 
     -f, --force
@@ -74,6 +74,7 @@ Options:
 """
 import docopt
 import logging
+import os
 import sys
 
 # project
@@ -81,6 +82,7 @@ from kiwi_keg.exceptions import KegError
 from kiwi_keg.image_definition import KegImageDefinition
 from kiwi_keg.generator import KegGenerator
 from kiwi_keg.version import __version__
+from kiwi_keg.file_utils import get_all_leaf_dirs
 
 log = logging.getLogger('keg')
 log.setLevel(logging.INFO)
@@ -92,16 +94,34 @@ def main():
     if args['--verbose']:
         log.setLevel(logging.DEBUG)
 
-    try:
-        if args['--list-recipes']:
-            image_definition = KegImageDefinition(
-                image_name='',
-                recipes_root=args['--recipes-root'],
-                data_roots=[]
-            )
-            print('\n'.join(image_definition.list_recipes()))
-            return
+    if args['--list-recipes']:
+        image_root = os.path.join(args['--recipes-root'], 'images')
+        image_dirs = get_all_leaf_dirs(image_root)
+        images = {}
+        for image_src in sorted(image_dirs):
+            try:
+                image_definition = KegImageDefinition(
+                    image_name=image_src,
+                    recipes_root=args['--recipes-root'],
+                    data_roots=[]
+                )
+                image_definition.populate()
+                image_spec = image_definition.data['image']
+                images[image_src] = {
+                    'name': image_spec['name'],
+                    'desc': image_spec['specification'],
+                    'ver': image_spec['version']
+                }
+            except KegError as e:
+                log.error('{} is not a valid image: {}'.format(image_src, e))
+            except KeyError:
+                log.info('{} does not contain a (full) image definition'.format(image_src))
+        print('{:30s} {:30s} {:8s} {}'.format('Source', 'Name', 'Version', 'Description'))
+        for image, spec in images.items():
+            print('{:30s} {:30s} {:8s} {}'.format(image, spec['name'], spec['ver'], spec['desc']))
+        return
 
+    try:
         image_definition = KegImageDefinition(
             image_name=args['SOURCE'],
             recipes_root=args['--recipes-root'],

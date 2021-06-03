@@ -112,20 +112,15 @@ def load_scripts(
     return script_lib
 
 
-def get_all_files(base_dir: str) -> Generator[str, None, None]:
+def get_all_leaf_dirs(base_dir: str) -> List[str]:
     """
-    Return a generator containing all the files paths in the sub directories
-    of a given path.
-    :param: str base_dir: directory path to get all the files from.
-    :return: generator with all the file paths inside that directory.
-
-    :rtype: generator
+    Return a list of leaf directories of a given path.
+    :param: str base_dir: directory path to scan
+    :return: list of all leaf directories
     """
-    for sub_dir in os.scandir(base_dir):
-        if sub_dir.is_dir():
-            yield from get_all_files(sub_dir.path)
-        elif sub_dir.is_file():
-            yield sub_dir.path
+    strip_offset = len(base_dir) + 1
+    walker = os.walk(base_dir)
+    return [x[0][strip_offset:] for x in walker if not x[1]]
 
 
 def _get_source_files(roots, sub_dir, ext, include_paths):
