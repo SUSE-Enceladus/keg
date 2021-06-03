@@ -18,5 +18,5 @@
 """
 Global version information used in keg and the package
 """
-__version__ = '0.0.8'
+__version__ = '1.0.0'
 __githash__ = '$Format:%H$'
