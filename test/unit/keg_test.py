@@ -10,6 +10,15 @@ from kiwi_keg.keg import main
 
 from kiwi_keg.exceptions import KegError
 
+expected_list_output = """\
+Source                         Name                           Version  Description
+leap/15                        Leap15-JeOS                    1.0.42   Leap 15 guest image
+leap/15.1                      Leap15.1-JeOS                  1.0.42   Leap 15.1 guest image
+leap/15.2                      Leap15.2-JeOS                  1.0.42   Leap 15.2 guest image
+leap_no_overlays               Leap15-JeOS                    1.0.42   Leap 15 guest image
+leap_single_build              Leap15.2-JeOS                  1.0.42   Leap 15.2 guest image
+"""
+
 
 class TestKeg:
     @fixture(autouse=True)
@@ -101,23 +110,15 @@ class TestKeg:
                 main()
             assert 'Unexpected error' in self._caplog.text
 
-    @patch('kiwi_keg.keg.KegImageDefinition')
-    def test_keg_list_recipes(self, mock_KegImageDefinition):
+    def test_keg_list_recipes(self, capsys):
         sys.argv = [
             sys.argv[0], '--list-recipes',
             '--recipes-root', '../data'
         ]
-        image_definition = Mock()
-        image_definition.list_recipes.return_value = []
-        mock_KegImageDefinition.return_value = image_definition
         with self._caplog.at_level(logging.ERROR):
             main()
-            mock_KegImageDefinition.assert_called_once_with(
-                image_name='',
-                recipes_root='../data',
-                data_roots=[]
-            )
-            assert image_definition.list_recipes.called
+            cap = capsys.readouterr()
+            assert cap.out == expected_list_output
 
     @patch('pprint.pprint')
     @patch('kiwi_keg.keg.KegImageDefinition')

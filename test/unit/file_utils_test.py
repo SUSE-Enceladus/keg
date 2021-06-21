@@ -1,3 +1,4 @@
+from mock import patch
 from kiwi_keg import file_utils
 
 
@@ -36,3 +37,8 @@ class TestUtils:
         assert file_utils.load_scripts(
             ['../data/data'], 'scripts', ['base/jeos/leap']
         ) == expected_output
+
+    @patch('file_utils.os.walk')
+    def get_all_leaf_dirs(self, mock_os_walk):
+        mock_os_walk.return_value = ['foo', [], []]
+        assert file_utils.get_all_leaf_dirs('foo') == ['foo']

@@ -49,7 +49,7 @@ author = 'public-cloud-dev@suse.de'
 # built documents.
 #
 # The short X.Y version.
-version = '0.0.8'
+version = '1.0.0'
 # The full version, including alpha/beta/rc tags.
 release = version
 
