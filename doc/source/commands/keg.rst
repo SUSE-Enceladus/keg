@@ -11,7 +11,7 @@ SYNOPSIS
    keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
 
    keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
-       [--format-xml|--format-yaml]
+       [--format-xml|--format-yaml] [--dump-dict]
        [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
        SOURCE
 
@@ -28,14 +28,14 @@ are situations where many image descriptions must be managed and the
 image descriptions have considerable overlap with respect to content
 and setup.
 
-The key component for Keg is a data structure called `image definition tree`.
+The key component for Keg is a data structure called `recipes`.
 This data structure is expected to contain all information necessary to
 create KIWI image descriptions. Keg is implemented such that data inheritance
-is possible to reduce data duplication in the `image definition tree`.
+is possible to reduce data duplication in the `recipes`.
 
-Please find an implementation of an `image definition tree` with
+Please find an implementation of an `recipes` with
 a focus on Public Cloud images here:
-`Public Cloud Image Definition Tree <https://github.com/SUSE-Enceladus/keg-recipes>`__
+`Public Cloud Keg Recipes <https://github.com/SUSE-Enceladus/keg-recipes>`__
 
 .. _keg_options:
 
@@ -91,6 +91,12 @@ OPTIONS
      written image description will be preserved into the
      formatted/updated KIWI XML file. Inline comments will
      not be preserved.
+
+--dump-dict
+
+  Parse input data and build image data dictionary, but instead
+  of running the generator, dump data dictionary and exit. Useful
+  for debugging.
 
 -v, --verbose
 

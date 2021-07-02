@@ -12,6 +12,9 @@ Keg Reference Guide
    overview
    installation
    commands
+   recipes_basics
+   image_definition
+   data_modules
 
 .. sidebar:: Links
 

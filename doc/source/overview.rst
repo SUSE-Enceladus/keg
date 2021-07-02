@@ -20,12 +20,12 @@ are situations where many image descriptions must be managed and the
 image descriptions have considerable overlap with respect to content
 and setup.
 
-The key component for `keg` is a data structure called `image definition tree`.
+The key component for `keg` is a data structure called `recipes`.
 This data structure is expected to contain all information necessary to
 create KIWI image descriptions. `keg` is implemented such that data inheritance 
-is possible to reduce data duplication in the `image definition tree`.
+is possible to reduce data duplication in the `recipes`.
 
-The `image definition tree` consists of three major components:
+The `recipes` consist of three major components:
 
 Data Building Blocks: :file:`data`
   Independent collection of components used in KIWI image
@@ -44,10 +44,13 @@ Schema Templates: :file:`schemas`
   Templates to implement Syntax and Semantic of image description
   files as required by KIWI
 
-The setup of the `image definition tree` is the most time consuming
-part when using Keg. Example definitions for the `image definition tree`
+The setup of the `recipes` is the most time consuming
+part when using Keg. Example definitions for the `recipes`
 can be found here:
-`Public Cloud Image Definition Tree <https://github.com/SUSE-Enceladus/keg-recipes>`__
+`Public Cloud Keg Recipes <https://github.com/SUSE-Enceladus/keg-recipes>`__
+
+For more details on how `keg` processes `recipes` data, see section
+:ref:`recipes_basics` (ff).
 
 Working With Keg
 ----------------

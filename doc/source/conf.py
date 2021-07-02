@@ -41,7 +41,7 @@ default_role="py:obj"
 
 # General information about the project.
 project = 'Keg - Image Composition Tool'
-copyright = '2020, SUSE - Public Cloud Team'
+copyright = '2021, SUSE - Public Cloud Team'
 author = 'public-cloud-dev@suse.de'
 
 # The version info for the project you're documenting, acts as replacement for
