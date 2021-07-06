@@ -111,6 +111,13 @@ This section describes the input paramaters used by the data modules.
         - string
         ...
 
+.. note::
+
+  For multi-build image definitions, any module that defines `profile`
+  parameters must be included in the profile specific section of the image
+  definition. Inclusion in the `common` profile only works for single-build
+  image definitions.
+
 Namespace may be any name. Namespaces exist to allow for dictionaries to be
 merged without overwriting keys from inherited dictionaries, except where this
 is wanted. Using the same namespace in a more specific dictionary (i.e. a lower
