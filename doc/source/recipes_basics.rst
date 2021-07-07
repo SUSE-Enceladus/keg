@@ -3,7 +3,7 @@
 Recipes Basics
 ==============
 
-To produce image descriptions, Keg must be provided with source data, also
+To produce image descriptions, keg must be provided with source data, also
 called `keg recipes`. Unlike kiwi descriptions, keg recipes can be composed of
 an arbitrary number of files, which allows to create building blocks for
 images. Keg does not mandate a specific structure of the recipes data, with the
@@ -18,7 +18,7 @@ Recipes Data Types
 
 There are several types of source data in `keg recipes`:
 
-1, Image Definitions
+1. Image Definitions
 
   Defines image properties and composition. Image definitions must be placed in
   the :file:`images` directory in the recipes root directory. Input format is
@@ -61,12 +61,12 @@ Source Data Format and Processing
 This section contains some general information about how `keg` handles its
 source data. An image description is internally represented by a data
 dictionary with a certain structure. This dictionary gets composed by parsing
-source image defintion and data files referenced by the image definition
+source image definition and data files referenced by the image definition
 and merging them into a dictionary. Image defintions as well as data modules
 are used by referencing a directory (under :file:`images` or :file:`data`
 respectively), which may be several layers of directories under the root
 directory. When parsing those, `keg` will also read any yaml file that is
 in a directory above the referenced one, and merge all source data into
 one dictionary, with the lower (i.e. more specific) layers taking precedence
-over upper (i.e. more generic) ones. This inhertance mechanism is intended to
+over upper (i.e. more generic) ones. This inheritance mechanism is intended to
 reduce data duplication.

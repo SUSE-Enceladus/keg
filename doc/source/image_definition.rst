@@ -85,7 +85,7 @@ dictionaries from a given input path need to have the following structure:
 .. note::
 
   Image definitions that define a `common` profile only in the `profiles`
-  section are considered single-bulld and definitions with additional
+  section are considered single-build and definitions with additional
   profiles are considered multi-build. Again, this depends on the used
   template and may not be true for custom templates.
 

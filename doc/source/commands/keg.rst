@@ -20,22 +20,22 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-Keg is a tool which helps to create and manage image descriptions suitable
+`Keg` is a tool which helps to create and manage image descriptions suitable
 for the `KIWI <https://osinside.github.io/kiwi/>`__ appliance builder.
 While `keg` can be used to manage a single image definition the tool provides
-no considerable advantage in such a use case. The primary use case for keg
+no considerable advantage in such a use case. The primary use case for `keg`
 are situations where many image descriptions must be managed and the
 image descriptions have considerable overlap with respect to content
 and setup.
 
-The key component for Keg is a data structure called `recipes`.
-This data structure is expected to contain all information necessary to
-create KIWI image descriptions. Keg is implemented such that data inheritance
-is possible to reduce data duplication in the `recipes`.
+`Keg` requires source data called `recipes` which provides all information
+necessary for `keg` to create KIWI image descriptions. See
+:ref:`recipes_basics` for more information about `recipes`.
 
-Please find an implementation of an `recipes` with
-a focus on Public Cloud images here:
+The `recipes` used for generating SUSE Public Cloud image descriptions
+can be found in the
 `Public Cloud Keg Recipes <https://github.com/SUSE-Enceladus/keg-recipes>`__
+repository.
 
 .. _keg_options:
 

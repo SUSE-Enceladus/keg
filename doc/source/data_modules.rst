@@ -3,12 +3,12 @@
 Data Modules
 ============
 
-Data modules are essentially directories in the :file:`data` tree. Inheritence
+Data modules are essentially directories in the :file:`data` tree. Inheritance
 rules apply similarly to the image definition tree, but additionally, `keg`
 supports cross inheritance for data modules. Cross inheritance is useful to
-inherit configuration changes from previous version. This can be specified in
+inherit configuration changes from previous versions. This can be specified in
 the image definition using the `include-paths` list. Include paths are paths
-the get appended to any source path and those get scanned for input files as
+that get appended to any source path and those get scanned for input files as
 well. For example, let's assume you have the following configration in your
 image defintion:
 
