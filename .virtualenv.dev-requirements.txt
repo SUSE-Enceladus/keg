@@ -28,3 +28,4 @@ git+https://github.com/openSUSE/rstxml2docbook.git@feature/kiwi
 
 # Python static type checker
 mypy
+types-PyYAML
