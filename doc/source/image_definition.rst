@@ -22,7 +22,7 @@ definitions. Example directory layout::
                             image.yaml
 
 This example layout defines two images, `opensuse/leap/15.2` and
-`opensuse/leap/15.3`. It uses inheritence to define a common profile for both
+`opensuse/leap/15.3`. It uses inheritance to define a common profile for both
 image definitions, and to set some `opensuse` specific defaults. Running `keg
 -d output_dir opensuse/leap/15.3` would merge data from the following files in
 the show order::
@@ -86,8 +86,13 @@ dictionaries from a given input path need to have the following structure:
 
   Image definitions that define a `common` profile only in the `profiles`
   section are considered single-build and definitions with additional
-  profiles are considered multi-build. Again, this depends on the used
-  template and may not be true for custom templates.
+  profiles are considered multi-build. Single-build image descriptions
+  produce a single image binary, with all configuration properties included in
+  the `common` profile. Multi-build image descriptions produce an image binary
+  per profile, with each profile using all configuration properties included in
+  the corresponding profile section and the `common` profile. Since the
+  generated image description depends on the used template this may not apply
+  for custom templates.
 
 The `profiles` section is what defines the image configuration and data
 composition. Any list item in `include` refers to a directory under
