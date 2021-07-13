@@ -39,6 +39,7 @@ class KegImageDefinition:
         image_name: str,
         recipes_root: str,
         data_roots: List[str] = [],
+        image_version: str = None,
         archive_ext: str = 'tar.gz'
     ):
         """
@@ -48,6 +49,7 @@ class KegImageDefinition:
         self._recipes_root = recipes_root
         self._image_name = image_name
         self._image_root = os.path.join(recipes_root, 'images')
+        self._image_version = image_version
         self._data_roots = [os.path.join(recipes_root, 'data')]
         self._overlay_root = os.path.join(recipes_root, 'data', 'overlayfiles')
         self._archive_ext = archive_ext
@@ -117,6 +119,8 @@ class KegImageDefinition:
                 'Error parsing image data: {error}'.format(error=issue)
             )
 
+        if self._image_version:
+            self._data['image']['version'] = self._image_version
         self._update_profiles(self._data.get('include-paths'))
         self._generate_config_scripts()
         self._generate_overlay_info()
