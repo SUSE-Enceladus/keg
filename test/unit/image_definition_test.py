@@ -11,7 +11,7 @@ from kiwi_keg.exceptions import KegError
 class TestKegImageDefinition:
     def setup(self):
         self.keg_definition = KegImageDefinition(
-            image_name='leap/15.2', recipes_root='../data'
+            image_name='leap/15.2', recipes_root='../data', image_version='1.0.42'
         )
 
     def test_setup_with_additional_data_root(self):

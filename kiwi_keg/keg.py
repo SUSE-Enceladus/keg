@@ -21,6 +21,7 @@ Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT) [-v
        keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
            [--format-xml|--format-yaml] [--disable-root-tar]
            [--disable-multibuild] [--dump-dict]
+           [-i IMAGE_VERSION|--image-version=IMAGE_VERSION]
            [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
            SOURCE
        keg -h | --help
@@ -65,6 +66,9 @@ Options:
     --format-xml
         Format/Update Keg written image description to installed
         KIWI schema and write the result description in XML markup
+
+    -i IMAGE_VERSION, --image-version=IMAGE_VERSION
+        Set image version
 
     -v, --verbose
         Enable verbose output
@@ -125,7 +129,8 @@ def main():
         image_definition = KegImageDefinition(
             image_name=args['SOURCE'],
             recipes_root=args['--recipes-root'],
-            data_roots=args['--add-data-root']
+            data_roots=args['--add-data-root'],
+            image_version=args['--image-version']
         )
         image_generator = KegGenerator(
             image_definition=image_definition,

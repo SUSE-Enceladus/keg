@@ -29,6 +29,7 @@ class TestKeg:
         sys.argv = [
             sys.argv[0], '--verbose',
             '--recipes-root', '../data',
+            '--image-version=1.0.42',
             '--dest-dir', 'some-target', '../data/images/leap/15.2'
         ]
 
@@ -44,7 +45,8 @@ class TestKeg:
             mock_KegImageDefinition.assert_called_once_with(
                 image_name='../data/images/leap/15.2',
                 recipes_root='../data',
-                data_roots=[]
+                data_roots=[],
+                image_version='1.0.42'
             )
             mock_KegGenerator.assert_called_once_with(
                 image_definition=image_definition, dest_dir='some-target'
@@ -138,7 +140,8 @@ class TestKeg:
             mock_KegImageDefinition.assert_called_once_with(
                 image_name='../data/images/leap/15.2',
                 recipes_root='../data',
-                data_roots=[]
+                data_roots=[],
+                image_version=None
             )
             mock_KegGenerator.assert_called_once_with(
                 image_definition=image_definition, dest_dir='some-target'
