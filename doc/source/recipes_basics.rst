@@ -28,12 +28,12 @@ There are several types of source data in `keg recipes`:
 
 2. Data Specifications
 
-  Specifies profile paramaters, package lists, image setup configuration, and
-  overlay data configuation. Data specifications must be placed in the
+  Specifies profile parameters, package lists, image setup configuration, and
+  overlay data configuration. Data specifications must be placed in the
   :file:`data` directory. The sub directories :file:`data/scripts` and
   :file:`data/overlayfiles` are reserved for configuration scriptlets and
   overlay files (see below). Everything else under :file:`data` is considered
-  data module specficiation with input format `yaml`.
+  data module specification with input format `yaml`.
 
   2.1 Image Configuration Scripts
 
@@ -62,7 +62,7 @@ This section contains some general information about how `keg` handles its
 source data. An image description is internally represented by a data
 dictionary with a certain structure. This dictionary gets composed by parsing
 source image definition and data files referenced by the image definition
-and merging them into a dictionary. Image defintions as well as data modules
+and merging them into a dictionary. Image definitions as well as data modules
 are used by referencing a directory (under :file:`images` or :file:`data`
 respectively), which may be several layers of directories under the root
 directory. When parsing those, `keg` will also read any yaml file that is
