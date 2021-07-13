@@ -9,8 +9,8 @@ supports cross inheritance for data modules. Cross inheritance is useful to
 inherit configuration changes from previous versions. This can be specified in
 the image definition using the `include-paths` list. Include paths are paths
 that get appended to any source path and those get scanned for input files as
-well. For example, let's assume you have the following configration in your
-image defintion:
+well. For example, let's assume you have the following configuration in your
+image definition:
 
 .. code:: yaml
 
@@ -41,13 +41,13 @@ necessary.
 
 When building the dictionary, `keg` will parse all input files referenced
 in the `profiles` section and merge them into the main dictionary. The
-folliwing section describes the structure used in the data section.
+following section describes the structure used in the data section.
 
 
 Data Module Dictionary Structure
 --------------------------------
 
-This section describes the input paramaters used by the data modules.
+This section describes the input parameters used by the data modules.
 
 .. note::
 
@@ -62,7 +62,7 @@ This section describes the input paramaters used by the data modules.
       kiwi_bootloader_param: string
       ...
     parameters:
-      kiwi_peferences_type_param: string
+      kiwi_preferences_type_param: string
       ...
       kernelcmdline:
         kernel_param: value
@@ -127,14 +127,14 @@ latter set it to `Null`).
 `kiwi_bootloader_param` refers to any bootloader type parameter supported by
 `kiwi <https://documentation.suse.com/kiwi/9/html/kiwi/building-types.html#disk-bootloader>`__.
 
-`kiwi_peferences_type_param` refers to any preferences type parameter supported
+`kiwi_preferences_type_param` refers to any preferences type parameter supported
 by `kiwi` (see `\<preferences\>\<type\> in kiwi documentation
 <https://documentation.suse.com/kiwi/9/html/kiwi/image-description.html#sec-preferences>`__).
 
-`kernelcmdline` is not a string that is directy copied into the appropriate
+`kernelcmdline` is not a string that is direct copied into the appropriate
 `kiwi` parameter but a dictionary that defines kernel parameters individually,
 with each key representing a kernel parameter. This allows to inherit parts of
-the kernel command line from other modules. There are two notiations for
+the kernel command line from other modules. There are two notations for
 parameters.  `kernel_param: value` will be translated into a single
 `kernel_param=value`, and `kernel_multi_param: [value, value, ...]` will add
 `kernel_multi_param` multiple times for each value from the given list.
@@ -159,7 +159,7 @@ allows to specify whether the service should be enabled or disabled).
 generated :file:`images.sh` instead of :file:`config.sh`.
 
 List items in `overlayfiles` refer to directories under
-:file:`data/overlafiles`. Files from those directories will be copied into
+:file:`data/overlayfiles`. Files from those directories will be copied into
 an overlay archive to be included in the image, either a generic or a profile
 specific one (depending on where the data module was included), or a named one
 in case `archivename` tag is used.
