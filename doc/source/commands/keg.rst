@@ -11,7 +11,7 @@ SYNOPSIS
    keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
 
    keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
-       [--format-xml|--format-yaml]
+       [--format-xml|--format-yaml] [--dump-dict]
        [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
        SOURCE
 
@@ -20,22 +20,22 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-Keg is a tool which helps to create and manage image descriptions suitable
+`Keg` is a tool which helps to create and manage image descriptions suitable
 for the `KIWI <https://osinside.github.io/kiwi/>`__ appliance builder.
 While `keg` can be used to manage a single image definition the tool provides
-no considerable advantage in such a use case. The primary use case for keg
+no considerable advantage in such a use case. The primary use case for `keg`
 are situations where many image descriptions must be managed and the
 image descriptions have considerable overlap with respect to content
 and setup.
 
-The key component for Keg is a data structure called `image definition tree`.
-This data structure is expected to contain all information necessary to
-create KIWI image descriptions. Keg is implemented such that data inheritance
-is possible to reduce data duplication in the `image definition tree`.
+`Keg` requires source data called `recipes` which provides all information
+necessary for `keg` to create KIWI image descriptions. See
+:ref:`recipes_basics` for more information about `recipes`.
 
-Please find an implementation of an `image definition tree` with
-a focus on Public Cloud images here:
-`Public Cloud Image Definition Tree <https://github.com/SUSE-Enceladus/keg-recipes>`__
+The `recipes` used for generating SUSE Public Cloud image descriptions
+can be found in the
+`Public Cloud Keg Recipes <https://github.com/SUSE-Enceladus/keg-recipes>`__
+repository.
 
 .. _keg_options:
 
@@ -91,6 +91,12 @@ OPTIONS
      written image description will be preserved into the
      formatted/updated KIWI XML file. Inline comments will
      not be preserved.
+
+--dump-dict
+
+  Parse input data and build image data dictionary, but instead
+  of running the generator, dump data dictionary and exit. Useful
+  for debugging.
 
 -v, --verbose
 
