@@ -35,13 +35,13 @@
                 While <literal>keg</literal> can be used to manage a single image definition the tool provides
                 no considerable advantage in such a use case. The primary use case for keg
                 are situations where many image descriptions must be managed and the
-                image descriptions have considerable over lap with respect to content
+                image descriptions have considerable overlap with respect to content
                 and setup.</para>
-      <para>The key component for <literal>keg</literal> is a data structure called <literal>image definition tree</literal>.
+      <para>The key component for <literal>keg</literal> is a data structure called <literal>recipes</literal>.
                 This data structure is expected to contain all information necessary to
                 create KIWI image descriptions. <literal>keg</literal> is implemented such that data inheritance
-                is possible to reduce data duplication in the <literal>image definition tree</literal>.</para>
-      <para>The <literal>image definition tree</literal> consists of three major components:</para>
+                is possible to reduce data duplication in the <literal>recipes</literal>.</para>
+      <para>The <literal>recipes</literal> consist of three major components:</para>
       <variablelist>
         <varlistentry>
           <term>Data Building Blocks: <literal>data</literal></term>
@@ -70,10 +70,12 @@
           </listitem>
         </varlistentry>
       </variablelist>
-      <para>The setup of the <literal>image definition tree</literal> is the most time consuming
-                part when using Keg. Example definitions for the <literal>image definition tree</literal>
+      <para>The setup of the <literal>recipes</literal> is the most time consuming
+                part when using Keg. Example definitions for the <literal>recipes</literal>
                 can be found here:
-                <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://github.com/SUSE-Enceladus/keg-recipes">Public Cloud Image Definition Tree</link></para>
+                <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://github.com/SUSE-Enceladus/keg-recipes">Public Cloud Keg Recipes</link></para>
+      <para>For more details on how <literal>keg</literal> processes <literal>recipes</literal> data, see section
+                <xref linkend="recipes-basics"/> (ff).</para>
     </section>
     <section xml:id="working-with-keg">
       <title>Working With Keg</title>
@@ -87,8 +89,8 @@
         </step>
       </procedure>
       <para>For the above to work, Keg needs to be installed as described in
-                <xref linkend="installation"/>. In addition install KIWI:
-                <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/installation.html"/></para>
+                <xref linkend="installation"/>. In addition install KIWI, see
+                <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/installation.html"/>.</para>
       <para>If all software components are installed, <literal>keg</literal> can be utilized like
                 the following example shows:</para>
       <screen language="shell-session">$ git clone https://github.com/SUSE-Enceladus/keg-recipes.git
@@ -97,9 +99,9 @@ $ keg --recipes-root keg-recipes --dest-dir leap_description \
       leap/jeos/15.2</screen>
       <para>After the <literal>keg</literal> command completes the destination directory specified
                 with <literal>--dest-dir</literal> contains and image description that can be processed
-                with kiwi to build an image. For more details about kiwi image descriptions
-                see: <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/image_description.html"/></para>
-      <para>With kiwi installed you can build the image with the <literal>keg</literal> created image
+                with KIWI to build an image. For more details about KIWI image descriptions,
+                see <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/image_description.html"/>.</para>
+      <para>With KIWI installed you can build the image with the <literal>keg</literal> created image
                 description as follows:</para>
       <screen language="shell-session">$ sudo kiwi-ng system build --description leap_description \
       --target-dir leap_image</screen>
@@ -129,7 +131,7 @@ $ keg --recipes-root keg-recipes --dest-dir leap_description \
         <screen language="bash">keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
 
 keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
-    [--format-xml|--format-yaml]
+    [--format-xml|--format-yaml] [--dump-dict]
     [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
     SOURCE
 
@@ -137,20 +139,20 @@ keg -h | --help</screen>
       </section>
       <section xml:id="description">
         <title>DESCRIPTION</title>
-        <para>Keg is a tool which helps to create and manage image descriptions suitable
+        <para><literal>Keg</literal> is a tool which helps to create and manage image descriptions suitable
                 for the <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/">KIWI</link> appliance builder.
                 While <literal>keg</literal> can be used to manage a single image definition the tool provides
-                no considerable advantage in such a use case. The primary use case for keg
+                no considerable advantage in such a use case. The primary use case for <literal>keg</literal>
                 are situations where many image descriptions must be managed and the
-                image descriptions have considerable over lap with respect to content
+                image descriptions have considerable overlap with respect to content
                 and setup.</para>
-        <para>The key component for Keg is a data structure called <literal>image definition tree</literal>.
-                This data structure is expected to contain all information necessary to
-                create KIWI image descriptions. Keg is implemented such that data inheritance
-                is possible to reduce data duplication in the <literal>image definition tree</literal>.</para>
-        <para>Please find an implementation of an <literal>image definition tree</literal> with
-                a focus on Public Cloud images here:
-                <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://github.com/SUSE-Enceladus/keg-recipes">Public Cloud Image Definition Tree</link></para>
+        <para><literal>Keg</literal> requires source data called <literal>recipes</literal> which provides all information
+                necessary for <literal>keg</literal> to create KIWI image descriptions. See
+                <xref linkend="recipes-basics"/> for more information about <literal>recipes</literal>.</para>
+        <para>The <literal>recipes</literal> used for generating SUSE Public Cloud image descriptions
+                can be found in the
+                <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://github.com/SUSE-Enceladus/keg-recipes">Public Cloud Keg Recipes</link>
+                repository.</para>
       </section>
       <section xml:id="keg-options">
         <title>ARGUMENTS</title>
@@ -236,6 +238,16 @@ keg -h | --help</screen>
           </varlistentry>
           <varlistentry>
             <term>
+              <option>--dump-dict</option>
+            </term>
+            <listitem>
+              <para>Parse input data and build image data dictionary, but instead
+                            of running the generator, dump data dictionary and exit. Useful
+                            for debugging.</para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>
               <option>-v</option>
               <option>--verbose</option>
             </term>
@@ -251,6 +263,293 @@ keg -h | --help</screen>
 
 $ keg --recipes-root keg-recipes --dest-dir leap_description leap/jeos/15.2</screen>
       </section>
+    </section>
+  </chapter>
+  <chapter xml:id="recipes-basics" xml:base="recipes_basics">
+    <title>Recipes Basics</title>
+    <para>To produce image descriptions, keg must be provided with source data, also
+            called <literal>keg recipes</literal>. Unlike kiwi descriptions, keg recipes can be composed of
+            an arbitrary number of files, which allows to create building blocks for
+            images. Keg does not mandate a specific structure of the recipes data, with the
+            exception that it expects certain types of source data in specific directories,
+            but how you want to structure the data is up to you.</para>
+    <para>This document describes the fundamental <literal>keg recipes</literal> structure and how <literal>keg</literal>
+            processes input data to generate an image definition.</para>
+    <section xml:id="recipes-data-types">
+      <title>Recipes Data Types</title>
+      <para>There are several types of source data in <literal>keg recipes</literal>:</para>
+      <procedure>
+        <step>
+          <para>Image Definitions</para>
+        </step>
+      </procedure>
+      <para>Defines image properties and composition. Image definitions must be placed in
+                    the <literal>images</literal> directory in the recipes root directory. Input format is
+                    <literal>yaml</literal>.</para>
+      <para>See <xref linkend="image-definition"/> for details.</para>
+      <procedure>
+        <step>
+          <para>Data Specifications</para>
+        </step>
+      </procedure>
+      <para>Specifies profile parameters, package lists, image setup configuration, and
+                    overlay data configuration. Data specifications must be placed in the
+                    <literal>data</literal> directory. The sub directories <literal>data/scripts</literal> and
+                    <literal>data/overlayfiles</literal> are reserved for configuration scriptlets and
+                    overlay files (see below). Everything else under <literal>data</literal> is considered
+                    data module specification with input format <literal>yaml</literal>.</para>
+      <para>2.1 Image Configuration Scripts</para>
+      <para>Image descriptions may include configuration scripts, which <literal>keg</literal> can compose
+                        from scriptlets. Those must be placed in <literal>data/scripts</literal>. All files
+                        need to have a <literal>sh</literal> suffix. Format is <literal>bash</literal>.</para>
+      <para>2.2 Overlay Data</para>
+      <para>Image description may include overlay files that get copied into the target
+                        image. <literal>Keg</literal> can create overlay archives from overlay data directories.
+                        Those must be placed in <literal>data/overlayfiles</literal>.</para>
+      <para>See <xref linkend="data-modules"/> for details on data modules.</para>
+      <procedure>
+        <step>
+          <para>Schema Templates</para>
+        </step>
+      </procedure>
+      <para><literal>Keg</literal> uses <literal>jinja2</literal> templates to produce the target <literal>config.kiwi</literal> file. The
+                    template defines the output structure, which is provided with the full image
+                    description as composed by <literal>keg</literal>. Templates need to be in <literal>data/schemas</literal>.</para>
+    </section>
+    <section xml:id="source-data-format-and-processing">
+      <title>Source Data Format and Processing</title>
+      <para>This section contains some general information about how <literal>keg</literal> handles its
+                source data. An image description is internally represented by a data
+                dictionary with a certain structure. This dictionary gets composed by parsing
+                source image definition and data files referenced by the image definition
+                and merging them into a dictionary. Image definitions as well as data modules
+                are used by referencing a directory (under <literal>images</literal> or <literal>data</literal>
+                respectively), which may be several layers of directories under the root
+                directory. When parsing those, <literal>keg</literal> will also read any yaml file that is
+                in a directory above the referenced one, and merge all source data into
+                one dictionary, with the lower (i.e. more specific) layers taking precedence
+                over upper (i.e. more generic) ones. This inheritance mechanism is intended to
+                reduce data duplication.</para>
+    </section>
+  </chapter>
+  <chapter xml:id="image-definition" xml:base="image_definition">
+    <title>Image Definition</title>
+    <para><literal>Keg</literal> considers all leaf directories in <literal>images</literal> to be image definitions.
+            This means by parsing any yaml file from those directories and all yaml files
+            in any parent directory and merging their data into a dictionary, a complete
+            image definition needs to be available in the resulting dictionary. There is no
+            specific hierarchy required in <literal>images</literal>. You can use any level of sub
+            directories to use any level of inheritance, or simply just to group image
+            definitions. Example directory layout:</para>
+    <screen language="default">images/
+       opensuse/
+                defaults.yaml
+                leap/
+                     profiles.yaml
+                     15.2/
+                          image.yaml
+                     15.3/
+                          image.yaml</screen>
+    <para>This example layout defines two images, <literal>opensuse/leap/15.2</literal> and
+            <literal>opensuse/leap/15.3</literal>. It uses inheritance to define a common profile for both
+            image definitions, and to set some <literal>opensuse</literal> specific defaults. Running <literal>keg
+-d output_dir opensuse/leap/15.3</literal> would merge data from the following files in
+            the show order:</para>
+    <screen language="default">images/opensuse/defaults.yaml
+images/opensuse/leap/profiles.yaml
+images/opensuse/leap/15.3/image.yaml</screen>
+    <section xml:id="image-definition-structure">
+      <title>Image Definition Structure</title>
+      <para>To properly define an image, the dictionary produced from merging the
+                dictionaries from a given input path need to have the following structure:</para>
+      <screen language="yaml">archs:
+  - string
+  ...
+include-paths:
+  - string
+  ...
+image:
+  author: string
+  contact: string
+  name: string
+  specification: string
+  version: integer.integer.integer
+profiles:
+  common:
+    include:
+      - string
+      ...
+  profile1:
+    include:
+      - string
+      ...
+  ...
+schema: string
+users:
+  - name: string
+    groups:
+      - string
+      ...
+    home: string
+    password: string
+  ...</screen>
+      <note>
+        <para><literal>schema</literal> corresponds to a template file in <literal>schema</literal> (with
+                    <literal>.kiwi.templ</literal> extension added). The schema defines the output structure and
+                    hence the input structure is dependent on what schema is used.</para>
+        <para>Some of the listed dictionary items are not strictly required by keg but
+                    they are used by the template provided in the <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://github.com/SUSE-Enceladus/keg-recipes">keg-recipes repository</link>.</para>
+      </note>
+      <note>
+        <para>Image definitions that define a <literal>common</literal> profile only in the <literal>profiles</literal>
+                    section are considered single-build and definitions with additional
+                    profiles are considered multi-build. Single-build image descriptions
+                    produce a single image binary, with all configuration properties included in
+                    the <literal>common</literal> profile. Multi-build image descriptions produce an image binary
+                    per profile, with each profile using all configuration properties included in
+                    the corresponding profile section and the <literal>common</literal> profile. Since the
+                    generated image description depends on the used template this may not apply
+                    for custom templates.</para>
+      </note>
+      <para>The <literal>profiles</literal> section is what defines the image configuration and data
+                composition. Any list item in <literal>include</literal> refers to a directory under
+                <literal>data</literal>.</para>
+    </section>
+  </chapter>
+  <chapter xml:id="data-modules" xml:base="data_modules">
+    <title>Data Modules</title>
+    <para>Data modules are essentially directories in the <literal>data</literal> tree. Inheritance
+            rules apply similarly to the image definition tree, but additionally, <literal>keg</literal>
+            supports cross inheritance for data modules. Cross inheritance is useful to
+            inherit configuration changes from previous versions. This can be specified in
+            the image definition using the <literal>include-paths</literal> list. Include paths are paths
+            that get appended to any source path and those get scanned for input files as
+            well. For example, let’s assume you have the following configuration in your
+            image definition:</para>
+    <screen language="yaml">include-paths:
+  leap15/1
+  leap15/2
+profiles:
+  common:
+    include:
+      base/common</screen>
+    <para>This tells <literal>keg</literal>, when adding data from directory <literal>data/base/common</literal> to
+            the image data dictionary, to also look into sub directories <literal>leap15/2</literal>,
+            <literal>leap15/1</literal>, and <literal>leap15</literal> (through inheritance). This would lead to
+            the following directories being scanned:</para>
+    <screen language="default">data/common
+data/common/base
+data/common/base/leap15
+data/common/base/leap15/1
+data/common/base/leap15/2</screen>
+    <para>This allows for example to put generic configuration bits in
+            <literal>common/base</literal>, Leap 15 specific configuration in
+            <literal>common/base/leap15</literal>, and adjust the configuration for minor versions, if
+            necessary.</para>
+    <para>When building the dictionary, <literal>keg</literal> will parse all input files referenced
+            in the <literal>profiles</literal> section and merge them into the main dictionary. The
+            following section describes the structure used in the data section.</para>
+    <section xml:id="data-module-dictionary-structure">
+      <title>Data Module Dictionary Structure</title>
+      <para>This section describes the input parameters used by the data modules.</para>
+      <note>
+        <para>This assumes the schema template provided in the <literal>keg-recipes repository</literal>. Custom templates may
+                    require different input data.</para>
+      </note>
+      <screen language="yaml">profile:
+  bootloader:
+    kiwi_bootloader_param: string
+    ...
+  parameters:
+    kiwi_preferences_type_param: string
+    ...
+    kernelcmdline:
+      kernel_param: value
+      kernel_multi_param: [value, value]
+      ...
+  size: integer
+packages:
+  packages_type:
+    namespace:
+      - string
+      - name: string
+        arch: string
+config:
+  files:
+    namespace:
+      - path: /path/to/file
+        append: bool
+        content: string
+      ...
+  scripts:
+    namespace:
+      - string
+      ....
+  sysconfig:
+    namespace:
+      - file: /etc/sysconfig/file
+        name: VARIABLE_NAME
+        value: VARIABLE_VALUE
+      ...
+  services:
+    namespace:
+      - string
+      - name: string
+        enable: bool
+      ...
+setup:
+  (same as config)
+overlayfiles:
+  namespace:
+    include:
+      - string
+      ...
+  namespace_named_archive:
+    archivename: string
+    include:
+      - string
+      ...</screen>
+      <note>
+        <para>For multi-build image definitions, any module that defines 
+                    parameters must be included in the profile specific section of the image
+                    definition. Inclusion in the <literal>common</literal> profile only works for single-build
+                    image definitions.</para>
+      </note>
+      <para>Namespace may be any name. Namespaces exist to allow for dictionaries to be
+                merged without overwriting keys from inherited dictionaries, except where this
+                is wanted. Using the same namespace in a more specific dictionary (i.e. a lower
+                level directory) can be used to change or even remove that namespace (for the
+                latter set it to <literal>Null</literal>).</para>
+      <para><literal>kiwi_bootloader_param</literal> refers to any bootloader type parameter supported by
+                <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://documentation.suse.com/kiwi/9/html/kiwi/building-types.html#disk-bootloader">kiwi</link>.</para>
+      <para><literal>kiwi_preferences_type_param</literal> refers to any preferences type parameter supported
+                by <literal>kiwi</literal> (see <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://documentation.suse.com/kiwi/9/html/kiwi/image-description.html#sec-preferences">&lt;preferences&gt;&lt;type&gt; in kiwi documentation</link>).</para>
+      <para><literal>kernelcmdline</literal> is not a string that is direct copied into the appropriate
+                <literal>kiwi</literal> parameter but a dictionary that defines kernel parameters individually,
+                with each key representing a kernel parameter. This allows to inherit parts of
+                the kernel command line from other modules. There are two notations for
+                parameters.  <literal>kernel_param: value</literal> will be translated into a single
+                <literal>kernel_param=value</literal>, and <literal>kernel_multi_param: [value, value, ...]</literal> will add
+                <literal>kernel_multi_param</literal> multiple times for each value from the given list.</para>
+      <para><literal>packages_type</literal> can be <literal>bootstrap</literal> or <literal>image</literal> (see <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://documentation.suse.com/kiwi/9/html/kiwi/image-description.html#sec-packages">kiwi documentation</link>).
+                The items in the package list have two possible notations. Either just a plain
+                string, which is considered to be the package name, or a dictionary with keys
+                <literal>name</literal> (the package name) and <literal>arch</literal> (the build architecture for which the
+                package should be included).</para>
+      <para>List items in <literal>config</literal><literal>script</literal> refer to files in <literal>data/scripts</literal> (with
+                <literal>.sh</literal> appended by <literal>keg</literal>) and the content of those will be added to the
+                <literal>config.sh</literal> script.</para>
+      <para>List items in <literal>config</literal><literal>services</literal> refer to system service that should be
+                enabled or disabled in the image. Analogue to packages, there are two supported
+                version, a short one containing only the service name, or a long one that
+                allows to specify whether the service should be enabled or disabled).</para>
+      <para><literal>setup</literal> has the same structure as <literal>config</literal> but the data will be used to
+                generated <literal>images.sh</literal> instead of <literal>config.sh</literal>.</para>
+      <para>List items in <literal>overlayfiles</literal> refer to directories under
+                <literal>data/overlayfiles</literal>. Files from those directories will be copied into
+                an overlay archive to be included in the image, either a generic or a profile
+                specific one (depending on where the data module was included), or a named one
+                in case <literal>archivename</literal> tag is used.</para>
     </section>
   </chapter>
 </book>
