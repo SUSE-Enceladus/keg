@@ -66,6 +66,7 @@ class KegGenerator:
         )
 
         self.image_definition.populate()
+
         self.image_schema: Optional[str] = self.image_definition.data.get('schema')
         if not self.image_schema:
             raise KegError(
