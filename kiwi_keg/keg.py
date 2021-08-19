@@ -38,7 +38,7 @@ Options:
         Additional data root directory of recipes (multiples allowed)
 
     -d DEST_DIR, --dest-dir=DEST_DIR
-        Destination directory for generated description, default cwd
+        Destination directory for generated description [default: .]
 
     --disable-multibuild
         Option to disable creation of OBS _multibuild file (for image
@@ -114,12 +114,10 @@ def main():
                 images[image_src] = {
                     'name': image_spec['name'],
                     'desc': image_spec['specification'],
-                    'ver': image_spec['version']
+                    'ver': image_spec.get('version', 'n/a')
                 }
             except KegError as e:
                 log.error('{} is not a valid image: {}'.format(image_src, e))
-            except KeyError:
-                log.info('{} does not contain a (full) image definition'.format(image_src))
         print('{:30s} {:30s} {:8s} {}'.format('Source', 'Name', 'Version', 'Description'))
         for image, spec in images.items():
             print('{:30s} {:30s} {:8s} {}'.format(image, spec['name'], spec['ver'], spec['desc']))
