@@ -29,6 +29,14 @@ class TestKegImageDefinition:
                 image_name='leap/15.2', recipes_root='artificial'
             )
 
+    def test_setup_raises_image_not_existing(self):
+        with raises(KegError) as exception_info:
+            KegImageDefinition(
+                image_name='no/such/image', recipes_root='../data'
+            )
+        assert "Image Definition: ../data/images/no/such/image does not exist" in \
+            str(exception_info.value)
+
     @patch('kiwi_keg.file_utils.get_recipes')
     def test_populate_raises_on_get_recipes(
         self, mock_utils_get_recipes
@@ -43,6 +51,24 @@ class TestKegImageDefinition:
                 image_name='leap_broken_overlay', recipes_root='../data'
             )
             keg_definition.populate()
+
+    def test_generate_overlay_info_raises_on_broken_overlay(self):
+        keg_definition = KegImageDefinition(
+            image_name='leap_broken_overlay', recipes_root='../data'
+        )
+        # produce in memory rather than read from data dir because
+        # broken syntax in data tree would break list recipes cmd
+        keg_definition._data = {
+            'profiles': {
+                'foo': {
+                    'overlayfiles': {
+                        'foo-overlay': {}
+                    }
+                }
+            }
+        }
+        with raises(KegError):
+            keg_definition._generate_overlay_info()
 
     @patch('kiwi_keg.image_definition.datetime')
     def test_populate_composed_image(self, mock_datetime):

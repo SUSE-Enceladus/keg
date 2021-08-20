@@ -27,6 +27,15 @@ class TestKegGenerator:
         with raises(KegError):
             KegGenerator(self.image_definition, 'dest-dir')
 
+    @patch('os.path.isdir')
+    def test_setup_raises_no_version_set(self, mock_os_path_is_dir):
+        mock_os_path_is_dir.return_value = True
+        self.image_definition.populate = Mock()
+        self.image_definition.data['schema'] = 'vm'
+        self.image_definition.data['image'] = {}
+        with raises(KegError):
+            KegGenerator(self.image_definition, 'image')
+
     @patch('os.path.exists')
     @patch('os.path.isdir')
     def test_raises_on_dest_dir_data_exists(

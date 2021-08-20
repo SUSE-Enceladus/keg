@@ -59,8 +59,15 @@ class KegImageDefinition:
             self._data_roots += data_roots
         if not os.path.isdir(recipes_root):
             raise KegError(
-                'Recipes Root: {root} does not exist'.format(
+                'Image Definition: {root} does not exist'.format(
                     root=recipes_root
+                )
+            )
+        image_dir = os.path.join(self._image_root, self._image_name)
+        if not os.path.isdir(image_dir):
+            raise KegError(
+                'Image Definition: {image_dir} does not exist'.format(
+                    image_dir=image_dir
                 )
             )
 
@@ -119,6 +126,7 @@ class KegImageDefinition:
                 'Error parsing image data: {error}'.format(error=issue)
             )
 
+        self._verify_basic_image_structure()
         if self._image_version:
             self._data['image']['version'] = self._image_version
         self._update_profiles(self._data.get('include-paths'))
@@ -173,10 +181,25 @@ class KegImageDefinition:
                     archive_list.append({'name': '{}.{}'.format(archive_name, self._archive_ext)})
                 else:
                     archive_name = default_archive_name
+                if not content.get('include'):
+                    raise KegError('overlayfiles namespace {} lacks include secion'.format(namespace))
                 for inc in content['include']:
                     self._add_dir_to_archive(archive_name, inc)
 
             self._add_archive_tag(self._data['profiles'][profile_name], archive_list)
+
+    def _verify_basic_image_structure(self):
+        try:
+            self._data['image']['name']
+            self._data['image']['specification']
+            self._data['archs']
+            self._data['profiles']
+        except KeyError as err:
+            raise KegError(
+                'Image Definition: mandatory key {key} does not exist'.format(
+                    key=err
+                )
+            )
 
     def _add_archive_tag(self, dict_node, archive_list):
         if archive_list:

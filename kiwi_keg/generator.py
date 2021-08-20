@@ -77,6 +77,8 @@ class KegGenerator:
                 keg_schema=self.image_schema
             )
         )
+        if not self.image_definition.data['image'].get('version'):
+            raise KegError('Keg Generator: image has no version')
 
     def create_kiwi_description(self, overwrite: bool = False) -> None:
         """
