@@ -214,7 +214,6 @@ class KegGenerator:
         for entry in entries:
             if os.path.join(subdir, entry.name) in [x.rstrip('/') for x in tar.getnames()]:
                 if entry.is_dir():
-                    print('dir already added')
                     self._add_dir_to_tar(tar, src_dir, os.path.join(subdir, entry.name))
                 else:
                     log.warning('{fname} included twice in {archive}'.format(
