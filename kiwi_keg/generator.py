@@ -188,7 +188,8 @@ class KegGenerator:
                         self._add_dir_to_tar(tar, base_dir)
 
     def create_multibuild_file(self, overwrite: bool = False):
-        profiles = [x for x in self.image_definition.data['profiles'] if x != 'common']
+        profiles_dict = self.image_definition.data['profiles']
+        profiles = [x for x in profiles_dict if x != 'common']
         if profiles:
             mbuild_file = os.path.join(self.dest_dir, '_multibuild')
             if os.path.exists(mbuild_file) and not overwrite:
@@ -200,7 +201,8 @@ class KegGenerator:
             with open(mbuild_file, 'w') as mbuild_obj:
                 mbuild_obj.write('<multibuild>\n')
                 for profile in profiles:
-                    mbuild_obj.write('    <flavor>{}</flavor>\n'.format(profile))
+                    if not profiles_dict[profile].get('nested_profiles'):
+                        mbuild_obj.write('    <flavor>{}</flavor>\n'.format(profile))
                 mbuild_obj.write('</multibuild>\n')
 
     @staticmethod
