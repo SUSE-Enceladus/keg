@@ -135,21 +135,45 @@ class KegImageDefinition:
 
     def _update_profiles(self, include_paths):
         if 'profiles' in self._data:
-            for profile_name, profile_data in self._data['profiles'].items():
+            for profile_name in list(self._data['profiles']):
                 profile: Dict = {}
-                for item, value in profile_data.items():
-                    if item == 'include':
-                        file_utils.rmerge(
-                            file_utils.get_recipes(
-                                self.data_roots,
-                                value,
-                                include_paths
-                            ),
+                profile_data = self._data['profiles'][profile_name]
+                self._expand_profile_includes(profile_data, profile, include_paths)
+
+                nested_profile_names = list(profile_data.keys() - ['include', 'description'])
+                if nested_profile_names:
+                    profile['nested_profiles'] = nested_profile_names
+                    del profile['profile']
+
+                self._data['profiles'][profile_name].update(profile)
+
+                if nested_profile_names:
+                    nested_profiles: Dict = {}
+                    for nested_profile_name in nested_profile_names:
+                        nested_profiles[nested_profile_name] = {}
+                        nested_profile_data = self._data['profiles'][profile_name][nested_profile_name]
+                        self._expand_profile_includes(
+                            nested_profile_data,
+                            nested_profiles[nested_profile_name],
+                            include_paths,
                             profile
                         )
-                    else:
-                        file_utils.rmerge({item: value}, profile_data)
-                self._data['profiles'][profile_name].update(profile)
+                    self._data['profiles'].update(nested_profiles)
+
+    def _expand_profile_includes(self, src, dest, include_paths, ref_profile=None):
+        for item, value in src.items():
+            if item == 'include':
+                file_utils.rmerge(
+                    file_utils.get_recipes(
+                        self.data_roots,
+                        value,
+                        include_paths
+                    ),
+                    dest,
+                    ref_profile
+                )
+            else:
+                file_utils.rmerge({item: value}, dest)
 
     def _generate_config_scripts(self):
         script_dirs = [

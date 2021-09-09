@@ -209,10 +209,19 @@ class KegGenerator:
         tarinfo.uname = tarinfo.gname = 'root'
         return tarinfo
 
-    def _add_dir_to_tar(self, tar, src_dir):
-        entries = os.scandir(src_dir)
+    def _add_dir_to_tar(self, tar, src_dir, subdir=''):
+        entries = os.scandir(os.path.join(src_dir, subdir))
         for entry in entries:
-            tar.add(name=entry.path, arcname=entry.name, filter=self._tarinfo_set_root)
+            if os.path.join(subdir, entry.name) in [x.rstrip('/') for x in tar.getnames()]:
+                if entry.is_dir():
+                    self._add_dir_to_tar(tar, src_dir, os.path.join(subdir, entry.name))
+                else:
+                    log.warning('{fname} included twice in {archive}'.format(
+                        fname=os.path.join(subdir, entry.name),
+                        archive=os.path.basename(tar.name))
+                    )
+            else:
+                tar.add(name=entry.path, arcname=os.path.join(subdir, entry.name), filter=self._tarinfo_set_root)
 
     def _copytree(self, src_dir, dest_dir):
         for entry in os.walk(src_dir):

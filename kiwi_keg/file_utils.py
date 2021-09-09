@@ -27,13 +27,13 @@ import yaml
 log = logging.getLogger('keg')
 
 
-def rmerge(src: Dict[str, str], dest: Dict[str, str]) -> Dict[str, str]:
+def rmerge(src: Dict[str, str], dest: Dict[str, str], ref: Dict[str, str] = None) -> Dict[str, str]:
     """
     Merge two dictionaries recursively,
     preserving all properties found in src.
     Updating 'dest' to the latest value, if property is not a dict
     or adding them in the right key, if it is while keeping the existing
-    key-values.
+    key-values. If 'ref' is given, only items _not_ in ref will be merged.
 
     Example:
     src = {'a': 'foo', 'b': {'c': 'bar'}}
@@ -42,14 +42,20 @@ def rmerge(src: Dict[str, str], dest: Dict[str, str]) -> Dict[str, str]:
     Result: {'a': 'foo', 'b': {'d': 'more_bar', 'c': 'bar'}}
     """
     for key, value in src.items():
+        ref_node = None
+        if ref:
+            ref_node = ref.get(key)
         if isinstance(value, dict):
             node = dest.setdefault(key, {})
-            rmerge(value, node)
-        elif value is None:
-            if dest.get(key):
+            rmerge(value, node, ref_node)
+            if not node:
                 del dest[key]
-        else:
-            dest[key] = value
+        elif ref_node is None:
+            if value is None:
+                if dest.get(key):
+                    del dest[key]
+            else:
+                dest[key] = value
     return dest
 
 

@@ -1,0 +1,15 @@
+profiles:
+  common:
+    include:
+      - base/jeos
+  base:
+    include:
+      - foo_profile
+    one:
+      description: Some Profile
+      include:
+        - foo_profile/overlay-addon
+    other:
+      description: Some Other Profile
+      include:
+        - foo_profile/overlay-addon

@@ -44,7 +44,11 @@ def get_config_script(profiles_dict: Dict, config_key: str, script_dirs: List[st
             continue
         config_root = profile_data.get(config_key)
         if config_root:
-            content += 'if [[ $kiwi_profiles = {profile} ]]; then\n'.format(profile=profile)
+            kiwi_profiles = profile_data.get('nested_profiles', [profile])
+            content += 'if [[ $kiwi_profiles = {} '.format(kiwi_profiles[0])
+            for p in kiwi_profiles[1:]:
+                content += '|| $kiwi_profiles = {} '.format(p)
+            content += ']]; then\n'
             content += get_profile_section(config_root, script_dirs, '    ')
             content += 'fi\n'
     return content

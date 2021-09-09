@@ -15,6 +15,7 @@ Source                         Name                           Version  Descripti
 leap/15                        Leap15-JeOS                    1.0.42   Leap 15 guest image
 leap/15.1                      Leap15.1-JeOS                  1.0.42   Leap 15.1 guest image
 leap/15.2                      Leap15.2-JeOS                  1.0.42   Leap 15.2 guest image
+leap_nested_profiles/15.2      Leap15.2-JeOS                  1.0.42   Leap 15.2 guest image
 leap_no_overlays               Leap15-JeOS                    1.0.42   Leap 15 guest image
 leap_single_build              Leap15.2-JeOS                  1.0.42   Leap 15.2 guest image
 """

@@ -221,6 +221,25 @@ class TestKegGenerator:
             generator.create_overlays(False)
             assert not mock_shutil_copy.called
 
+    def test_add_dir_to_tar(self):
+        image_definition = KegImageDefinition(
+            image_name='leap/15.2', recipes_root='../data'
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dir1_path = os.path.join(tmpdir, 'dir1')
+            dir2_path = os.path.join(tmpdir, 'dir2')
+            os.mkdir(dir1_path)
+            os.mkdir(dir2_path)
+            os.mkdir(os.path.join(dir1_path, 'etc'))
+            os.mkdir(os.path.join(dir2_path, 'etc'))
+            Path(os.path.join(dir1_path, 'etc', 'foo')).touch()
+            Path(os.path.join(dir2_path, 'etc', 'foo')).touch()
+            tar_path = os.path.join(tmpdir, 'tmp.tar')
+            generator = KegGenerator(image_definition, tmpdir)
+            with tarfile.open(tar_path, 'w') as tar:
+                generator._add_dir_to_tar(tar, dir1_path)
+                generator._add_dir_to_tar(tar, dir2_path)
+
     def test_tarinfo_set_root(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             some_file = os.path.join(tmpdir, 'some_file')
