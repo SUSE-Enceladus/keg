@@ -216,7 +216,6 @@ class KegImageDefinition:
         try:
             self._data['image']['name']
             self._data['image']['specification']
-            self._data['archs']
             self._data['profiles']
         except KeyError as err:
             raise KegError(
