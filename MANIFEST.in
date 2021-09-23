@@ -1,6 +1,6 @@
 # Manifest describing source package contents
 
-graft kiwi_keg/tasks
+graft kiwi_keg/obs_service
 graft package
 
 include Makefile
