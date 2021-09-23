@@ -104,7 +104,9 @@ make buildroot=%{buildroot}/ docdir=%{_defaultdocdir}/ install_package_docs
 
 %files -n python%{python3_pkgversion}-kiwi_keg
 %dir %{_defaultdocdir}/python-kiwi_keg
+%dir %{_usr}/lib/obs
 %{_bindir}/keg
+%{_usr}/lib/obs/service
 %{python3_sitelib}/kiwi_keg*
 %{_defaultdocdir}/python-kiwi_keg/LICENSE
 %{_defaultdocdir}/python-kiwi_keg/README

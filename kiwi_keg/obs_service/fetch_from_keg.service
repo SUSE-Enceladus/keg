@@ -1,0 +1,12 @@
+<service name="fetch_from_keg">
+  <summary>Compose KIWI Image-Description from keg recipe</summary>
+  <description>The service creates a KIWI description from a given keg recipe and commits it to the project</description>
+  <parameter name="git-recipes">
+    <description>git clone location to fetch keg recipes</description>
+    <required/>
+  </parameter>
+  <parameter name="image-source">
+    <description>image source path relative to the images directory in the recipe git tree</description>
+    <required/>
+  </parameter>
+</service>

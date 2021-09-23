@@ -27,6 +27,11 @@ install:
 	for man in doc/build/man/*.8.gz; do \
 		install -m 644 $$man ${buildroot}usr/share/man/man8 ;\
 	done
+	# keg obs service
+	install -d -m 755 ${buildroot}usr/lib/obs/service
+	mv ${buildroot}usr/bin/fetch_from_keg ${buildroot}usr/lib/obs/service
+	install -m 644 kiwi_keg/obs_service/fetch_from_keg.service \
+		${buildroot}usr/lib/obs/service
 
 tox:
 	tox "-n 5"
