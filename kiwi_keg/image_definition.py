@@ -140,18 +140,30 @@ class KegImageDefinition:
                 profile_data = self._data['profiles'][profile_name]
                 self._expand_profile_includes(profile_data, profile, include_paths)
 
-                nested_profile_names = list(profile_data.keys() - ['include', 'description'])
+                # sort nested profiles, otherwise order may not be deterministic
+                nested_profile_names = sorted(list(profile_data.keys() - ['include', 'description']))
+
                 if nested_profile_names:
                     profile['nested_profiles'] = nested_profile_names
-                    del profile['profile']
-
-                self._data['profiles'][profile_name].update(profile)
+                    profile_params = profile.get('profile')
+                    if profile_params:
+                        # remove parameter section from base profile so it
+                        # won't prevent nested profile parameters from being
+                        # merged and also so the template does not have to
+                        # deal with it
+                        del profile['profile']
 
                 if nested_profile_names:
                     nested_profiles: Dict = {}
                     for nested_profile_name in nested_profile_names:
                         nested_profiles[nested_profile_name] = {}
                         nested_profile_data = self._data['profiles'][profile_name][nested_profile_name]
+                        # copy base profile parameters (if any) into nested profile
+                        if profile_params:
+                            file_utils.rmerge(
+                                {'profile': profile_params},
+                                nested_profiles[nested_profile_name]
+                            )
                         self._expand_profile_includes(
                             nested_profile_data,
                             nested_profiles[nested_profile_name],
@@ -159,6 +171,8 @@ class KegImageDefinition:
                             profile
                         )
                     self._data['profiles'].update(nested_profiles)
+
+                self._data['profiles'][profile_name].update(profile)
 
     def _expand_profile_includes(self, src, dest, include_paths, ref_profile=None):
         for item, value in src.items():
