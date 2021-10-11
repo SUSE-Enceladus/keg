@@ -29,8 +29,9 @@ install:
 	done
 	# keg obs service
 	install -d -m 755 ${buildroot}usr/lib/obs/service
-	mv ${buildroot}usr/bin/fetch_from_keg ${buildroot}usr/lib/obs/service
-	install -m 644 kiwi_keg/obs_service/fetch_from_keg.service \
+	mv ${buildroot}usr/bin/compose_kiwi_description \
+		${buildroot}usr/lib/obs/service
+	install -m 644 kiwi_keg/obs_service/compose_kiwi_description.service \
 		${buildroot}usr/lib/obs/service
 
 tox:

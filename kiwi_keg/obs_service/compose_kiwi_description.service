@@ -1,0 +1,21 @@
+<service name="compose_kiwi_description">
+  <summary>Compose KIWI Image-Description from keg recipe</summary>
+  <description>The service creates a KIWI description from a given keg recipe and commits it to the project</description>
+  <parameter name="main-git-recipes">
+    <description>Main git clone location to fetch keg recipes</description>
+    <required/>
+  </parameter>
+  <parameter name="main-branch">
+    <description>Branch in main git source [default: released]</description>
+  </parameter>
+  <parameter name="image-source">
+    <description>Keg path in git source pointing to the image description. The path must be relative to the images/ directory</description>
+    <required/>
+  </parameter>
+  <parameter name="add-on-git-recipes">
+    <description>Additional git clone location to fetch other keg recipes</description>
+  </parameter>
+  <parameter name="add-on-branch">
+    <description>Branch in additional git source [default: released]</description>
+  </parameter>
+</service>

@@ -1,7 +1,7 @@
 import logging
 import sys
 from pytest import fixture
-from kiwi_keg.obs_service.fetch_from_keg import main
+from kiwi_keg.obs_service.compose_kiwi_description import main
 
 
 class TestFetchFromKeg:
@@ -12,14 +12,14 @@ class TestFetchFromKeg:
     def setup(self):
         sys.argv = [
             sys.argv[0],
-            '--git-recipes',
+            '--main-git-recipes',
             'https://github.com/SUSE-Enceladus/keg-recipes.git',
             '--image-source',
             'leap/jeos/15.2',
-            '--branch',
+            '--main-branch',
             'develop'
         ]
 
-    def test_fetch_from_keg(self):
+    def test_compose_kiwi_description(self):
         with self._caplog.at_level(logging.INFO):
             main()

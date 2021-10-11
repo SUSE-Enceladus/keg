@@ -16,9 +16,30 @@
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
 """
-Usage: fetch_from_keg --git-recipes=<git_clone_source> --image-source=<path> --branch=<name>
-       fetch_from_keg -h | --help
-       fetch_from_keg --version
+Usage:
+    compose_kiwi_description --main-git-recipes=<git_clone_source> --image-source=<path>
+        [--main-branch=<name>]
+        [--add-on-git-recipes=<add_on_git_clone_source>]
+        [--add-on-branch=<name>]
+    compose_kiwi_description -h | --help
+    compose_kiwi_description --version
+
+Options:
+    --main-git-recipes=<git_clone_source>
+        Main git clone location to fetch keg recipes.
+
+    --image-source=<path>
+        Keg path in git source pointing to the image description.
+        The path must be relative to the images/ directory
+
+    --main-branch=<name>
+        Branch in main git source [default: released].
+
+    --add-on-git-recipes=<add_on_git_clone_source>
+        Additional git clone location to fetch other keg recipes.
+
+    --add-on-branch=<name>
+        Branch in additional git source [default: released].
 """
 import docopt
 import logging
