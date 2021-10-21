@@ -17,7 +17,9 @@ class TestFetchFromKeg:
             '--image-source',
             'leap/jeos/15.2',
             '--main-branch',
-            'develop'
+            'develop',
+            '--outdir',
+            'obs_out'
         ]
 
     def test_compose_kiwi_description(self):

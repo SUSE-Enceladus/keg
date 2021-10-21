@@ -17,7 +17,7 @@
 #
 """
 Usage:
-    compose_kiwi_description --main-git-recipes=<git_clone_source> --image-source=<path>
+    compose_kiwi_description --main-git-recipes=<git_clone_source> --image-source=<path> --outdir=<obs_out>
         [--main-branch=<name>]
         [--add-on-git-recipes=<add_on_git_clone_source>]
         [--add-on-branch=<name>]
@@ -40,6 +40,11 @@ Options:
 
     --add-on-branch=<name>
         Branch in additional git source [default: released].
+
+    --outdir=<obs_out>
+        Output directory to store data produced by the service.
+        At the time the service is called through the OBS API
+        this option is set.
 """
 import docopt
 import logging
