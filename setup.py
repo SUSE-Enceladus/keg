@@ -34,7 +34,8 @@ config = {
     'packages': ['kiwi_keg'],
     'entry_points': {
         'console_scripts': [
-            'keg=kiwi_keg.keg:main'
+            'keg=kiwi_keg.keg:main',
+            'compose_kiwi_description=kiwi_keg.obs_service.compose_kiwi_description:main'
         ]
     },
     'include_package_data': True,
