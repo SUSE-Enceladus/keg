@@ -24,7 +24,10 @@ import tarfile
 
 from kiwi_keg.image_definition import KegImageDefinition
 from kiwi_keg.kiwi_description import KiwiDescription
-from kiwi_keg.exceptions import KegError
+from kiwi_keg.exceptions import (
+    KegError,
+    KegDataError
+)
 
 from jinja2.exceptions import TemplateNotFound
 
@@ -69,7 +72,7 @@ class KegGenerator:
 
         self.image_schema: Optional[str] = self.image_definition.data.get('schema')
         if not self.image_schema:
-            raise KegError(
+            raise KegDataError(
                 'No KIWI schema configured in image definition'
             )
         log.info(
@@ -78,7 +81,7 @@ class KegGenerator:
             )
         )
         if not self.image_definition.data['image'].get('version'):
-            raise KegError('Keg Generator: image has no version')
+            raise KegDataError('Keg Generator: image has no version')
 
     def create_kiwi_description(self, overwrite: bool = False) -> None:
         """
@@ -264,7 +267,7 @@ class KegGenerator:
                 template_name
             )
         except TemplateNotFound:
-            raise KegError(
+            raise KegDataError(
                 'Template {name} not found in: {location}'.format(
                     name=repr(template_name),
                     location=self.description_schemas

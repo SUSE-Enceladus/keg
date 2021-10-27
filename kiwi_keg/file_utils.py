@@ -24,6 +24,8 @@ from typing import (
 import os
 import yaml
 
+from kiwi_keg.exceptions import KegDataError
+
 log = logging.getLogger('keg')
 
 
@@ -41,6 +43,11 @@ def rmerge(src: Dict[str, str], dest: Dict[str, str], ref: Dict[str, str] = None
 
     Result: {'a': 'foo', 'b': {'d': 'more_bar', 'c': 'bar'}}
     """
+    if type(src) != dict:
+        raise KegDataError('Cannot rmerge, source is not dict: {}'.format(src))
+    if type(dest) != dict:
+        raise KegDataError('Cannot rmerge, destination is not dict: {}'.format(dest))
+
     for key, value in src.items():
         ref_node = None
         if ref:

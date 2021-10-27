@@ -1,5 +1,7 @@
 from mock import patch
+from pytest import raises
 from kiwi_keg import file_utils
+from kiwi_keg.exceptions import KegDataError
 
 
 class TestUtils:
@@ -42,3 +44,11 @@ class TestUtils:
     def get_all_leaf_dirs(self, mock_os_walk):
         mock_os_walk.return_value = ['foo', [], []]
         assert file_utils.get_all_leaf_dirs('foo') == ['foo']
+
+    def test_rmerge_data_exception(self):
+        a_dict = {'some_key': 1}
+        not_a_dict = None
+        with raises(KegDataError):
+            file_utils.rmerge(a_dict, not_a_dict)
+        with raises(KegDataError):
+            file_utils.rmerge(not_a_dict, a_dict)

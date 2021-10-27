@@ -56,3 +56,9 @@ class KegKiwiDescriptionError(KegError):
     Exception raised if the creation of the keg written description
     through the KIWI API has failed
     """
+
+
+class KegDataError(KegError):
+    """
+    Exception raised if input data contains errors.
+    """
