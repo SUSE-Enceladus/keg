@@ -46,22 +46,50 @@ Options:
         At the time the service is called through the OBS API
         this option is set.
 """
+import os
 import docopt
-import logging
 
+from kiwi.utils.temporary import Temporary
+from kiwi.command import Command
+from kiwi.path import Path
 from kiwi_keg.version import __version__
-
-log = logging.getLogger('keg')
-log.setLevel(logging.INFO)
+from kiwi_keg.image_definition import KegImageDefinition
+from kiwi_keg.generator import KegGenerator
 
 
 def main() -> None:
     args = docopt.docopt(__doc__, version=__version__)
 
-    # steps
-    # 1. clone from args['--git-recipes']
-    # 2. Run KegGenerator on args['--image-source']
-    # 3. Care for the version bump
-    # 4. Commit results
+    if not os.path.exists(args['--outdir']):
+        Path.create(args['--outdir'])
 
-    log.info(args)
+    # TODO: How should the version be handled, open discussion
+    image_version = None
+
+    temp_git_dir = Temporary(prefix='keg_recipes.').new_dir()
+    Command.run(
+        ['git', 'clone', args['--main-git-recipes'], temp_git_dir.name]
+    )
+    Command.run(
+        ['git', '-C', temp_git_dir.name, 'checkout', args['--main-branch']]
+    )
+
+    image_definition = KegImageDefinition(
+        image_name=args['--image-source'],
+        recipes_root=temp_git_dir.name,
+        data_roots=args['--add-on-git-recipes'],
+        image_version=image_version
+    )
+    image_generator = KegGenerator(
+        image_definition=image_definition,
+        dest_dir=args['--outdir']
+    )
+    image_generator.create_kiwi_description(
+        overwrite=True
+    )
+    image_generator.create_custom_scripts(
+        overwrite=True
+    )
+    image_generator.create_overlays(
+        disable_root_tar=False, overwrite=True
+    )
