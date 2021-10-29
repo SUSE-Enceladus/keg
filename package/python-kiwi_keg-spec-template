@@ -57,6 +57,7 @@ Source:         %{name}.tar.gz
 Source1:        %{name}-rpmlintrc
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python%{python3_pkgversion}-%{develsuffix}
+BuildRequires:  python%{python3_pkgversion}-Jinja2
 BuildRequires:  python%{python3_pkgversion}-setuptools
 BuildRequires:  fdupes
 BuildArch:      noarch

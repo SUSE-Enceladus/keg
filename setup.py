@@ -28,6 +28,7 @@ config = {
     'license' : 'GPLv3+',
     'install_requires': [
         'docopt',
+        'Jinja2',
         'kiwi>=9.21.21',
         'PyYAML'
     ],

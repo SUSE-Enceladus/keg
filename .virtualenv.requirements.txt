@@ -14,5 +14,8 @@ PyYAML
 # markup support
 anymarkup
 
-#xml parsing
+# xml parsing
 lxml
+
+# Template engine used for producing config.kiwi
+Jinja2
