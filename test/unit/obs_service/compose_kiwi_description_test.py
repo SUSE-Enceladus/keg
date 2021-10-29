@@ -24,6 +24,7 @@ class TestFetchFromKeg:
             'obs_out'
         ]
 
+    @patch('kiwi_keg.obs_service.compose_kiwi_description.XMLDescription')
     @patch('kiwi_keg.obs_service.compose_kiwi_description.Temporary.new_dir')
     @patch('kiwi_keg.obs_service.compose_kiwi_description.KegImageDefinition')
     @patch('kiwi_keg.obs_service.compose_kiwi_description.KegGenerator')
@@ -32,8 +33,16 @@ class TestFetchFromKeg:
     @patch('os.path.exists')
     def test_compose_kiwi_description(
         self, mock_path_exists, mock_Path_create, mock_Command_run,
-        mock_KegGenerator, mock_KegImageDefinition, mock_Temporary_new_dir
+        mock_KegGenerator, mock_KegImageDefinition, mock_Temporary_new_dir,
+        mock_XMLDescription
     ):
+        xml_data = Mock()
+        preferences = Mock()
+        preferences.get_version.return_value = ['1.1.1']
+        xml_data.get_preferences.return_value = [preferences]
+        description = Mock()
+        description.load.return_value = xml_data
+        mock_XMLDescription.return_value = description
         mock_path_exists.return_value = False
         image_definition = Mock()
         mock_KegImageDefinition.return_value = image_definition
@@ -41,7 +50,10 @@ class TestFetchFromKeg:
         mock_KegGenerator.return_value = image_generator
         temp_dir = Mock()
         mock_Temporary_new_dir.return_value = temp_dir
-        main()
+
+        with patch('builtins.open', create=True):
+            main()
+
         mock_Path_create.assert_called_once_with('obs_out')
         assert mock_Command_run.call_args_list == [
             call(
@@ -60,8 +72,7 @@ class TestFetchFromKeg:
         mock_KegImageDefinition.assert_called_once_with(
             image_name='leap/jeos/15.2',
             recipes_root=temp_dir.name,
-            data_roots=None,
-            image_version=None
+            data_roots=None
         )
         mock_KegGenerator.assert_called_once_with(
             image_definition=image_definition, dest_dir='obs_out'
@@ -74,4 +85,10 @@ class TestFetchFromKeg:
         )
         image_generator.create_overlays.assert_called_once_with(
             disable_root_tar=False, overwrite=True
+        )
+        mock_XMLDescription.assert_called_once_with(
+            'obs_out/config.kiwi'
+        )
+        preferences.set_version.assert_called_once_with(
+            ['1.1.2']
         )
