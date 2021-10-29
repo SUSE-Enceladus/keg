@@ -27,7 +27,7 @@ from datetime import (
 from kiwi_keg import script_utils
 from kiwi_keg import file_utils
 from kiwi_keg import version
-from kiwi_keg.exceptions import KegError
+from kiwi_keg.exceptions import KegDataError
 
 
 class KegImageDefinition:
@@ -58,14 +58,14 @@ class KegImageDefinition:
         if data_roots:
             self._data_roots += data_roots
         if not os.path.isdir(recipes_root):
-            raise KegError(
+            raise KegDataError(
                 'Image Definition: {root} does not exist'.format(
                     root=recipes_root
                 )
             )
         image_dir = os.path.join(self._image_root, self._image_name)
         if not os.path.isdir(image_dir):
-            raise KegError(
+            raise KegDataError(
                 'Image Definition: {image_dir} does not exist'.format(
                     image_dir=image_dir
                 )
@@ -122,16 +122,22 @@ class KegImageDefinition:
                 )
             )
         except Exception as issue:
-            raise KegError(
+            raise KegDataError(
                 'Error parsing image data: {error}'.format(error=issue)
             )
 
         self._verify_basic_image_structure()
         if self._image_version:
             self._data['image']['version'] = self._image_version
-        self._update_profiles(self._data.get('include-paths'))
-        self._generate_config_scripts()
-        self._generate_overlay_info()
+
+        try:
+            self._update_profiles(self._data.get('include-paths'))
+            self._generate_config_scripts()
+            self._generate_overlay_info()
+        except Exception as issue:
+            raise KegDataError(
+                'Error generating profile data: {error}'.format(error=issue)
+            )
 
     def _update_profiles(self, include_paths):
         if 'profiles' in self._data:
@@ -220,7 +226,7 @@ class KegImageDefinition:
                 else:
                     archive_name = default_archive_name
                 if not content.get('include'):
-                    raise KegError('overlayfiles namespace {} lacks include secion'.format(namespace))
+                    raise KegDataError('overlayfiles namespace {} lacks include secion'.format(namespace))
                 for inc in content['include']:
                     self._add_dir_to_archive(archive_name, inc)
 
@@ -232,7 +238,7 @@ class KegImageDefinition:
             self._data['image']['specification']
             self._data['profiles']
         except KeyError as err:
-            raise KegError(
+            raise KegDataError(
                 'Image Definition: mandatory key {key} does not exist'.format(
                     key=err
                 )
@@ -258,7 +264,7 @@ class KegImageDefinition:
             if os.path.exists(comp_dir):
                 src_dir = comp_dir
         if not src_dir:
-            raise KegError('No such overlay files module "{}"'.format(overlay_module_name))
+            raise KegDataError('No such overlay files module "{}"'.format(overlay_module_name))
         if not self._data['archives'].get(archive_name):
             self._data['archives'][archive_name] = []
         self._data['archives'][archive_name].append(src_dir)
