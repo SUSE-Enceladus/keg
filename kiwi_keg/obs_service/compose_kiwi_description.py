@@ -21,6 +21,7 @@ Usage:
         [--main-branch=<name>]
         [--add-on-git-recipes=<add_on_git_clone_source>]
         [--add-on-branch=<name>]
+        [--disable-version-bump]
     compose_kiwi_description -h | --help
     compose_kiwi_description --version
 
@@ -45,23 +46,73 @@ Options:
         Output directory to store data produced by the service.
         At the time the service is called through the OBS API
         this option is set.
+
+    --disable-version-bump
+        Do not increment the patch version number
 """
+import os
 import docopt
-import logging
 
+from kiwi.xml_description import XMLDescription
+from kiwi.utils.temporary import Temporary
+from kiwi.command import Command
+from kiwi.path import Path
 from kiwi_keg.version import __version__
-
-log = logging.getLogger('keg')
-log.setLevel(logging.INFO)
+from kiwi_keg.image_definition import KegImageDefinition
+from kiwi_keg.generator import KegGenerator
 
 
 def main() -> None:
     args = docopt.docopt(__doc__, version=__version__)
 
-    # steps
-    # 1. clone from args['--git-recipes']
-    # 2. Run KegGenerator on args['--image-source']
-    # 3. Care for the version bump
-    # 4. Commit results
+    if not os.path.exists(args['--outdir']):
+        Path.create(args['--outdir'])
 
-    log.info(args)
+    temp_git_dir = Temporary(prefix='keg_recipes.').new_dir()
+    Command.run(
+        ['git', 'clone', args['--main-git-recipes'], temp_git_dir.name]
+    )
+    Command.run(
+        ['git', '-C', temp_git_dir.name, 'checkout', args['--main-branch']]
+    )
+
+    image_definition = KegImageDefinition(
+        image_name=args['--image-source'],
+        recipes_root=temp_git_dir.name,
+        data_roots=args['--add-on-git-recipes']
+    )
+    image_generator = KegGenerator(
+        image_definition=image_definition,
+        dest_dir=args['--outdir']
+    )
+    image_generator.create_kiwi_description(
+        overwrite=True
+    )
+    image_generator.create_custom_scripts(
+        overwrite=True
+    )
+    image_generator.create_overlays(
+        disable_root_tar=False, overwrite=True
+    )
+
+    if not args['--disable-version-bump']:
+        # Increment patch version number unless disabled
+        kiwi_config = f'{args["--outdir"]}/config.kiwi'
+        description = XMLDescription(kiwi_config)
+        xml_data = description.load()
+        for preferences in xml_data.get_preferences():
+            # It is expected that the <version> setting exists only once
+            # in a keg generated image description. KIWI allows for profiled
+            # <preferences> which in theory also allows to distribute the
+            # <version> information between several <preferences> sections
+            # but this would be in general questionable and should not be
+            # be done any case by keg managed recipes. Thus the following
+            # code takes the first version setting it can find and takes
+            # it as the only version information available
+            if preferences.get_version():
+                version = preferences.get_version()[0].split('.')
+                version[2] = f'{int(version[2]) + 1}'
+                preferences.set_version(['.'.join(version)])
+                with open(kiwi_config, 'w') as kiwi:
+                    xml_data.export(outfile=kiwi, level=0)
+                break
