@@ -47,7 +47,8 @@ class TestKeg:
                 image_name='../data/images/leap/15.2',
                 recipes_root='../data',
                 data_roots=[],
-                image_version='1.0.42'
+                image_version='1.0.42',
+                track_sources=False
             )
             mock_KegGenerator.assert_called_once_with(
                 image_definition=image_definition, dest_dir='some-target'
@@ -63,6 +64,46 @@ class TestKeg:
                 disable_root_tar=False, overwrite=False
             )
             image_generator.create_multibuild_file.assert_called_once_with(
+                overwrite=False
+            )
+
+    @patch('kiwi_keg.keg.SourceInfoGenerator')
+    @patch('kiwi_keg.keg.KegImageDefinition')
+    @patch('kiwi_keg.keg.KegGenerator')
+    def test_keg_write_source_info(self, mock_KegGenerator, mock_KegImageDefinition, mock_SourceInfoGenerator):
+        sys.argv += ['--write-source-info']
+        image_definition = Mock()
+        mock_KegImageDefinition.return_value = image_definition
+        image_generator = Mock()
+        mock_KegGenerator.return_value = image_generator
+        source_info_generator = Mock()
+        mock_SourceInfoGenerator.return_value = source_info_generator
+        with self._caplog.at_level(logging.DEBUG):
+            main()
+            mock_KegImageDefinition.assert_called_once_with(
+                image_name='../data/images/leap/15.2',
+                recipes_root='../data',
+                data_roots=[],
+                image_version='1.0.42',
+                track_sources=True
+            )
+            mock_KegGenerator.assert_called_once_with(
+                image_definition=image_definition, dest_dir='some-target'
+            )
+            image_generator.create_kiwi_description.assert_called_once_with(
+                overwrite=False
+            )
+            image_generator.validate_kiwi_description.assert_called_once_with()
+            image_generator.create_custom_scripts.assert_called_once_with(
+                overwrite=False
+            )
+            image_generator.create_overlays.assert_called_once_with(
+                disable_root_tar=False, overwrite=False
+            )
+            image_generator.create_multibuild_file.assert_called_once_with(
+                overwrite=False
+            )
+            source_info_generator.write_source_info.assert_called_once_with(
                 overwrite=False
             )
 
@@ -123,12 +164,12 @@ class TestKeg:
             cap = capsys.readouterr()
             assert cap.out == expected_list_output
 
-    @patch('pprint.pprint')
+    @patch('kiwi_keg.keg.AnnotatedPrettyPrinter')
     @patch('kiwi_keg.keg.KegImageDefinition')
     @patch('kiwi_keg.keg.KegGenerator')
-    def test_keg_dump(self, mock_KegGenerator, mock_KegImageDefinition, mock_pprint):
+    def test_keg_dump(self, mock_KegGenerator, mock_KegImageDefinition, mock_pprinter):
         sys.argv = [
-            sys.argv[0], '--verbose', '--dump',
+            sys.argv[0], '--verbose', '--dump-dict',
             '--recipes-root', '../data',
             '--dest-dir', 'some-target', '../data/images/leap/15.2'
         ]
@@ -136,15 +177,18 @@ class TestKeg:
         mock_KegImageDefinition.return_value = image_definition
         image_generator = Mock()
         mock_KegGenerator.return_value = image_generator
+        pprinter = Mock()
+        mock_pprinter.return_value = pprinter
         with self._caplog.at_level(logging.DEBUG):
             main()
             mock_KegImageDefinition.assert_called_once_with(
                 image_name='../data/images/leap/15.2',
                 recipes_root='../data',
                 data_roots=[],
-                image_version=None
+                image_version=None,
+                track_sources=False
             )
             mock_KegGenerator.assert_called_once_with(
                 image_definition=image_definition, dest_dir='some-target'
             )
-            mock_pprint.assert_called_once_with(image_definition.data, indent=2)
+            pprinter.pprint.assert_called_once_with(image_definition.data)

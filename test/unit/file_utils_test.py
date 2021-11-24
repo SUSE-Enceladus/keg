@@ -2,6 +2,7 @@ from mock import patch
 from pytest import raises
 from kiwi_keg import file_utils
 from kiwi_keg.exceptions import KegDataError
+import yaml
 
 
 class TestUtils:
@@ -52,3 +53,17 @@ class TestUtils:
             file_utils.rmerge(a_dict, not_a_dict)
         with raises(KegDataError):
             file_utils.rmerge(not_a_dict, a_dict)
+
+    def test_tracker_loader_constructor_error(self):
+        with open('../data/images/defaults.yaml', 'r') as f:
+            stl = file_utils.SafeTrackerLoader(f)
+            with raises(yaml.constructor.ConstructorError) as err:
+                stl.construct_mapping(yaml.nodes.ScalarNode('no', 'mapping'))
+            assert 'expected a mapping node' in str(err)
+            with raises(yaml.constructor.ConstructorError) as err:
+                broken_node = yaml.nodes.MappingNode(
+                    tag='tag:yaml.org,2002:map',
+                    value=[(yaml.nodes.ScalarNode(tag='tag:yaml.org,2002:str', value=['not', 'hashable']), yaml.nodes.ScalarNode(tag='tag:yaml.org,2002:str', value='foo'))]
+                )
+                stl.construct_mapping(broken_node)
+            assert 'found unhashable key' in str(err)

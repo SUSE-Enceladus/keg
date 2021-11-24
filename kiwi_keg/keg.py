@@ -23,7 +23,7 @@ Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT) [-v
            [--disable-multibuild] [--dump-dict]
            [-i IMAGE_VERSION|--image-version=IMAGE_VERSION]
            [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
-           SOURCE
+           [-s|--write-source-info] SOURCE
        keg -h | --help
        keg --version
 
@@ -70,6 +70,11 @@ Options:
     -i IMAGE_VERSION, --image-version=IMAGE_VERSION
         Set image version
 
+    -s, --write-source-info
+        Write a file per profile containing a list of all used source
+        locations. The files can used to generate a change log from the
+        recipes repository commit log.
+
     -v, --verbose
         Enable verbose output
 
@@ -82,11 +87,13 @@ import os
 import sys
 
 # project
+from kiwi_keg.annotated_mapping import AnnotatedPrettyPrinter
 from kiwi_keg.exceptions import KegError
-from kiwi_keg.image_definition import KegImageDefinition
-from kiwi_keg.generator import KegGenerator
-from kiwi_keg.version import __version__
 from kiwi_keg.file_utils import get_all_leaf_dirs
+from kiwi_keg.generator import KegGenerator
+from kiwi_keg.image_definition import KegImageDefinition
+from kiwi_keg.source_info_generator import SourceInfoGenerator
+from kiwi_keg.version import __version__
 
 log = logging.getLogger('keg')
 log.setLevel(logging.INFO)
@@ -128,15 +135,16 @@ def main():
             image_name=args['SOURCE'],
             recipes_root=args['--recipes-root'],
             data_roots=args['--add-data-root'],
-            image_version=args['--image-version']
+            image_version=args['--image-version'],
+            track_sources=args['--write-source-info']
         )
         image_generator = KegGenerator(
             image_definition=image_definition,
             dest_dir=args['--dest-dir']
         )
         if args['--dump-dict']:
-            from pprint import pprint
-            pprint(image_definition.data, indent=2)
+            ap = AnnotatedPrettyPrinter(indent=2)
+            ap.pprint(image_definition.data)
             return
         image_generator.create_kiwi_description(
             overwrite=args['--force']
@@ -158,6 +166,12 @@ def main():
             image_generator.create_multibuild_file(
                 overwrite=args['--force']
             )
+        if args['--write-source-info']:
+            source_info_generator = SourceInfoGenerator(
+                image_definition=image_definition,
+                dest_dir=args['--dest-dir']
+            )
+            source_info_generator.write_source_info(overwrite=args['--force'])
     except KegError as issue:
         # known exception, log information and exit
         log.error('%s: %s', type(issue).__name__, format(issue))

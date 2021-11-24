@@ -17,7 +17,7 @@
 #
 import os
 from typing import (
-    List, Dict, Optional
+    List, Optional
 )
 from datetime import (
     datetime, timezone
@@ -28,6 +28,7 @@ from kiwi_keg import script_utils
 from kiwi_keg import file_utils
 from kiwi_keg import version
 from kiwi_keg.exceptions import KegDataError
+from kiwi_keg.annotated_mapping import AnnotatedMapping, keg_dict, keg_dict_type
 
 
 class KegImageDefinition:
@@ -40,12 +41,12 @@ class KegImageDefinition:
         recipes_root: str,
         data_roots: List[str] = [],
         image_version: str = None,
-        archive_ext: str = 'tar.gz'
+        archive_ext: str = 'tar.gz',
+        track_sources: bool = False
     ):
         """
         Init ImageDefintion with image_name and recipes root path
         """
-        self._data: Dict = {}
         self._recipes_root = recipes_root
         self._image_name = image_name
         self._image_root = os.path.join(recipes_root, 'images')
@@ -53,6 +54,14 @@ class KegImageDefinition:
         self._data_roots = [os.path.join(recipes_root, 'data')]
         self._overlay_root = os.path.join(recipes_root, 'data', 'overlayfiles')
         self._archive_ext = archive_ext
+        self._track_sources = track_sources
+        self._dict_type: keg_dict_type
+        self._data: keg_dict
+        if self._track_sources:
+            self._dict_type = AnnotatedMapping
+        else:
+            self._dict_type = dict
+        self._data = self._dict_type({})
         self._config_script = None
         self._images_script = None
         if data_roots:
@@ -72,7 +81,7 @@ class KegImageDefinition:
             )
 
     @property
-    def data(self) -> Dict:
+    def data(self) -> keg_dict:
         return self._data
 
     @property
@@ -92,7 +101,7 @@ class KegImageDefinition:
         return self._image_root
 
     @property
-    def archives(self) -> Optional[Dict]:
+    def archives(self) -> Optional[keg_dict]:
         return self._data.get('archives')
 
     @property
@@ -109,18 +118,17 @@ class KegImageDefinition:
         """
         utc_now = datetime.now(timezone.utc)
         utc_now_str = utc_now.strftime("%Y-%m-%d %H:%M:%S")
-        self._data = {
+        self._data = self._dict_type({
             'generator': 'keg {}'.format(version.__version__),
             'timestamp': '{}'.format(utc_now_str),
             'image source path': '{}'.format(self.image_name),
             'archives': {}
-        }
+        })
         try:
-            self._data.update(
-                file_utils.get_recipes(
-                    [self.image_root], [self.image_name]
-                )
+            img_dict = file_utils.get_recipes(
+                [self.image_root], [self.image_name], track_sources=self._track_sources
             )
+            self._data.update(img_dict)
         except Exception as issue:
             raise KegDataError(
                 'Error parsing image data: {error}'.format(error=issue)
@@ -131,7 +139,7 @@ class KegImageDefinition:
             self._data['image']['version'] = self._image_version
 
         try:
-            self._update_profiles(self._data.get('include-paths'))
+            self._update_profiles()
             self._generate_config_scripts()
             self._generate_overlay_info()
         except Exception as issue:
@@ -139,15 +147,22 @@ class KegImageDefinition:
                 'Error generating profile data: {error}'.format(error=issue)
             )
 
-    def _update_profiles(self, include_paths):
+    def _update_profiles(self):
+        include_paths = self._data.get('include-paths')
         if 'profiles' in self._data:
-            for profile_name in list(self._data['profiles']):
-                profile: Dict = {}
+            for profile_name in list(self._data['profiles'].keys()):
+                profile = self._dict_type({})
                 profile_data = self._data['profiles'][profile_name]
-                self._expand_profile_includes(profile_data, profile, include_paths)
+                self._expand_profile_includes(
+                    profile_data,
+                    profile,
+                    include_paths,
+                    self._data['profiles'][profile_name]
+                )
 
                 # sort nested profiles, otherwise order may not be deterministic
-                nested_profile_names = sorted(list(profile_data.keys() - ['include', 'description']))
+#                nested_profile_names = sorted(list(profile_data.keys()) - ['include', 'description'])
+                nested_profile_names = sorted([x for x in profile_data.keys() if x != 'include' and x != 'description'])
 
                 if nested_profile_names:
                     profile['nested_profiles'] = nested_profile_names
@@ -159,11 +174,11 @@ class KegImageDefinition:
                         # deal with it
                         del profile['profile']
 
-                if nested_profile_names:
-                    nested_profiles: Dict = {}
+                    nested_profiles = self._dict_type({})
                     for nested_profile_name in nested_profile_names:
-                        nested_profiles[nested_profile_name] = {}
+                        nested_profiles[nested_profile_name] = self._dict_type({})
                         nested_profile_data = self._data['profiles'][profile_name][nested_profile_name]
+                        nested_profile_data['base_profile'] = profile_name
                         # copy base profile parameters (if any) into nested profile
                         if profile_params:
                             file_utils.rmerge(
@@ -181,14 +196,20 @@ class KegImageDefinition:
                 self._data['profiles'][profile_name].update(profile)
 
     def _expand_profile_includes(self, src, dest, include_paths, ref_profile=None):
-        for item, value in src.items():
+        if isinstance(src, AnnotatedMapping):
+            items = src.all_items()
+        else:
+            items = src.items()
+        for item, value in items:
             if item == 'include':
+                profile_dict = file_utils.get_recipes(
+                    self.data_roots,
+                    value,
+                    include_paths,
+                    self._track_sources
+                )
                 file_utils.rmerge(
-                    file_utils.get_recipes(
-                        self.data_roots,
-                        value,
-                        include_paths
-                    ),
+                    profile_dict,
                     dest,
                     ref_profile
                 )
