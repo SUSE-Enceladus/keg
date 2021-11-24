@@ -45,7 +45,7 @@ def get_config_script(profiles_dict: Dict, config_key: str, script_dirs: List[st
         config_root = profile_data.get(config_key)
         if config_root:
             kiwi_profiles = profile_data.get('nested_profiles', [profile])
-            content += 'if [[ $kiwi_profiles = {} '.format(kiwi_profiles[0])
+            content += '\nif [[ $kiwi_profiles = {} '.format(kiwi_profiles[0])
             for p in kiwi_profiles[1:]:
                 content += '|| $kiwi_profiles = {} '.format(p)
             content += ']]; then\n'
@@ -64,29 +64,34 @@ def get_profile_section(config_section: Dict, script_dirs: List[str], indent: st
     """
     content = ''
     config_sysconfig = config_section.get('sysconfig')
+    separator = ''
     if config_sysconfig:
         for ns, items in config_sysconfig.items():
+            content += separator
+            separator = '\n'
             content += '{indent}# keg: included from {ns}\n'.format(indent=indent, ns=ns)
             content += textwrap.indent(get_sysconfig_section(items, ns), indent)
-            content += '\n'
     config_files = config_section.get('files')
     if config_files:
         for ns, items in config_files.items():
+            content += separator
+            separator = '\n'
             content += '{indent}# keg: included from {ns}\n'.format(indent=indent, ns=ns)
             content += get_files_section(items, ns, indent)
-            content += '\n'
     config_scripts = config_section.get('scripts')
     if config_scripts:
         for ns, items in config_scripts.items():
+            content += separator
+            separator = '\n'
             content += '{indent}# keg: included from {ns}\n'.format(indent=indent, ns=ns)
             content += textwrap.indent(get_scripts_section(items, ns, script_dirs), indent)
-            content += '\n'
     config_services = config_section.get('services')
     if config_services:
         for ns, items in config_services.items():
+            content += separator
+            separator = '\n'
             content += '{indent}# keg: included from {ns}\n'.format(indent=indent, ns=ns)
             content += textwrap.indent(get_services_section(items, ns), indent)
-            content += '\n'
     return content
 
 
@@ -169,10 +174,13 @@ def get_scripts_section(script_items: Dict, ns: str, script_dirs: List[str]) -> 
     :param: str ns: Namespace the section belongs to
     """
     content = ''
+    separator = ''
     for script_name in script_items:
         script_path = get_script_path(script_dirs, script_name)
         if script_path:
             with open(script_path, 'r') as script_file:
+                content += separator
+                separator = '\n'
                 content += script_file.read()
         else:
             raise KegError(
