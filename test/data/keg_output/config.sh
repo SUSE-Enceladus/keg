@@ -45,6 +45,7 @@ EOF
 
 # keg: included from JeOS-config
 bar
+
 bob
 
 # keg: included from JeOS-services
@@ -54,5 +55,4 @@ baseRemoveService kbd
 if [[ $kiwi_profiles = other ]]; then
     # keg: included from foo-timer
     systemctl enable foo.timer
-
 fi
