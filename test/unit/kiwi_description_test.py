@@ -1,5 +1,6 @@
 import tempfile
 import filecmp
+from xmldiff import main
 from pytest import raises
 from mock import patch
 
@@ -35,9 +36,10 @@ class TestKiwiDescription:
         kiwi = KiwiDescription('../data/keg_output_xml/config.kiwi')
         with tempfile.NamedTemporaryFile() as tmpfile:
             kiwi.create_XML_description(tmpfile.name)
-            assert filecmp.cmp(
+            diff = main.diff_files(
                 '../data/keg_output_xml/config.xml', tmpfile.name
-            ) is True
+            )
+            assert len(diff) == 0
 
     def test_create_YAML_description(self):
         kiwi = KiwiDescription('../data/keg_output_yaml/config.kiwi')
