@@ -19,17 +19,65 @@ import logging
 from glob import glob
 from pathlib import Path
 from typing import (
-    List, Dict
+    List, Dict, Union, Type
 )
 import os
+import collections.abc
 import yaml
-
-from kiwi_keg.exceptions import KegDataError
+from kiwi_keg.exceptions import KegDataError, KegError
+from kiwi_keg.annotated_mapping import AnnotatedMapping, keg_dict
 
 log = logging.getLogger('keg')
 
 
-def rmerge(src: Dict[str, str], dest: Dict[str, str], ref: Dict[str, str] = None) -> Dict[str, str]:
+class SafeTrackerLoader(yaml.loader.SafeLoader):
+    """
+    Extends SafeLoader with source info tracking.
+    Adds source file and line number info for all hashable keys.
+    Uses AnnotatedMappings to hide annotated tags from normal access.
+    """
+    def __init__(self, stream):
+        self._source = stream.name
+        self._current_end = None
+        super().__init__(stream)
+        yaml.add_constructor(
+            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+            SafeTrackerLoader.construct_yaml_map,
+            SafeTrackerLoader
+        )
+
+    def construct_mapping(self, node, deep=False):
+        if isinstance(node, yaml.nodes.MappingNode):
+            self.flatten_mapping(node)
+        else:
+            raise yaml.constructor.ConstructorError(
+                None, None,
+                "expected a mapping node, but found %s" % node.id,
+                node.start_mark
+            )
+        mapping = AnnotatedMapping()
+        for key_node, value_node in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            if not isinstance(key, collections.abc.Hashable):
+                raise yaml.constructor.ConstructorError(
+                    "while constructing a mapping", node.start_mark,
+                    "found unhashable key", key_node.start_mark
+                )
+            value = self.construct_object(value_node, deep=deep)
+            mapping[key] = value
+            mapping['__{}_source__'.format(key)] = self._source
+            mapping['__{}_line_start__'.format(key)] = value_node.start_mark.line + 1
+            mapping['__{}_line_end__'.format(key)] = value_node.end_mark.line + 1
+        return mapping
+
+    def construct_yaml_map(self, node):
+        data = AnnotatedMapping()
+        yield data
+        value = self.construct_mapping(node)
+        data.update(value)
+
+
+def rmerge(src: keg_dict, dest: keg_dict, ref: keg_dict = None) -> keg_dict:
     """
     Merge two dictionaries recursively,
     preserving all properties found in src.
@@ -43,17 +91,25 @@ def rmerge(src: Dict[str, str], dest: Dict[str, str], ref: Dict[str, str] = None
 
     Result: {'a': 'foo', 'b': {'d': 'more_bar', 'c': 'bar'}}
     """
-    if type(src) != dict:
-        raise KegDataError('Cannot rmerge, source is not dict: {}'.format(src))
-    if type(dest) != dict:
-        raise KegDataError('Cannot rmerge, destination is not dict: {}'.format(dest))
+    if not isinstance(dest, dict) and not isinstance(dest, AnnotatedMapping):
+        raise KegDataError(
+            'Cannot rmerge, destination is not a mapping: {}'.format(type(dest))
+        )
+    if isinstance(src, dict):
+        items = src.items()
+    elif isinstance(src, AnnotatedMapping):
+        items = src.all_items()
+    else:
+        raise KegDataError(
+            'Cannot rmerge, source mapping type not supported: {}'.format(type(src))
+        )
 
-    for key, value in src.items():
+    for key, value in items:
         ref_node = None
         if ref:
             ref_node = ref.get(key)
-        if isinstance(value, dict):
-            node = dest.setdefault(key, {})
+        if isinstance(value, dict) or isinstance(value, AnnotatedMapping):
+            node = dest.setdefault(key, type(value)({}))
             rmerge(value, node, ref_node)
             if not node:
                 del dest[key]
@@ -67,8 +123,8 @@ def rmerge(src: Dict[str, str], dest: Dict[str, str], ref: Dict[str, str] = None
 
 
 def get_recipes(
-    roots: List[str], sub_dirs: List[str], include_paths: List[str] = None
-) -> Dict[str, str]:
+    roots: List[str], sub_dirs: List[str], include_paths: List[str] = None, track_sources: bool = False
+) -> keg_dict:
     """
     Return a new yaml tree including the data of all the source files for
     a given list of root directories and a sub directory
@@ -82,13 +138,20 @@ def get_recipes(
         desc_files += _get_source_files(
             roots, sub_dir, 'yaml', include_paths
         )
-    merged_tree: Dict[str, str] = {}
+    merged_tree: Union[Dict[str, str], AnnotatedMapping]
+    yaml_loader: Union[Type[yaml.SafeLoader], Type[SafeTrackerLoader]]
+    if track_sources:
+        merged_tree = AnnotatedMapping()
+        yaml_loader = SafeTrackerLoader
+    else:
+        merged_tree = {}
+        yaml_loader = yaml.SafeLoader
     files_read = []
     for desc_file in desc_files:
         if desc_file not in files_read:
             log.debug(f'Reading: {desc_file}')
             with open(desc_file, 'r') as f:
-                desc_yaml = yaml.safe_load(f.read())
+                desc_yaml = yaml.load(f, Loader=yaml_loader)
             rmerge(desc_yaml, merged_tree)
             files_read.append(desc_file)
     return merged_tree
@@ -134,6 +197,19 @@ def get_all_leaf_dirs(base_dir: str) -> List[str]:
     strip_offset = len(base_dir) + 1
     walker = os.walk(base_dir)
     return [x[0][strip_offset:] for x in walker if not x[1]]
+
+
+def raise_on_file_exists(fpath: str, overwrite: bool):
+    """
+    Raise error if given path exists and overwrite is False.
+    :param: str fpath: file with path.
+    """
+    if not overwrite and os.path.exists(fpath):
+        raise KegError(
+            '{target} exists, use force to overwrite.'.format(
+                target=fpath
+            )
+        )
 
 
 def _get_source_files(roots, sub_dir, ext, include_paths):

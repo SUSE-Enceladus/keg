@@ -22,6 +22,7 @@ import os
 import shutil
 import tarfile
 
+from kiwi_keg import file_utils
 from kiwi_keg.image_definition import KegImageDefinition
 from kiwi_keg.kiwi_description import KiwiDescription
 from kiwi_keg.exceptions import (
@@ -90,7 +91,7 @@ class KegGenerator:
         :param bool overwrite:
             Override destination contents, default is: False
         """
-        self._check_file(self.kiwi_description, overwrite)
+        file_utils.raise_on_file_exists(self.kiwi_description, overwrite)
 
         kiwi_template = self._read_template(
             '{}.kiwi.templ'.format(self.image_schema)
@@ -133,7 +134,7 @@ class KegGenerator:
         """
         if self.image_definition.config_script:
             log.debug('Generating config.sh')
-            self._check_file(self.kiwi_config_script, overwrite)
+            file_utils.raise_on_file_exists(self.kiwi_config_script, overwrite)
             self._write_custom_script(
                 self.kiwi_config_script,
                 self.image_definition.config_script,
@@ -142,7 +143,7 @@ class KegGenerator:
 
         if self.image_definition.images_script:
             log.debug('Generating images.sh')
-            self._check_file(self.kiwi_images_script, overwrite)
+            file_utils.raise_on_file_exists(self.kiwi_images_script, overwrite)
             self._write_custom_script(
                 self.kiwi_images_script,
                 self.image_definition.images_script,
@@ -235,15 +236,6 @@ class KegGenerator:
             for file in entry[2]:
                 src = os.path.join(entry[0], file)
                 shutil.copy(src, dest_sub, follow_symlinks=False)
-
-    @staticmethod
-    def _check_file(filename, overwrite):
-        if not overwrite and os.path.exists(filename):
-            raise KegError(
-                '{target} exists, use force to overwrite.'.format(
-                    target=filename
-                )
-            )
 
     def _write_custom_script(self, filename, content, template_name):
         try:
