@@ -1,7 +1,7 @@
 from pytest import (fixture, raises)
-import filecmp
 import tempfile
 import logging
+import os
 
 from kiwi_keg.source_info_generator import SourceInfoGenerator
 from kiwi_keg.exceptions import KegError
@@ -26,9 +26,9 @@ class TestSourceInfoGenerator:
             generator.write_source_info(
                 overwrite=True
             )
-            assert filecmp.cmp(
-                '../data/keg_output_source_info/log_sources_other', tmpdirname + '/log_sources_other'
-            ) is True
+            expected = open('../data/keg_output_source_info/log_sources_other').readlines()
+            generated = open(os.path.join(tmpdirname, 'log_sources_other')).readlines()
+            assert generated == expected
 
     def test_write_source_info_single_build(self):
         self.image_definition = KegImageDefinition(
@@ -40,9 +40,9 @@ class TestSourceInfoGenerator:
             generator.write_source_info(
                 overwrite=False
             )
-            assert filecmp.cmp(
-                '../data/keg_output_source_info/log_sources', tmpdirname + '/log_sources'
-            ) is True
+            expected = open('../data/keg_output_source_info/log_sources').readlines()
+            generated = open(os.path.join(tmpdirname, 'log_sources')).readlines()
+            assert generated == expected
 
     def test_write_source_info_nested(self):
         self.image_definition = KegImageDefinition(
@@ -54,12 +54,12 @@ class TestSourceInfoGenerator:
             generator.write_source_info(
                 overwrite=False
             )
-            assert filecmp.cmp(
-                '../data/keg_output_source_info/log_sources_nested_one', tmpdirname + '/log_sources_one'
-            ) is True
-            assert filecmp.cmp(
-                '../data/keg_output_source_info/log_sources_nested_other', tmpdirname + '/log_sources_other'
-            ) is True
+            expected = open('../data/keg_output_source_info/log_sources_nested_one').readlines()
+            generated = open(os.path.join(tmpdirname, 'log_sources_one')).readlines()
+            assert generated == expected
+            expected = open('../data/keg_output_source_info/log_sources_nested_other').readlines()
+            generated = open(os.path.join(tmpdirname, 'log_sources_other')).readlines()
+            assert generated == expected
 
     def test_write_source_info_raise_missing_dir(self):
         with raises(KegError) as err:
