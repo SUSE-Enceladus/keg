@@ -78,7 +78,7 @@ def get_commits_from_path(pathspec, rev=None):
 
 
 def get_commits(gitargs):
-    sp = subprocess.run(args=gitargs, capture_output=True)
+    sp = subprocess.run(args=gitargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if sp.returncode != 0:
         raise Exception('git exited with error "{}"'.format(sp.stderr))
     commit_lines = sp.stdout.decode('utf-8').splitlines()
@@ -87,7 +87,7 @@ def get_commits(gitargs):
 
 def get_commit_message(chash, msgformat):
     gitargs = gitcmd + ['show', '--no-patch', '--format={}'.format(msgformat), chash]
-    sp = subprocess.run(args=gitargs, capture_output=True)
+    sp = subprocess.run(args=gitargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if sp.returncode != 0:
         raise Exception('git exited with error "{}"'.format(sp.stderr))
     return sp.stdout.decode('utf-8').rstrip('\n')
