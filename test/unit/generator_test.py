@@ -17,7 +17,7 @@ from kiwi_keg.exceptions import KegError
 class TestKegGenerator:
     def setup(self):
         self.image_definition = KegImageDefinition(
-            image_name='leap/15.2', recipes_root='../data'
+            image_name='leap/15.2', recipes_roots=['../data']
         )
 
     @patch('os.path.isdir')
@@ -214,7 +214,7 @@ class TestKegGenerator:
     @patch('shutil.copy')
     def test_create_no_overlays_configuration_provided(self, mock_shutil_copy):
         image_definition = KegImageDefinition(
-            image_name='leap_no_overlays', recipes_root='../data'
+            image_name='leap_no_overlays', recipes_roots=['../data']
         )
         with tempfile.TemporaryDirectory() as tmpdirname:
             generator = KegGenerator(image_definition, tmpdirname)
@@ -223,7 +223,7 @@ class TestKegGenerator:
 
     def test_add_dir_to_tar(self):
         image_definition = KegImageDefinition(
-            image_name='leap/15.2', recipes_root='../data'
+            image_name='leap/15.2', recipes_roots=['../data']
         )
         with tempfile.TemporaryDirectory() as tmpdir:
             dir1_path = os.path.join(tmpdir, 'dir1')

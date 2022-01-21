@@ -16,7 +16,7 @@
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
 import logging
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, ChoiceLoader
 from typing import Optional
 import os
 import shutil
@@ -61,12 +61,12 @@ class KegGenerator:
             dest_dir, 'images.sh'
         )
         self.image_definition: KegImageDefinition = image_definition
-        self.description_schemas = os.path.join(
-            image_definition.recipes_root, 'schemas'
-        )
         self.dest_dir: str = dest_dir
+        loaders = []
+        for root in reversed(image_definition.recipes_roots):
+            loaders.append(FileSystemLoader(os.path.join(root, 'schemas')))
         self.env = Environment(
-            loader=FileSystemLoader(self.description_schemas)
+            loader=ChoiceLoader(loaders)
         )
 
         self.image_definition.populate()
@@ -260,8 +260,7 @@ class KegGenerator:
             )
         except TemplateNotFound:
             raise KegDataError(
-                'Template {name} not found in: {location}'.format(
-                    name=repr(template_name),
-                    location=self.description_schemas
+                'Template {name} not found'.format(
+                    name=repr(template_name)
                 )
             )

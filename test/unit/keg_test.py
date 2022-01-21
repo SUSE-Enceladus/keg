@@ -45,8 +45,7 @@ class TestKeg:
             main()
             mock_KegImageDefinition.assert_called_once_with(
                 image_name='../data/images/leap/15.2',
-                recipes_root='../data',
-                data_roots=[],
+                recipes_roots=['../data'],
                 image_version='1.0.42',
                 track_sources=False
             )
@@ -82,8 +81,7 @@ class TestKeg:
             main()
             mock_KegImageDefinition.assert_called_once_with(
                 image_name='../data/images/leap/15.2',
-                recipes_root='../data',
-                data_roots=[],
+                recipes_roots=['../data'],
                 image_version='1.0.42',
                 track_sources=True
             )
@@ -183,8 +181,7 @@ class TestKeg:
             main()
             mock_KegImageDefinition.assert_called_once_with(
                 image_name='../data/images/leap/15.2',
-                recipes_root='../data',
-                data_roots=[],
+                recipes_roots=['../data'],
                 image_version=None,
                 track_sources=False
             )

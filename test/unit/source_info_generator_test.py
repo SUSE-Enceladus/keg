@@ -16,7 +16,7 @@ class TestSourceInfoGenerator:
 
     def setup(self):
         self.image_definition = KegImageDefinition(
-            image_name='leap/15.2', recipes_root='../data', track_sources=True
+            image_name='leap/15.2', recipes_roots=['../data'], track_sources=True
         )
 
     def test_write_source_info(self):
@@ -32,7 +32,7 @@ class TestSourceInfoGenerator:
 
     def test_write_source_info_single_build(self):
         self.image_definition = KegImageDefinition(
-            image_name='leap_single_build', recipes_root='../data', track_sources=True
+            image_name='leap_single_build', recipes_roots=['../data'], track_sources=True
         )
         with tempfile.TemporaryDirectory() as tmpdirname:
             self.image_definition.populate()
@@ -46,7 +46,7 @@ class TestSourceInfoGenerator:
 
     def test_write_source_info_nested(self):
         self.image_definition = KegImageDefinition(
-            image_name='leap_nested_profiles/15.2', recipes_root='../data', track_sources=True
+            image_name='leap_nested_profiles/15.2', recipes_roots=['../data'], track_sources=True
         )
         with tempfile.TemporaryDirectory() as tmpdirname:
             self.image_definition.populate()

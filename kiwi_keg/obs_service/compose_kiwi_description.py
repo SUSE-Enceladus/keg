@@ -17,30 +17,22 @@
 #
 """
 Usage:
-    compose_kiwi_description --main-git-recipes=<git_clone_source> --image-source=<path> --outdir=<obs_out>
-        [--main-branch=<name>]
-        [--add-on-git-recipes=<add_on_git_clone_source>]
-        [--add-on-branch=<name>]
+    compose_kiwi_description --git-recipes=<git_clone_source> ... --image-source=<path> --outdir=<obs_out>
+        [--git-branch=<name>] ...
         [--disable-version-bump]
     compose_kiwi_description -h | --help
     compose_kiwi_description --version
 
 Options:
-    --main-git-recipes=<git_clone_source>
-        Main git clone location to fetch keg recipes.
+    --git-recipes=<git_clone_source>
+        Remote git repository containing keg-recipes (multiples allowed).
+
+    --git-branch=<name>
+        Recipes repository branch to check out (multiples allowed, optional).
 
     --image-source=<path>
         Keg path in git source pointing to the image description.
-        The path must be relative to the images/ directory
-
-    --main-branch=<name>
-        Branch in main git source [default: released].
-
-    --add-on-git-recipes=<add_on_git_clone_source>
-        Additional git clone location to fetch other keg recipes.
-
-    --add-on-branch=<name>
-        Branch in additional git source [default: released].
+        The path must be relative to the images/ directory.
 
     --outdir=<obs_out>
         Output directory to store data produced by the service.
@@ -52,6 +44,8 @@ Options:
 """
 import os
 import docopt
+import itertools
+import sys
 
 from kiwi.xml_description import XMLDescription
 from kiwi.utils.temporary import Temporary
@@ -68,18 +62,22 @@ def main() -> None:
     if not os.path.exists(args['--outdir']):
         Path.create(args['--outdir'])
 
-    temp_git_dir = Temporary(prefix='keg_recipes.').new_dir()
-    Command.run(
-        ['git', 'clone', args['--main-git-recipes'], temp_git_dir.name]
-    )
-    Command.run(
-        ['git', '-C', temp_git_dir.name, 'checkout', args['--main-branch']]
-    )
+    if len(args['--git-branch']) > len(args['--git-recipes']):
+        sys.exit('Number of --git-branch arguments must not exceed number of git repos.')
 
+    temp_git_dirs = []
+    for repo, branch in itertools.zip_longest(args['--git-recipes'], args['--git-branch']):
+        temp_git_dir = Temporary(prefix='keg_recipes.').new_dir()
+        if branch:
+            Command.run(['git', 'clone', '-b', branch, repo, temp_git_dir.name])
+        else:
+            Command.run(['git', 'clone', repo, temp_git_dir.name])
+        temp_git_dirs.append(temp_git_dir.name)
+
+    print(temp_git_dirs)
     image_definition = KegImageDefinition(
         image_name=args['--image-source'],
-        recipes_root=temp_git_dir.name,
-        data_roots=args['--add-on-git-recipes']
+        recipes_roots=temp_git_dirs
     )
     image_generator = KegGenerator(
         image_definition=image_definition,
