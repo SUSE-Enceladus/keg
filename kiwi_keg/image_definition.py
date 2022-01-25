@@ -66,7 +66,7 @@ class KegImageDefinition:
         for recipes_root in self._recipes_roots:
             if not os.path.isdir(recipes_root):
                 raise KegDataError(
-                    'Image Definition: {root} does not exist'.format(
+                    'Recipes root "{root}" does not exist'.format(
                         root=recipes_root
                     )
                 )
@@ -77,7 +77,7 @@ class KegImageDefinition:
                 break
         if not image_dir_exists:
             raise KegDataError(
-                'Image Definition: {image} does not exist'.format(
+                'Image source path "{image}" does not exist'.format(
                     image=self._image_name
                 )
             )

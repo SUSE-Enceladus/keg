@@ -25,7 +25,7 @@ class TestKegImageDefinition:
             KegImageDefinition(
                 image_name='no/such/image', recipes_roots=['../data']
             )
-        assert "Image Definition: no/such/image does not exist" in \
+        assert 'Image source path "no/such/image" does not exist' in \
             str(exception_info.value)
 
     @patch('kiwi_keg.file_utils.get_recipes')
