@@ -74,7 +74,6 @@ def main() -> None:
             Command.run(['git', 'clone', repo, temp_git_dir.name])
         temp_git_dirs.append(temp_git_dir.name)
 
-    print(temp_git_dirs)
     image_definition = KegImageDefinition(
         image_name=args['--image-source'],
         recipes_roots=temp_git_dirs
