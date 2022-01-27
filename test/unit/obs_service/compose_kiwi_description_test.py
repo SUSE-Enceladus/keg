@@ -2,7 +2,7 @@ import sys
 from mock import (
     Mock, patch, call
 )
-from pytest import fixture
+from pytest import fixture, raises
 from kiwi_keg.obs_service.compose_kiwi_description import main
 
 
@@ -14,11 +14,13 @@ class TestFetchFromKeg:
     def setup(self):
         sys.argv = [
             sys.argv[0],
-            '--main-git-recipes',
+            '--git-recipes',
             'https://github.com/SUSE-Enceladus/keg-recipes.git',
+            '--git-recipes',
+            'https://github.com/SUSE-Enceladus/keg-recipes2.git',
             '--image-source',
             'leap/jeos/15.2',
-            '--main-branch',
+            '--git-branch',
             'develop',
             '--outdir',
             'obs_out'
@@ -58,21 +60,22 @@ class TestFetchFromKeg:
         assert mock_Command_run.call_args_list == [
             call(
                 [
-                    'git', 'clone',
+                    'git', 'clone', '-b', 'develop',
                     'https://github.com/SUSE-Enceladus/keg-recipes.git',
                     temp_dir.name
                 ]
             ),
             call(
                 [
-                    'git', '-C', temp_dir.name, 'checkout', 'develop'
+                    'git', 'clone',
+                    'https://github.com/SUSE-Enceladus/keg-recipes2.git',
+                    temp_dir.name
                 ]
             )
         ]
         mock_KegImageDefinition.assert_called_once_with(
             image_name='leap/jeos/15.2',
-            recipes_root=temp_dir.name,
-            data_roots=None
+            recipes_roots=[temp_dir.name, temp_dir.name]
         )
         mock_KegGenerator.assert_called_once_with(
             image_definition=image_definition, dest_dir='obs_out'
@@ -92,3 +95,9 @@ class TestFetchFromKeg:
         preferences.set_version.assert_called_once_with(
             ['1.1.2']
         )
+
+    def test_too_many_branch_args(self):
+        sys.argv += ['--git-branch=foo', '--git-branch=bar']
+        with raises(SystemExit) as sysex:
+            main()
+        assert sysex.value.code == 'Number of --git-branch arguments must not exceed number of git repos.'

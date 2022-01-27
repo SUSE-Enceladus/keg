@@ -11,30 +11,21 @@ from kiwi_keg.exceptions import KegError
 class TestKegImageDefinition:
     def setup(self):
         self.keg_definition = KegImageDefinition(
-            image_name='leap/15.2', recipes_root='../data', image_version='1.0.42'
+            image_name='leap/15.2', recipes_roots=['../data'], image_version='1.0.42'
         )
-
-    def test_setup_with_additional_data_root(self):
-        keg_definition = KegImageDefinition(
-            image_name='leap/15.2', recipes_root='../data',
-            data_roots=['data2', 'data3']
-        )
-        assert keg_definition._data_roots == [
-            '../data/data', 'data2', 'data3'
-        ]
 
     def test_setup_raises_recipes_root_not_existing(self):
         with raises(KegError):
             KegImageDefinition(
-                image_name='leap/15.2', recipes_root='artificial'
+                image_name='leap/15.2', recipes_roots=['artificial']
             )
 
     def test_setup_raises_image_not_existing(self):
         with raises(KegError) as exception_info:
             KegImageDefinition(
-                image_name='no/such/image', recipes_root='../data'
+                image_name='no/such/image', recipes_roots=['../data']
             )
-        assert "Image Definition: ../data/images/no/such/image does not exist" in \
+        assert 'Image source path "no/such/image" does not exist' in \
             str(exception_info.value)
 
     @patch('kiwi_keg.file_utils.get_recipes')
@@ -48,13 +39,13 @@ class TestKegImageDefinition:
     def test_populate_raises_on_no_such_overlay(self):
         with raises(KegError):
             keg_definition = KegImageDefinition(
-                image_name='leap_broken_overlay', recipes_root='../data'
+                image_name='leap_broken_overlay', recipes_roots=['../data']
             )
             keg_definition.populate()
 
     def test_generate_overlay_info_raises_on_broken_overlay(self):
         keg_definition = KegImageDefinition(
-            image_name='leap_broken_overlay', recipes_root='../data'
+            image_name='leap_broken_overlay', recipes_roots=['../data']
         )
         # produce in memory rather than read from data dir because
         # broken syntax in data tree would break list recipes cmd

@@ -17,12 +17,12 @@
 #
 """
 
-Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT) [-v]
+Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT) ... [-v]
        keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
            [--format-xml|--format-yaml] [--disable-root-tar]
            [--disable-multibuild] [--dump-dict]
            [-i IMAGE_VERSION|--image-version=IMAGE_VERSION]
-           [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
+           [-d DEST_DIR] [-fv]
            [-s|--write-source-info] SOURCE
        keg -h | --help
        keg --version
@@ -32,10 +32,8 @@ Arguments:
 
 Options:
     -r RECIPES_ROOT, --recipes-root=RECIPES_ROOT
-        Root directory of keg recipes
-
-    -a ADD_DATA_ROOT, --add-data-root=ADD_DATA_ROOT
-        Additional data root directory of recipes (multiples allowed)
+        Root directory of keg recipes. Can be used more than once. Elements
+        from later roots may overwrite earlier one.
 
     -d DEST_DIR, --dest-dir=DEST_DIR
         Destination directory for generated description [default: .]
@@ -106,15 +104,16 @@ def main():
         log.setLevel(logging.DEBUG)
 
     if args['--list-recipes']:
-        image_root = os.path.join(args['--recipes-root'], 'images')
-        image_dirs = get_all_leaf_dirs(image_root)
+        image_roots = [os.path.join(x, 'images') for x in args['--recipes-root']]
+        image_dirs = []
+        for image_root in image_roots:
+            image_dirs += get_all_leaf_dirs(image_root)
         images = {}
         for image_src in sorted(image_dirs):
             try:
                 image_definition = KegImageDefinition(
                     image_name=image_src,
-                    recipes_root=args['--recipes-root'],
-                    data_roots=[]
+                    recipes_roots=args['--recipes-root']
                 )
                 image_definition.populate()
                 image_spec = image_definition.data['image']
@@ -133,8 +132,7 @@ def main():
     try:
         image_definition = KegImageDefinition(
             image_name=args['SOURCE'],
-            recipes_root=args['--recipes-root'],
-            data_roots=args['--add-data-root'],
+            recipes_roots=args['--recipes-root'],
             image_version=args['--image-version'],
             track_sources=args['--write-source-info']
         )

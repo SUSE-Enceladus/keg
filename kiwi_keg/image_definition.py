@@ -38,8 +38,7 @@ class KegImageDefinition:
     def __init__(
         self,
         image_name: str,
-        recipes_root: str,
-        data_roots: List[str] = [],
+        recipes_roots: List[str],
         image_version: str = None,
         archive_ext: str = 'tar.gz',
         track_sources: bool = False
@@ -47,12 +46,12 @@ class KegImageDefinition:
         """
         Init ImageDefintion with image_name and recipes root path
         """
-        self._recipes_root = recipes_root
+        self._recipes_roots = recipes_roots
         self._image_name = image_name
-        self._image_root = os.path.join(recipes_root, 'images')
+        self._image_roots = [os.path.join(x, 'images') for x in recipes_roots]
         self._image_version = image_version
-        self._data_roots = [os.path.join(recipes_root, 'data')]
-        self._overlay_root = os.path.join(recipes_root, 'data', 'overlayfiles')
+        self._data_roots = [os.path.join(x, 'data') for x in recipes_roots]
+        self._overlay_roots = [os.path.join(x, 'data', 'overlayfiles') for x in recipes_roots]
         self._archive_ext = archive_ext
         self._track_sources = track_sources
         self._dict_type: keg_dict_type
@@ -64,29 +63,16 @@ class KegImageDefinition:
         self._data = self._dict_type({})
         self._config_script = None
         self._images_script = None
-        if data_roots:
-            self._data_roots += data_roots
-        if not os.path.isdir(recipes_root):
-            raise KegDataError(
-                'Image Definition: {root} does not exist'.format(
-                    root=recipes_root
-                )
-            )
-        image_dir = os.path.join(self._image_root, self._image_name)
-        if not os.path.isdir(image_dir):
-            raise KegDataError(
-                'Image Definition: {image_dir} does not exist'.format(
-                    image_dir=image_dir
-                )
-            )
+        self._check_recipes_paths_exist()
+        self._check_image_path_exists()
 
     @property
     def data(self) -> keg_dict:
         return self._data
 
     @property
-    def recipes_root(self) -> str:
-        return self._recipes_root
+    def recipes_roots(self) -> List[str]:
+        return self._recipes_roots
 
     @property
     def data_roots(self) -> List[str]:
@@ -97,8 +83,8 @@ class KegImageDefinition:
         return self._image_name
 
     @property
-    def image_root(self) -> str:
-        return self._image_root
+    def image_roots(self) -> List[str]:
+        return self._image_roots
 
     @property
     def archives(self) -> Optional[keg_dict]:
@@ -126,7 +112,7 @@ class KegImageDefinition:
         })
         try:
             img_dict = file_utils.get_recipes(
-                [self.image_root], [self.image_name], track_sources=self._track_sources
+                self.image_roots, [self.image_name], track_sources=self._track_sources
             )
             self._data.update(img_dict)
         except Exception as issue:
@@ -145,6 +131,28 @@ class KegImageDefinition:
         except Exception as issue:
             raise KegDataError(
                 'Error generating profile data: {error}'.format(error=issue)
+            )
+
+    def _check_recipes_paths_exist(self):
+        for recipes_root in self._recipes_roots:
+            if not os.path.isdir(recipes_root):
+                raise KegDataError(
+                    'Recipes root "{root}" does not exist'.format(
+                        root=recipes_root
+                    )
+                )
+
+    def _check_image_path_exists(self):
+        image_dir_exists = False
+        for image_dir in self._image_roots:
+            if os.path.isdir(os.path.join(image_dir, self._image_name)):
+                image_dir_exists = True
+                break
+        if not image_dir_exists:
+            raise KegDataError(
+                'Image source path "{image}" does not exist'.format(
+                    image=self._image_name
+                )
             )
 
     def _update_profiles(self):
