@@ -63,24 +63,8 @@ class KegImageDefinition:
         self._data = self._dict_type({})
         self._config_script = None
         self._images_script = None
-        for recipes_root in self._recipes_roots:
-            if not os.path.isdir(recipes_root):
-                raise KegDataError(
-                    'Recipes root "{root}" does not exist'.format(
-                        root=recipes_root
-                    )
-                )
-        image_dir_exists = False
-        for image_dir in self._image_roots:
-            if os.path.isdir(os.path.join(image_dir, self._image_name)):
-                image_dir_exists = True
-                break
-        if not image_dir_exists:
-            raise KegDataError(
-                'Image source path "{image}" does not exist'.format(
-                    image=self._image_name
-                )
-            )
+        self._check_recipes_paths_exist()
+        self._check_image_path_exists()
 
     @property
     def data(self) -> keg_dict:
@@ -147,6 +131,28 @@ class KegImageDefinition:
         except Exception as issue:
             raise KegDataError(
                 'Error generating profile data: {error}'.format(error=issue)
+            )
+
+    def _check_recipes_paths_exist(self):
+        for recipes_root in self._recipes_roots:
+            if not os.path.isdir(recipes_root):
+                raise KegDataError(
+                    'Recipes root "{root}" does not exist'.format(
+                        root=recipes_root
+                    )
+                )
+
+    def _check_image_path_exists(self):
+        image_dir_exists = False
+        for image_dir in self._image_roots:
+            if os.path.isdir(os.path.join(image_dir, self._image_name)):
+                image_dir_exists = True
+                break
+        if not image_dir_exists:
+            raise KegDataError(
+                'Image source path "{image}" does not exist'.format(
+                    image=self._image_name
+                )
             )
 
     def _update_profiles(self):
