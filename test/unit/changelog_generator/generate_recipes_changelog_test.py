@@ -44,7 +44,6 @@ class TestGenerateRecipesChangelog:
             sys.argv[0],
             '-r', 'fake_commit..',
             '-f', 'text',
-            '-C', '.',
             '../data/keg_output_source_info/log_sources_fake'
         ]
 
@@ -88,12 +87,12 @@ class TestGenerateRecipesChangelog:
     def test_get_commits_error(self):
         gitcmd = ['git', 'log', 'no_such_path']
         with raises(Exception) as err:
-            get_commits(gitcmd)
+            get_commits(gitcmd, 'fake_root')
         assert 'unknown revision or path not in the working tree' in str(err.value)
 
     def test_get_commit_message_error(self):
         with raises(Exception) as err:
-            get_commit_message('no_such_hash', '%s')
+            get_commit_message('no_such_hash', '.', '%s')
         assert 'unknown revision or path not in the working tree' in str(err.value)
 
     def test_unsupported_format_error(self):
@@ -101,3 +100,12 @@ class TestGenerateRecipesChangelog:
         with raises(SystemExit) as err:
             main()
         assert str(err.value) == 'Unsupported output format "foo".'
+
+    def test_broken_log(self):
+        sys.argv = [
+            sys.argv[0],
+            '../data/keg_output_source_info/log_sources_broken'
+        ]
+        with raises(Exception) as err:
+            main()
+        assert str(err.value) == 'path "not_that_root/some_path" is outside git roots'

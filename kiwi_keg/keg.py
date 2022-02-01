@@ -17,8 +17,8 @@
 #
 """
 
-Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT) ... [-v]
-       keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
+Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)... [-v]
+       keg (-r RECIPES_ROOT|-recipes-root=RECIPES_ROOT)...
            [--format-xml|--format-yaml] [--disable-root-tar]
            [--disable-multibuild] [--dump-dict]
            [-i IMAGE_VERSION|--image-version=IMAGE_VERSION]
@@ -100,11 +100,14 @@ log.setLevel(logging.INFO)
 def main():
     args = docopt.docopt(__doc__, version=__version__)
 
+    # docopt seems to duplicate repeatable options, remove them
+    roots = list(dict.fromkeys(args['--recipes-root']))
+
     if args['--verbose']:
         log.setLevel(logging.DEBUG)
 
     if args['--list-recipes']:
-        image_roots = [os.path.join(x, 'images') for x in args['--recipes-root']]
+        image_roots = [os.path.join(x, 'images') for x in roots]
         image_dirs = []
         for image_root in image_roots:
             image_dirs += get_all_leaf_dirs(image_root)
@@ -113,7 +116,7 @@ def main():
             try:
                 image_definition = KegImageDefinition(
                     image_name=image_src,
-                    recipes_roots=args['--recipes-root']
+                    recipes_roots=roots
                 )
                 image_definition.populate()
                 image_spec = image_definition.data['image']
@@ -132,7 +135,7 @@ def main():
     try:
         image_definition = KegImageDefinition(
             image_name=args['SOURCE'],
-            recipes_roots=args['--recipes-root'],
+            recipes_roots=roots,
             image_version=args['--image-version'],
             track_sources=args['--write-source-info']
         )

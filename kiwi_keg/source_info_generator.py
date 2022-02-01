@@ -55,6 +55,8 @@ class SourceInfoGenerator:
         profiles = self.image_definition.data['profiles']
         if list(profiles.keys()) == ['common']:
             with self._open_source_info_file('log_sources', overwrite) as outf:
+                for r in self.image_definition.recipes_roots:
+                    outf.write('root:{}\n'.format(r))
                 outf.write(self._get_source_info_profile('common'))
                 outf.write('\n')
         else:
@@ -70,6 +72,8 @@ class SourceInfoGenerator:
                         with self._open_source_info_file(
                             'log_sources_{}'.format(nested_profile), overwrite
                         ) as outf:
+                            for r in self.image_definition.recipes_roots:
+                                outf.write('root:{}\n'.format(r))
                             outf.write(base_src_info)
                             outf.write('\n')
                             outf.write(self._get_source_info_profile(nested_profile))
@@ -78,6 +82,8 @@ class SourceInfoGenerator:
                     with self._open_source_info_file(
                         'log_sources_{}'.format(profile_name), overwrite
                     ) as outf:
+                        for r in self.image_definition.recipes_roots:
+                            outf.write('root:{}\n'.format(r))
                         outf.write(base_src_info)
                         outf.write('\n')
 
