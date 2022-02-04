@@ -36,7 +36,8 @@ config = {
     'entry_points': {
         'console_scripts': [
             'keg=kiwi_keg.keg:main',
-            'compose_kiwi_description=kiwi_keg.obs_service.compose_kiwi_description:main'
+            'compose_kiwi_description=kiwi_keg.obs_service.compose_kiwi_description:main',
+            'generate_recipes_changelog=kiwi_keg.changelog_generator.generate_recipes_changelog:main'
         ]
     },
     'include_package_data': True,
