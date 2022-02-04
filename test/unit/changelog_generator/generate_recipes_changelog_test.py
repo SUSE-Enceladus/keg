@@ -22,6 +22,7 @@ expected_output_yaml = """\
 """
 
 side_effects_text = [
+    'fake_commits\n',
     'ts1 fake_commit_id1\n',
     'ts2 fake_commit_id2\n',
     '- change1\n',
@@ -29,6 +30,7 @@ side_effects_text = [
 ]
 
 side_effects_yaml = [
+    'fake_commits\n',
     'ts1 fake_commit_id1\n',
     'ts2 fake_commit_id2\n',
     'change1\n',
@@ -42,7 +44,7 @@ class TestGenerateRecipesChangelog:
     def setup(self):
         sys.argv = [
             sys.argv[0],
-            '-r', 'fake_commit..',
+            '-r', 'fake_root:fake_commit..',
             '-f', 'text',
             '../data/keg_output_source_info/log_sources_fake'
         ]
@@ -70,6 +72,20 @@ class TestGenerateRecipesChangelog:
             sys.argv.append(tmpfile)
             main()
             assert open(tmpfile, 'r').read() == expected_output_yaml
+
+    @patch('kiwi_keg.changelog_generator.generate_recipes_changelog.subprocess.run')
+    def test_generate_recipes_changelog_yaml_empty_log(self, mock_run):
+        mock_stdout = Mock()
+        mock_stdout.stdout.decode.side_effect = ['', '']
+        mock_stdout.returncode = 0
+        mock_run.return_value = mock_stdout
+        sys.argv[4] = 'yaml'
+        with TemporaryDirectory() as tmpdir:
+            tmpfile = os.path.join(tmpdir, 'out')
+            sys.argv.append('-o')
+            sys.argv.append(tmpfile)
+            main()
+            assert open(tmpfile, 'r').read() == '[]\n'
 
     @patch('kiwi_keg.changelog_generator.generate_recipes_changelog.subprocess.run')
     def test_generate_recipes_changelog_yaml_title(self, mock_run, capsys):
@@ -106,6 +122,16 @@ class TestGenerateRecipesChangelog:
             sys.argv[0],
             '../data/keg_output_source_info/log_sources_broken'
         ]
-        with raises(Exception) as err:
+        with raises(SystemExit) as err:
             main()
         assert str(err.value) == 'path "not_that_root/some_path" is outside git roots'
+
+    def test_malformed_rev_arg(self):
+        sys.argv = [
+            sys.argv[0],
+            '-r', 'INVALID',
+            '../data/keg_output_source_info/log_sources_broken'
+        ]
+        with raises(SystemExit) as err:
+            main()
+        assert str(err.value) == 'Malformed revision specification "INVALID"'
