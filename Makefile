@@ -57,8 +57,6 @@ build: clean tox
 	$(python) setup.py sdist
 	# restore original setup.py backed up from sed
 	mv setup.pye setup.py
-	# provide rpm source tarball
-	mv dist/kiwi_keg-${version}.tar.gz dist/python-kiwi_keg.tar.gz
 	# update rpm changelog using reference file
 	helper/update_changelog.py --since package/python-kiwi_keg.changes > \
 		dist/python-kiwi_keg.changes

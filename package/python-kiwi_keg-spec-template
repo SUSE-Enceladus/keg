@@ -53,7 +53,7 @@ License:        GPL-3.0-or-later
 Packager:       Public Cloud Team <public-cloud-dev@suse.de>
 %endif
 Group:          %{pygroup}
-Source:         %{name}.tar.gz
+Source:         kiwi_keg-%{version}.tar.gz
 Source1:        %{name}-rpmlintrc
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python%{python3_pkgversion}-%{develsuffix}
@@ -86,6 +86,18 @@ Requires:       python%{python3_pkgversion}-cerberus
 %description -n python%{python3_pkgversion}-kiwi_keg
 KEG is an image composition tool for KIWI image descriptions
 
+%package -n obs-service-keg
+Summary:        An OBS service: generate KIWI description using KEG
+Group:          Development/Tools/Building
+Requires:       python%{python3_pkgversion}-kiwi_keg
+
+%description -n obs-service-keg
+This is a source service for openSUSE Build Service.
+
+The source service produces a KIWI image description through KEG from one or
+more given git repositories that contain keg-recipes source tree. It supports
+auto-generation of change log files from commit history.
+
 %prep
 %setup -q -n kiwi_keg-%{version}
 
@@ -106,11 +118,14 @@ make buildroot=%{buildroot}/ docdir=%{_defaultdocdir}/ install_package_docs
 %files -n python%{python3_pkgversion}-kiwi_keg
 %dir %{_defaultdocdir}/python-kiwi_keg
 %dir %{_usr}/lib/obs
+%{_bindir}/generate_recipes_changelog
 %{_bindir}/keg
-%{_usr}/lib/obs/service
 %{python3_sitelib}/kiwi_keg*
 %{_defaultdocdir}/python-kiwi_keg/LICENSE
 %{_defaultdocdir}/python-kiwi_keg/README
 %doc %{_mandir}/man8/*
+
+%files -n obs-service-keg
+%{_usr}/lib/obs/service
 
 %changelog
