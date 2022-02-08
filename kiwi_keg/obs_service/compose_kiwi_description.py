@@ -55,10 +55,8 @@ import docopt
 import itertools
 import logging
 import os
-import re
 import shutil
 import sys
-import tempfile
 
 from kiwi.xml_description import XMLDescription
 from kiwi.utils.temporary import Temporary
@@ -139,26 +137,6 @@ def generate_changelog(source_log, outdir, prefix, image_version, rev_args):
     shutil.move(changes_new, os.path.join(outdir, changes_old))
 
 
-def update_image_version(kiwi_config, version):
-    # Do not use the kiwi export function to update XML data,
-    # as this would remove all comments from the file.
-    new_config = tempfile.NamedTemporaryFile(mode='w', delete=False)
-    with open(kiwi_config, 'r') as inf:
-        exp = re.compile('(\\s*<version>)([^<]*)(</version>.*)')
-        line = inf.readline()
-        while line:
-            m = exp.match(line)
-            if m:
-                new_config.write(m.group(1))
-                new_config.write(version)
-                new_config.write(m.group(3))
-                new_config.write('\n')
-            else:
-                new_config.write(line)
-            line = inf.readline()
-    shutil.move(new_config.name, kiwi_config)
-
-
 def update_revisions(repo_dirs, outdir):
     with open(os.path.join(outdir, '_keg_revisions'), 'w') as outf:
         for rname, rpath in repo_dirs.items():
@@ -186,10 +164,24 @@ def main() -> None:
             Command.run(['git', 'clone', repo, temp_git_dir.name])
         repo_dirs[repo] = temp_git_dir
 
+    image_version = None
+    old_kiwi_config = None
+    if os.path.exists('config.kiwi'):
+        old_kiwi_config = 'config.kiwi'
+
+    if not args['--disable-version-bump'] and old_kiwi_config:
+        # if old config.kiwi exists, increment patch version number
+        version = get_image_version(old_kiwi_config)
+        if version:
+            ver_elements = version.split('.')
+            ver_elements[2] = f'{int(ver_elements[2]) + 1}'
+            image_version = '.'.join(ver_elements)
+
     image_definition = KegImageDefinition(
         image_name=args['--image-source'],
         recipes_roots=[x.name for x in repo_dirs.values()],
-        track_sources=handle_changelog
+        track_sources=handle_changelog,
+        image_version=image_version
     )
     image_generator = KegGenerator(
         image_definition=image_definition,
@@ -205,29 +197,18 @@ def main() -> None:
         disable_root_tar=False, overwrite=True
     )
 
-    image_version = None
-    kiwi_config = f'{args["--outdir"]}/config.kiwi'
-
-    if not args['--disable-version-bump']:
-        # Increment patch version number unless disabled
-        version = get_image_version(kiwi_config)
-        if version:
-            ver_elements = version.split('.')
-            ver_elements[2] = f'{int(ver_elements[2]) + 1}'
-            image_version = '.'.join(ver_elements)
-            update_image_version(kiwi_config, image_version)
-
     if handle_changelog:
         sig = SourceInfoGenerator(image_definition, dest_dir=args['--outdir'])
         sig.write_source_info()
         rev_args = get_revision_args(repo_dirs)
 
         if not image_version:
-            log.warning(
-                'Warning: generating changes file but version bump is disabled. '
-                'Using old version.'
-            )
-            image_version = get_image_version(kiwi_config)
+            if old_kiwi_config:
+                log.warning(
+                    'Warning: generating changes file but version bump is disabled. '
+                    'Using old version.'
+                )
+            image_version = get_image_version(os.path.join(args['--outdir'], 'config.kiwi'))
 
         for source_log in glob.glob(os.path.join(args['--outdir'], 'log_sources*')):
             flavor = source_log[len(os.path.join(args['--outdir'], 'log_sources')) + 1:]
