@@ -11,8 +11,7 @@ from kiwi_keg.obs_service.compose_kiwi_description import (
     generate_changelog,
     get_image_version,
     get_revision_args,
-    update_revisions,
-    update_image_version
+    update_revisions
 )
 
 
@@ -36,7 +35,6 @@ class TestFetchFromKeg:
             'obs_out'
         ]
 
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.update_image_version')
     @patch('kiwi_keg.obs_service.compose_kiwi_description.update_revisions')
     @patch('os.remove')
     @patch('os.rename')
@@ -55,7 +53,7 @@ class TestFetchFromKeg:
         mock_KegGenerator, mock_KegImageDefinition, mock_Temporary_new_dir,
         mock_XMLDescription, mock_SourceInfoGenerator, mock_glob,
         mock_get_revision_args, mock_rename, mock_remove,
-        mock_update_revisions, mock_update_image_version
+        mock_update_revisions
     ):
         xml_data = Mock()
         preferences = Mock()
@@ -64,7 +62,7 @@ class TestFetchFromKeg:
         description = Mock()
         description.load.return_value = xml_data
         mock_XMLDescription.return_value = description
-        mock_path_exists.return_value = False
+        mock_path_exists.side_effect = [False, True, True, True]
         image_definition = Mock()
         mock_KegImageDefinition.return_value = image_definition
         image_generator = Mock()
@@ -75,7 +73,6 @@ class TestFetchFromKeg:
         mock_SourceInfoGenerator.return_value = source_info_generator
         mock_glob.return_value = ['obs_out/log_sources_flavor1', 'obs_out/log_sources_flavor2']
         mock_get_revision_args.return_value = ['-r', 'fake_repo:fake_rev..']
-        mock_path_exists.return_value = False
 
         with patch('builtins.open', create=True):
             main()
@@ -120,7 +117,8 @@ class TestFetchFromKeg:
         mock_KegImageDefinition.assert_called_once_with(
             image_name='leap/jeos/15.2',
             recipes_roots=[temp_dir.name, temp_dir.name],
-            track_sources=True
+            track_sources=True,
+            image_version='1.1.2'
         )
         mock_KegGenerator.assert_called_once_with(
             image_definition=image_definition, dest_dir='obs_out'
@@ -135,10 +133,7 @@ class TestFetchFromKeg:
             disable_root_tar=False, overwrite=True
         )
         mock_XMLDescription.assert_called_once_with(
-            'obs_out/config.kiwi'
-        )
-        mock_update_image_version.assert_called_once_with(
-            'obs_out/config.kiwi', '1.1.2'
+            'config.kiwi'
         )
         source_info_generator.write_source_info.assert_called_once()
         mock_rename.assert_has_calls(
@@ -194,7 +189,7 @@ class TestFetchFromKeg:
         description = Mock()
         description.load.return_value = xml_data
         mock_XMLDescription.return_value = description
-        mock_path_exists.return_value = False
+        mock_path_exists.side_effect = [False, True, True]
         image_definition = Mock()
         mock_KegImageDefinition.return_value = image_definition
         image_generator = Mock()
@@ -205,7 +200,6 @@ class TestFetchFromKeg:
         mock_SourceInfoGenerator.return_value = source_info_generator
         mock_glob.return_value = ['obs_out/log_sources']
         mock_get_revision_args.return_value = ['-r', 'fake_repo:fake_rev..']
-        mock_path_exists.return_value = False
 
         with patch('builtins.open', create=True):
             main()
@@ -233,7 +227,8 @@ class TestFetchFromKeg:
         mock_KegImageDefinition.assert_called_once_with(
             image_name='leap/jeos/15.2',
             recipes_roots=[temp_dir.name],
-            track_sources=True
+            track_sources=True,
+            image_version=None
         )
         mock_KegGenerator.assert_called_once_with(
             image_definition=image_definition, dest_dir='obs_out'
@@ -339,10 +334,3 @@ class TestFetchFromKeg:
             assert open('changes.yaml', 'r').read() == 'new entry\nold entry\n'
             assert not os.path.exists('changes.yaml.tmp')
             os.chdir(old_wd)
-
-    def test_update_image_version(self):
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            kiwi_file = os.path.join(tmpdirname, 'config.kiwi')
-            open(kiwi_file, 'w').write('foo\n    <version>1.1.1</version>\n')
-            update_image_version(kiwi_file, '1.1.42')
-            assert open(kiwi_file, 'r').read() == 'foo\n    <version>1.1.42</version>\n'
