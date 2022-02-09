@@ -11,7 +11,9 @@ from kiwi_keg.obs_service.compose_kiwi_description import (
     generate_changelog,
     get_image_version,
     get_revision_args,
-    update_revisions
+    parse_revisions,
+    update_revisions,
+    RepoInfo
 )
 
 
@@ -62,7 +64,7 @@ class TestFetchFromKeg:
         description = Mock()
         description.load.return_value = xml_data
         mock_XMLDescription.return_value = description
-        mock_path_exists.side_effect = [False, True, True, True]
+        mock_path_exists.side_effect = [False, False, True, True, True, True]
         image_definition = Mock()
         mock_KegImageDefinition.return_value = image_definition
         image_generator = Mock()
@@ -88,9 +90,21 @@ class TestFetchFromKeg:
             ),
             call(
                 [
+                    'git', '-C', temp_dir.name,
+                    'show', '--no-patch', '--format=%H', 'HEAD'
+                ]
+            ),
+            call(
+                [
                     'git', 'clone',
                     'https://github.com/SUSE-Enceladus/keg-recipes2.git',
                     temp_dir.name
+                ]
+            ),
+            call(
+                [
+                    'git', '-C', temp_dir.name,
+                    'show', '--no-patch', '--format=%H', 'HEAD'
                 ]
             ),
             call(
@@ -189,7 +203,7 @@ class TestFetchFromKeg:
         description = Mock()
         description.load.return_value = xml_data
         mock_XMLDescription.return_value = description
-        mock_path_exists.side_effect = [False, True, True]
+        mock_path_exists.side_effect = [False, True, True, True]
         image_definition = Mock()
         mock_KegImageDefinition.return_value = image_definition
         image_generator = Mock()
@@ -211,6 +225,12 @@ class TestFetchFromKeg:
                     'git', 'clone', '-b', 'develop',
                     'https://github.com/SUSE-Enceladus/keg-recipes.git',
                     temp_dir.name
+                ]
+            ),
+            call(
+                [
+                    'git', '-C', temp_dir.name,
+                    'show', '--no-patch', '--format=%H', 'HEAD'
                 ]
             ),
             call(
@@ -265,20 +285,14 @@ class TestFetchFromKeg:
             main()
         assert sysex.value.code == 'Number of --git-branch arguments must not exceed number of git repos.'
 
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.Command.run')
-    def test_update_revisions(self, mock_run):
-        mock_dir = Mock()
-        mock_dir.name = 'fake_dir'
-        repos = {'fake_repo': mock_dir}
-        mock_result = Mock()
-        mock_result.output = '1234'
-        mock_run.return_value = mock_result
+    def test_update_revisions(self):
+        mock_repo = Mock()
+        mock_repo.path = 'fake_dir'
+        mock_repo.head_commit = '1234'
+        repos = {'fake_repo': mock_repo}
 
         with tempfile.TemporaryDirectory() as tmpdirname:
             update_revisions(repos, tmpdirname)
-            mock_run.assert_called_once_with(
-                ['git', '-C', 'fake_dir', 'show', '--no-patch', '--format=%H', 'HEAD']
-            )
             assert open(os.path.join(tmpdirname, '_keg_revisions'), 'r').read() == 'fake_repo 1234\n'
 
     @patch('kiwi_keg.obs_service.compose_kiwi_description.XMLDescription')
@@ -294,10 +308,13 @@ class TestFetchFromKeg:
             get_image_version(mock_XMLDescription)
         assert sysex.value.code == 'Cannot determine image version.'
 
-    def test_get_revision_args(self):
+    @patch('kiwi_keg.obs_service.compose_kiwi_description.get_head_commit_hash')
+    def test_parse_revisions(self, mock_get_head_commit_hash):
         mock_dir = Mock()
         mock_dir.name = 'dir1'
-        repos = {'repo1': mock_dir}
+        mock_get_head_commit_hash.return_value = '1234'
+        repo = RepoInfo(mock_dir)
+        repos = {'repo1': repo}
         with tempfile.TemporaryDirectory() as tmpdirname:
             with open(os.path.join(tmpdirname, '_keg_revisions'), 'w') as outf:
                 outf.write('repo1 hash1\nrepo2 hash2\n')
@@ -306,22 +323,33 @@ class TestFetchFromKeg:
             os.chdir(tmpdirname)
 
             with self._caplog.at_level(logging.WARNING):
-                get_revision_args(repos)
-                assert 'Warning: Cannot map URL "repo2" to repository.' in self._caplog.text
+                parse_revisions(repos)
+                assert 'Cannot map URL "repo2" to repository.' in self._caplog.text
 
             os.remove('_keg_revisions')
             with self._caplog.at_level(logging.WARNING):
-                get_revision_args(repos)
-                assert 'Warning: no _keg_revision file.' in self._caplog.text
+                parse_revisions(repos)
+                assert 'No _keg_revision file.' in self._caplog.text
 
             with open(os.path.join(tmpdirname, '_keg_revisions'), 'w') as outf:
                 outf.write('INVALID')
 
             with raises(SystemExit) as sysex:
-                get_revision_args(repos)
+                parse_revisions(repos)
             assert sysex.value.code == 'Malformed revision spec "INVALID".'
 
             os.chdir(old_wd)
+
+    @patch('kiwi_keg.obs_service.compose_kiwi_description.get_head_commit_hash')
+    def test_get_revision_args(self, mock_get_head_commit_hash):
+        mock_dir = Mock()
+        mock_dir.name = 'dir1'
+        mock_get_head_commit_hash.return_value = '5678'
+        repo = RepoInfo(mock_dir)
+        repo.set_start_commit('1234')
+        repos = {'repo1': repo}
+        assert repo.head_commit == '5678'
+        assert get_revision_args(repos) == ['-r', 'dir1:1234..']
 
     @patch('kiwi_keg.obs_service.compose_kiwi_description.Command.run')
     def test_changelog_prepend(self, mock_run):
@@ -334,3 +362,16 @@ class TestFetchFromKeg:
             assert open('changes.yaml', 'r').read() == 'new entry\nold entry\n'
             assert not os.path.exists('changes.yaml.tmp')
             os.chdir(old_wd)
+
+    @patch('kiwi_keg.obs_service.compose_kiwi_description.parse_revisions')
+    @patch('kiwi_keg.obs_service.compose_kiwi_description.RepoInfo')
+    @patch('kiwi_keg.obs_service.compose_kiwi_description.Command.run')
+    @patch('os.path.exists')
+    def test_no_new_commits(self, mock_path_exists, mock_run, mock_repo_info, mock_parse_revisions):
+        mock_path_exists.return_value = True
+        mock_repo_info.has_commits.return_value = False
+        with self._caplog.at_level(logging.INFO):
+            with raises(SystemExit):
+                main()
+            assert 'No repository has new commits.' in self._caplog.text
+            assert 'Aborting.' in self._caplog.text

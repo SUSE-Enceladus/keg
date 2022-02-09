@@ -22,6 +22,7 @@ Usage:
         [--disable-version-bump]
         [--disable-update-changelog]
         [--disable-update-revisions]
+        [--force]
     compose_kiwi_description -h | --help
     compose_kiwi_description --version
 
@@ -49,6 +50,9 @@ Options:
 
     --disable-update-revisions
         Do not update '_keg_revisions'.
+
+    --force
+        Refresh image description even if there are no new commits.
 """
 import glob
 import docopt
@@ -69,6 +73,32 @@ from kiwi_keg.source_info_generator import SourceInfoGenerator
 
 
 log = logging.getLogger('compose_keg_description')
+log.setLevel(logging.INFO)
+
+
+class RepoInfo:
+    def __init__(self, path):
+        self._path = path
+        self._head_commit = get_head_commit_hash(path.name)
+        self._start_commit = None
+
+    def set_start_commit(self, commit):
+        self._start_commit = commit
+
+    @property
+    def path(self):
+        return self._path.name
+
+    @property
+    def head_commit(self):
+        return self._head_commit
+
+    @property
+    def start_commit(self):
+        return self._start_commit
+
+    def has_commits(self):
+        return self._start_commit != self._head_commit
 
 
 def get_kiwi_data(kiwi_config):
@@ -98,24 +128,30 @@ def get_image_version(kiwi_config):
         sys.exit('Cannot determine image version.')
 
 
-def get_revision_args(repo_dirs):
-    rev_args = []
+def parse_revisions(repos):
     if os.path.exists('_keg_revisions'):
         with open('_keg_revisions') as inf:
             for line in inf.readlines():
                 rev_spec = line.strip('\n').split(' ')
                 if len(rev_spec) != 2:
                     sys.exit('Malformed revision spec "{}".'.format(line.strip('\n')))
-                repo_path = repo_dirs.get(rev_spec[0])
-                if not repo_path:
-                    log.warning('Warning: Cannot map URL "{}" to repository.'.format(rev_spec[0]))
+                repo = repos.get(rev_spec[0])
+                if not repo:
+                    log.warning('Cannot map URL "{}" to repository.'.format(rev_spec[0]))
                 else:
-                    rev_args += ['-r', '{}:{}..'.format(repo_path.name, rev_spec[1])]
+                    repo.set_start_commit(rev_spec[1])
     else:
         log.warning(
-            'Warning: no _keg_revision file. '
-            'Change file will contain all applicable commit messages.'
+            'No _keg_revision file. '
+            'Changes file(s) will contain all applicable commit messages.'
         )
+
+
+def get_revision_args(repos):
+    rev_args = []
+    for repo in repos.values():
+        if repo.start_commit:
+            rev_args += ['-r', '{}:{}..'.format(repo.path, repo.start_commit)]
     return rev_args
 
 
@@ -137,11 +173,10 @@ def generate_changelog(source_log, outdir, prefix, image_version, rev_args):
     shutil.move(changes_new, os.path.join(outdir, changes_old))
 
 
-def update_revisions(repo_dirs, outdir):
+def update_revisions(repos, outdir):
     with open(os.path.join(outdir, '_keg_revisions'), 'w') as outf:
-        for rname, rpath in repo_dirs.items():
-            chash = get_head_commit_hash(rpath.name)
-            print('{} {}'.format(rname, chash), file=outf)
+        for rname, rinfo in repos.items():
+            print('{} {}'.format(rname, rinfo.head_commit), file=outf)
 
 
 def main() -> None:
@@ -155,14 +190,22 @@ def main() -> None:
 
     handle_changelog = not args['--disable-update-changelog']
 
-    repo_dirs = {}
+    repos = {}
     for repo, branch in itertools.zip_longest(args['--git-recipes'], args['--git-branch']):
         temp_git_dir = Temporary(prefix='keg_recipes.').new_dir()
         if branch:
             Command.run(['git', 'clone', '-b', branch, repo, temp_git_dir.name])
         else:
             Command.run(['git', 'clone', repo, temp_git_dir.name])
-        repo_dirs[repo] = temp_git_dir
+        repos[repo] = RepoInfo(temp_git_dir)
+
+    parse_revisions(repos)
+    repos_with_commits = list(filter(lambda x: x.has_commits() is True, repos.values()))
+    if not repos_with_commits:
+        log.warning('No repository has new commits.')
+        if not args['--force']:
+            log.info('Aborting.')
+            sys.exit()
 
     image_version = None
     old_kiwi_config = None
@@ -179,7 +222,7 @@ def main() -> None:
 
     image_definition = KegImageDefinition(
         image_name=args['--image-source'],
-        recipes_roots=[x.name for x in repo_dirs.values()],
+        recipes_roots=[x.path for x in repos.values()],
         track_sources=handle_changelog,
         image_version=image_version
     )
@@ -200,13 +243,12 @@ def main() -> None:
     if handle_changelog:
         sig = SourceInfoGenerator(image_definition, dest_dir=args['--outdir'])
         sig.write_source_info()
-        rev_args = get_revision_args(repo_dirs)
+        rev_args = get_revision_args(repos)
 
         if not image_version:
             if old_kiwi_config:
                 log.warning(
-                    'Warning: generating changes file but version bump is disabled. '
-                    'Using old version.'
+                    'Generating changes file but version bump is disabled. Using old version.'
                 )
             image_version = get_image_version(os.path.join(args['--outdir'], 'config.kiwi'))
 
@@ -218,4 +260,4 @@ def main() -> None:
 
     if not args['--disable-update-revisions']:
         # capture current commits
-        update_revisions(repo_dirs, args['--outdir'])
+        update_revisions(repos, args['--outdir'])

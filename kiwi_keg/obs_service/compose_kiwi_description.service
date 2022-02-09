@@ -21,4 +21,7 @@
   <parameter name="disable-update-revisions">
     <description>Do not update _keg_revisions [default: False]</description>
   </parameter>
+  <parameter name="force">
+    <description>Refresh description even if there are no new commits [default: False]</description>
+  </parameter>
 </service>
