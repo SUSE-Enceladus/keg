@@ -57,6 +57,8 @@ class SourceInfoGenerator:
             with self._open_source_info_file('log_sources', overwrite) as outf:
                 for r in self.image_definition.recipes_roots:
                     outf.write('root:{}\n'.format(r))
+                outf.write(self._get_source_info_top())
+                outf.write('\n')
                 outf.write(self._get_source_info_profile('common'))
                 outf.write('\n')
         else:
@@ -65,6 +67,7 @@ class SourceInfoGenerator:
                     continue
                 if profiles[profile_name].get('base_profile'):
                     continue
+                top_src_info = self._get_source_info_top()
                 base_src_info = self._get_source_info_profile(profile_name)
                 nested_profiles = profiles[profile_name].get('nested_profiles')
                 if nested_profiles:
@@ -74,6 +77,8 @@ class SourceInfoGenerator:
                         ) as outf:
                             for r in self.image_definition.recipes_roots:
                                 outf.write('root:{}\n'.format(r))
+                            outf.write(top_src_info)
+                            outf.write('\n')
                             outf.write(base_src_info)
                             outf.write('\n')
                             outf.write(self._get_source_info_profile(nested_profile))
@@ -84,6 +89,8 @@ class SourceInfoGenerator:
                     ) as outf:
                         for r in self.image_definition.recipes_roots:
                             outf.write('root:{}\n'.format(r))
+                        outf.write(top_src_info)
+                        outf.write('\n')
                         outf.write(base_src_info)
                         outf.write('\n')
 
@@ -92,6 +99,11 @@ class SourceInfoGenerator:
         file_utils.raise_on_file_exists(fpath, overwrite)
         fobj = open(fpath, 'w')
         return fobj
+
+    def _get_source_info_top(self):
+        src_info: list = []
+        src_info = self._get_mapping_sources(self.image_definition.data)
+        return '\n'.join(src_info)
 
     def _get_source_info_profile(self, profile_name):
         src_info: list = []
@@ -112,18 +124,18 @@ class SourceInfoGenerator:
 
     def _get_mapping_sources(self, mapping):
         src_info: list = []
+        skip_keys = ['generator', 'timestamp', 'image source path',
+                     'archives', 'profiles', 'nested_profiles', 'base_profile']
         if not isinstance(mapping, AnnotatedMapping):
             raise KegError('_get_source_info: Object is not AnnotatedMapping: {}'.format(mapping))
         for key, value in mapping.items():
+            if key in skip_keys:
+                continue
             if isinstance(value, AnnotatedMapping):
                 src_info += self._get_mapping_sources(value)
             else:
                 if key == 'archive':
                     src_info += self._get_archive_sources(value)
-                elif key == 'nested_profiles':
-                    pass
-                elif key == 'base_profile':
-                    pass
                 else:
                     src = mapping.get('__{}_source__'.format(key))
                     start = mapping.get('__{}_line_start__'.format(key))

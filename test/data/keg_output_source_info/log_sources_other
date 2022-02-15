@@ -1,4 +1,13 @@
 root:../data
+range:1:1:../data/images/./defaults.yaml
+range:3:3:../data/images/./defaults.yaml
+range:4:4:../data/images/./defaults.yaml
+range:5:5:../data/images/leap/15.2/image.yaml
+range:6:6:../data/images/leap/15.2/image.yaml
+range:7:7:../data/images/leap/15.2/image.yaml
+range:6:7:../data/images/./defaults.yaml
+range:8:13:../data/images/./defaults.yaml
+range:2:4:../data/images/leap/15.2/image.yaml
 range:4:5:../data/images/leap/profiles.yaml
 range:4:7:../data/data/base/jeos/leap15/packages.yaml
 ../data/data/overlayfiles/products/leap/15.2
