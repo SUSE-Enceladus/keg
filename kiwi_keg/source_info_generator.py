@@ -126,7 +126,7 @@ class SourceInfoGenerator:
         src_info: list = []
         # skip internal keys to avoid warning
         skip_keys += ['generator', 'timestamp', 'image source path',
-                     'archives', 'nested_profiles', 'base_profile']
+                      'archives', 'nested_profiles', 'base_profile']
         if not isinstance(mapping, AnnotatedMapping):
             raise KegError('_get_source_info: Object is not AnnotatedMapping: {}'.format(mapping))
         for key, value in mapping.items():
