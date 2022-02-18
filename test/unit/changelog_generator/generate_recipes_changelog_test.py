@@ -84,7 +84,9 @@ class TestGenerateRecipesChangelog:
             tmpfile = os.path.join(tmpdir, 'out')
             sys.argv.append('-o')
             sys.argv.append(tmpfile)
-            main()
+            with raises(SystemExit) as sysex:
+                main()
+                assert sysex.value.code == 2
             assert open(tmpfile, 'r').read() == '[]\n'
 
     @patch('kiwi_keg.changelog_generator.generate_recipes_changelog.subprocess.run')

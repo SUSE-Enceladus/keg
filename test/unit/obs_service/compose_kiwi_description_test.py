@@ -13,6 +13,7 @@ from kiwi_keg.obs_service.compose_kiwi_description import (
     get_revision_args,
     parse_revisions,
     update_revisions,
+    update_changelog,
     RepoInfo
 )
 
@@ -39,7 +40,6 @@ class TestFetchFromKeg:
 
     @patch('kiwi_keg.obs_service.compose_kiwi_description.update_revisions')
     @patch('os.remove')
-    @patch('os.rename')
     @patch('kiwi_keg.obs_service.compose_kiwi_description.get_revision_args')
     @patch('glob.glob')
     @patch('kiwi_keg.obs_service.compose_kiwi_description.SourceInfoGenerator')
@@ -54,8 +54,7 @@ class TestFetchFromKeg:
         self, mock_path_exists, mock_Path_create, mock_Command_run,
         mock_KegGenerator, mock_KegImageDefinition, mock_Temporary_new_dir,
         mock_XMLDescription, mock_SourceInfoGenerator, mock_glob,
-        mock_get_revision_args, mock_rename, mock_remove,
-        mock_update_revisions
+        mock_get_revision_args, mock_remove, mock_update_revisions
     ):
         xml_data = Mock()
         preferences = Mock()
@@ -64,7 +63,7 @@ class TestFetchFromKeg:
         description = Mock()
         description.load.return_value = xml_data
         mock_XMLDescription.return_value = description
-        mock_path_exists.side_effect = [False, False, True, True, True, True]
+        mock_path_exists.side_effect = [False, False, True, True, True, False]
         image_definition = Mock()
         mock_KegImageDefinition.return_value = image_definition
         image_generator = Mock()
@@ -75,6 +74,9 @@ class TestFetchFromKeg:
         mock_SourceInfoGenerator.return_value = source_info_generator
         mock_glob.return_value = ['obs_out/log_sources_flavor1', 'obs_out/log_sources_flavor2']
         mock_get_revision_args.return_value = ['-r', 'fake_repo:fake_rev..']
+        mock_result = Mock()
+        mock_result.returncode = 0
+        mock_Command_run.return_value = mock_result
 
         with patch('builtins.open', create=True):
             main()
@@ -110,22 +112,22 @@ class TestFetchFromKeg:
             call(
                 [
                     'generate_recipes_changelog',
-                    '-o', 'obs_out/flavor1.changes.yaml.tmp',
+                    '-o', 'obs_out/flavor1.changes.yaml',
                     '-f', 'yaml',
                     '-t', '1.1.2',
                     '-r', 'fake_repo:fake_rev..',
                     'obs_out/log_sources_flavor1'
-                ]
+                ], raise_on_error=False
             ),
             call(
                 [
                     'generate_recipes_changelog',
-                    '-o', 'obs_out/flavor2.changes.yaml.tmp',
+                    '-o', 'obs_out/flavor2.changes.yaml',
                     '-f', 'yaml',
                     '-t', '1.1.2',
                     '-r', 'fake_repo:fake_rev..',
                     'obs_out/log_sources_flavor2'
-                ]
+                ], raise_on_error=False
             )
         ]
         mock_KegImageDefinition.assert_called_once_with(
@@ -149,24 +151,16 @@ class TestFetchFromKeg:
         mock_XMLDescription.assert_called_once_with(
             'config.kiwi'
         )
+        assert mock_remove.call_args_list == [
+            call('obs_out/log_sources_flavor1'),
+            call('obs_out/log_sources_flavor2')
+        ]
         source_info_generator.write_source_info.assert_called_once()
-        mock_rename.assert_has_calls(
-            [
-                call('obs_out/flavor1.changes.yaml.tmp', 'obs_out/flavor1.changes.yaml'),
-                call('obs_out/flavor2.changes.yaml.tmp', 'obs_out/flavor2.changes.yaml')
-            ]
-        )
-        mock_remove.assert_has_calls(
-            [
-                call('obs_out/log_sources_flavor1'),
-                call('obs_out/log_sources_flavor2')
-            ]
-        )
         mock_update_revisions.called_once_with([temp_dir.name, temp_dir.name])
 
     @patch('kiwi_keg.obs_service.compose_kiwi_description.update_revisions')
+    @patch('os.walk')
     @patch('os.remove')
-    @patch('os.rename')
     @patch('kiwi_keg.obs_service.compose_kiwi_description.get_revision_args')
     @patch('glob.glob')
     @patch('kiwi_keg.obs_service.compose_kiwi_description.SourceInfoGenerator')
@@ -181,8 +175,7 @@ class TestFetchFromKeg:
         self, mock_path_exists, mock_Path_create, mock_Command_run,
         mock_KegGenerator, mock_KegImageDefinition, mock_Temporary_new_dir,
         mock_XMLDescription, mock_SourceInfoGenerator, mock_glob,
-        mock_get_revision_args, mock_rename, mock_remove,
-        mock_update_revisions
+        mock_get_revision_args, mock_remove, mock_walk, mock_update_revisions
     ):
         sys.argv = [
             sys.argv[0],
@@ -214,9 +207,16 @@ class TestFetchFromKeg:
         mock_SourceInfoGenerator.return_value = source_info_generator
         mock_glob.return_value = ['obs_out/log_sources']
         mock_get_revision_args.return_value = ['-r', 'fake_repo:fake_rev..']
+        mock_result = Mock()
+        mock_result.returncode = 2
+        mock_Command_run.return_value = mock_result
+        mock_walk.return_value = iter([('obs_out', [], ['config.kiwi'])])
 
-        with patch('builtins.open', create=True):
+        with patch('builtins.open', create=True), raises(SystemExit), self._caplog.at_level(logging.WARNING):
             main()
+
+        assert 'Generating changes file but version bump is disabled. Using old version.' in self._caplog.text
+        assert 'Image has no changes.' in self._caplog.text
 
         mock_Path_create.assert_called_once_with('obs_out')
         assert mock_Command_run.call_args_list == [
@@ -236,12 +236,12 @@ class TestFetchFromKeg:
             call(
                 [
                     'generate_recipes_changelog',
-                    '-o', 'obs_out/changes.yaml.tmp',
+                    '-o', 'obs_out/changes.yaml',
                     '-f', 'yaml',
                     '-t', '1.1.1',
                     '-r', 'fake_repo:fake_rev..',
                     'obs_out/log_sources'
-                ]
+                ], raise_on_error=False
             )
         ]
         mock_KegImageDefinition.assert_called_once_with(
@@ -267,19 +267,12 @@ class TestFetchFromKeg:
         )
         preferences.set_version.assert_not_called()
         source_info_generator.write_source_info.assert_called_once()
-        mock_rename.assert_has_calls(
-            [
-                call('obs_out/changes.yaml.tmp', 'obs_out/changes.yaml')
-            ]
-        )
-        mock_remove.assert_has_calls(
-            [
-                call('obs_out/log_sources'),
-            ]
-        )
         mock_update_revisions.called_once_with([temp_dir.name, temp_dir.name])
+        mock_remove.assert_called_once_with('obs_out/config.kiwi')
 
-    def test_too_many_branch_args(self):
+    @patch('os.path.exists')
+    def test_too_many_branch_args(self, mock_path_exists):
+        mock_path_exists.return_value = True
         sys.argv += ['--git-branch=foo', '--git-branch=bar']
         with raises(SystemExit) as sysex:
             main()
@@ -357,10 +350,9 @@ class TestFetchFromKeg:
             old_wd = os.getcwd()
             os.chdir(tmpdirname)
             open('changes.yaml', 'w').write('old entry\n')
-            open('changes.yaml.tmp', 'w').write('new entry\n')
-            generate_changelog('log_sources', tmpdirname, '', '1.1.1', (1, 2))
-            assert open('changes.yaml', 'r').read() == 'new entry\nold entry\n'
-            assert not os.path.exists('changes.yaml.tmp')
+            open('changes.yaml.new', 'w').write('new entry\n')
+            update_changelog('changes.yaml', 'changes.yaml.new')
+            assert open('changes.yaml.new', 'r').read() == 'new entry\nold entry\n'
             os.chdir(old_wd)
 
     @patch('kiwi_keg.obs_service.compose_kiwi_description.parse_revisions')
@@ -375,3 +367,13 @@ class TestFetchFromKeg:
                 main()
             assert 'No repository has new commits.' in self._caplog.text
             assert 'Aborting.' in self._caplog.text
+
+    @patch('kiwi_keg.obs_service.compose_kiwi_description.Command.run')
+    def test_generate_changelog_error(self, mock_Command_run):
+        mock_result = Mock()
+        mock_result.returncode = 1
+        mock_result.error = 'That went totally wrong'
+        mock_Command_run.return_value = mock_result
+        with raises(SystemExit) as sysex:
+            generate_changelog('log_sources', 'changes.yaml', '1.1.1', ['-r', 'fakerev'])
+        assert sysex.value.code == 'Error generating change log: That went totally wrong'

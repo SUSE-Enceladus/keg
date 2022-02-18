@@ -59,7 +59,6 @@ import docopt
 import itertools
 import logging
 import os
-import shutil
 import sys
 
 from kiwi.xml_description import XMLDescription
@@ -155,28 +154,38 @@ def get_revision_args(repos):
     return rev_args
 
 
-def generate_changelog(source_log, outdir, prefix, image_version, rev_args):
-    prefix += '.' if prefix else ''
-    changes_new = os.path.join(outdir, '{}changes.yaml.tmp'.format(prefix))
-    changes_old = '{}changes.yaml'.format(prefix)
-    Command.run([
-        'generate_recipes_changelog',
-        '-o', changes_new,
-        '-f', 'yaml',
-        '-t', image_version,
-        *rev_args,
-        source_log
-    ])
+def generate_changelog(source_log, changes_file, image_version, rev_args):
+    result = Command.run(
+        [
+            'generate_recipes_changelog',
+            '-o', changes_file,
+            '-f', 'yaml',
+            '-t', image_version,
+            *rev_args,
+            source_log
+        ], raise_on_error=False
+    )
+    if result.returncode == 1:
+        sys.exit('Error generating change log: {}'.format(result.error))
+    return result.returncode == 0
+
+
+def update_changelog(changes_old, changes_new):
     if os.path.exists(changes_old):
         with open(changes_new, 'a') as outf, open(changes_old) as inf:
             outf.write(inf.read())
-    shutil.move(changes_new, os.path.join(outdir, changes_old))
 
 
 def update_revisions(repos, outdir):
     with open(os.path.join(outdir, '_keg_revisions'), 'w') as outf:
         for rname, rinfo in repos.items():
             print('{} {}'.format(rname, rinfo.head_commit), file=outf)
+
+
+def get_log_sources(logdir):
+    for source_log in glob.glob(os.path.join(logdir, 'log_sources*')):
+        flavor = source_log[len(os.path.join(logdir, 'log_sources')) + 1:]
+        yield source_log, flavor
 
 
 def main() -> None:
@@ -244,6 +253,7 @@ def main() -> None:
         sig = SourceInfoGenerator(image_definition, dest_dir=args['--outdir'])
         sig.write_source_info()
         rev_args = get_revision_args(repos)
+        have_changes = False
 
         if not image_version:
             if old_kiwi_config:
@@ -252,9 +262,23 @@ def main() -> None:
                 )
             image_version = get_image_version(os.path.join(args['--outdir'], 'config.kiwi'))
 
-        for source_log in glob.glob(os.path.join(args['--outdir'], 'log_sources*')):
-            flavor = source_log[len(os.path.join(args['--outdir'], 'log_sources')) + 1:]
-            generate_changelog(source_log, args['--outdir'], flavor, image_version, rev_args)
+        for source_log, flavor in get_log_sources(os.path.join(args['--outdir'])):
+            changes_filename = f'{flavor}{"." if flavor else ""}changes.yaml'
+            changes_path = os.path.join(args['--outdir'], changes_filename)
+            have_changes |= generate_changelog(source_log, changes_path, image_version, rev_args)
+
+        if not have_changes:
+            log.warning('Image has no changes.')
+            if not args['--force']:
+                log.info('Deleting generated files.')
+                for f in next(os.walk(args['--outdir']))[2]:
+                    os.remove(os.path.join(args['--outdir'], f))
+                sys.exit()
+
+        for source_log, flavor in get_log_sources(os.path.join(args['--outdir'])):
+            changes_filename = f'{flavor}{"." if flavor else ""}changes.yaml'
+            changes_new = os.path.join(args['--outdir'], changes_filename)
+            update_changelog(changes_filename, changes_new)
             # clean up source log
             os.remove(source_log)
 
