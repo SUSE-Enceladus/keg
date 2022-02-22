@@ -167,6 +167,8 @@ def generate_changelog(source_log, changes_file, image_version, rev_args):
     )
     if result.returncode == 1:
         sys.exit('Error generating change log: {}'.format(result.error))
+    # generate_recipes_changelog returns 2 in case there were no changes
+    # return True or False accordingly
     return result.returncode == 0
 
 
