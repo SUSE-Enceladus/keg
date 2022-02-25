@@ -28,20 +28,20 @@ Arguments:
 
 Options:
     -o OUTPUT_FILE
-        Write output to OUTPUT_FILE
+        Write output to OUTPUT_FILE (stdout if omitted)
 
     -r PATH:REV
-        Set git revision range start to REV for repo at PATH
+        Set git revision range to REV for repo at PATH
 
     -f FORMAT
-       Output format, 'text' or 'yaml' [default: yaml]
+        Output format, 'text' or 'yaml' [default: yaml]
 
     -m MSG_FORMAT
-       Format spec for commit messages (see 'format:<string>' in 'man git-log')
-       [default: - %s] (only used with text format)
+        Format spec for commit messages (see 'format:<string>' in 'man git-log')
+        [default: - %s] (only used with text format)
 
     -t ROOT_TAG
-       Use ROOT_TAG for yaml output (e.g. image version)
+        Use ROOT_TAG for yaml output (e.g. image version)
 """
 
 import docopt
