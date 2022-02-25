@@ -5,3 +5,4 @@ Command Line
    :maxdepth: 1
 
    commands/keg
+   commands/generate_recipes_changelog
