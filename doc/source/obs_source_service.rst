@@ -26,10 +26,10 @@ file should look like the following:
        </service>
    </services>
 
-In this example, the public `keg-recipes` for SUSE Linux Enterprise images
-hosted on github is used as source, working off the `released` branch,  and the
+In this example, the `released` branch of the public `keg-recipes` repository
+for SUSE Linux Enterprise images hosted on github is used as source and the
 selected image source is `cross-cloud/sles/byos/15-sp3`. Running the source
-service will produce a description for  SUSE Linux Enterprise Server 15 SP3
+service will produce a description for a SUSE Linux Enterprise Server 15 SP3
 BYOS image for several cloud service provider frameworks.
 
 The parameters `<git-recipes>` and `<git-branch>` may be used multiple times if
