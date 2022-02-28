@@ -6,7 +6,7 @@ Generating Change Logs
 `Keg` comes with a separate tool that can be used to produce a change log
 for a generated image description from the git commit history of the used
 `keg recipes` tree(s). This obviously requires these `keg recipes` to be
-stored in a git repositories.
+stored in git repositories.
 
 For the change log generator to work, the image description for which the
 change log(s) need to have been generated with source info tracking, which
@@ -16,7 +16,7 @@ Source Info Tracking
 --------------------
 
 With source info tracking enabled, `keg` will write one or more source info
-files in addtion to the image description in the output directory. In case
+files in addition to the image description in the output directory. In case
 the image description at hand is single-build, a single file
 :file:`log_sources` is written, in case it is multi-build, a file
 :file:`log_sources_PROFILE` is written for each profile. This allows for
