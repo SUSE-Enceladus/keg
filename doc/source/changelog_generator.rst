@@ -8,9 +8,9 @@ for a generated image description from the git commit history of the used
 `keg recipes` tree(s). This obviously requires these `keg recipes` to be
 stored in git repositories.
 
-For the change log generator to work, the image description for which the
-change log(s) need to have been generated with source info tracking, which
-can be enabled using the `-s` command line switch.
+To produce a change log for an image description, the description needs to
+be generated with source info tracking enabled in :program:`keg` (`-s` command
+line switch).
 
 Source Info Tracking
 --------------------
