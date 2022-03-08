@@ -7,15 +7,15 @@ KEG - Image Compositon Tool
 |GitHub CI Action|
 
 keg is a command line tool that creates a
-[kiwi](https://github.com/OSInside/kiwi) image description based on
+`kiwi <https://github.com/OSInside/kiwi>`_ image description based on
 description snippets in a given GIT repository.
 
 Contributing
 ------------
 
-keg is written in Python, it uses [tox](https://tox.readthedocs.io/en/latest/) to setup a development environment
-for the desired Python version. Make sure the Python development headers
-are installed (e.g. `python36-devel`)
+keg is written in Python, it uses `tox <https://tox.readthedocs.io/en/latest/>`_
+to setup a development environment for the desired Python version. Make
+sure the Python development headers are installed (e.g. `python36-devel`)
 
 Currently, there are 5 targets for tox:
 
