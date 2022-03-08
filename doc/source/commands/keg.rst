@@ -6,29 +6,20 @@ keg
 SYNOPSIS
 --------
 
-.. code:: bash
-
-   keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
-
-   keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)
-       [--format-xml|--format-yaml] [--dump-dict]
-       [-a ADD_DATA_ROOT] ... [-d DEST_DIR] [-fv]
-       SOURCE
-
-   keg -h | --help
+**keg** [*options*] <*source*>
 
 DESCRIPTION
 -----------
 
-`Keg` is a tool which helps to create and manage image descriptions suitable
-for the `KIWI <https://osinside.github.io/kiwi/>`__ appliance builder.
-While `keg` can be used to manage a single image definition the tool provides
-no considerable advantage in such a use case. The primary use case for `keg`
-are situations where many image descriptions must be managed and the
-image descriptions have considerable overlap with respect to content
-and setup.
+:program:`keg` is a tool which helps to create and manage image descriptions
+suitable for the `KIWI <https://osinside.github.io/kiwi/>`__ appliance builder.
+While :program:`keg` can be used to manage a single image definition the tool
+provides no considerable advantage in such a use case. The primary use case for
+:program:`keg` are situations where many image descriptions must be managed and
+the image descriptions have considerable overlap with respect to content and
+setup.
 
-`Keg` requires source data called `recipes` which provides all information
+:program:`keg` requires source data called `recipes` which provides all information
 necessary for `keg` to create KIWI image descriptions. See
 :ref:`recipes_basics` for more information about `recipes`.
 
@@ -42,71 +33,93 @@ repository.
 ARGUMENTS
 ---------
 
-SOURCE
+source
 
-  Path to image source, expected under RECIPES_ROOT/images
+  Path to image source under RECIPES_ROOT/images
 
 OPTIONS
 -------
 
--r RECIPES_ROOT, --recipes-root=RECIPES_ROOT
+.. program:: keg
 
-  Root directory of Keg recipes
+.. option:: -r RECIPES_ROOT, --recipes-root=RECIPES_ROOT
 
--a ADD_DATA_ROOT, --add-data-root=ADD_DATA_ROOT
+   Root directory of keg recipes. Can be used more than once. Elements
+   from later roots may overwrite earlier one.
 
-  Additional data root directory of recipes (multiples allowed)
+.. option:: -d DEST_DIR, --dest-dir=DEST_DIR
 
--d DEST_DIR, --dest-dir=DEST_DIR
+   Destination directory for generated description [default: .]
 
-  Destination directory for generated description, default cwd
+.. option:: --disable-multibuild
 
--l, --list-recipes
+   Option to disable creation of OBS _multibuild file (for image
+   definitions with multiple profiles). [default: false]
 
-  List available images that can be created with the current recipes
+.. option:: --disable-root-tar
 
--f, --force
+   Option to disable the creation of root.tar.gz in destination directory.
+   If present, an overlay tree will be created instead.
+   [default: false]
 
-  Force mode (ignore errors, overwrite files)
+.. option:: --dump-dict
 
---format-yaml
+   Dump generated data dictionary to stdout instead of generating an image
+   description. Useful for debugging.
 
-  Format/Update Keg written image description to installed
-  KIWI schema and write the result description in YAML markup.
+.. option:: -l, --list-recipes
 
-  .. note::
+   List available images that can be created with the current recipes
 
-     Currently no translation of comment blocks from the Keg
-     generated KIWI description to the YAML markup will be
-     performed
+.. option:: -f, --force
 
---format-xml
+   Force mode (ignore errors, overwrite files)
 
-  Format/Update Keg written image description to installed
-  KIWI schema and write the result description in XML markup
+.. option:: --format-yaml
 
-  .. note::
+   Format/Update Keg written image description to installed
+   KIWI schema and write the result description in YAML markup
 
-     Currently only toplevel header comments from the Keg
-     written image description will be preserved into the
-     formatted/updated KIWI XML file. Inline comments will
-     not be preserved.
+   .. note::
+      Currently no translation of comment blocks from the Keg
+      generated KIWI description to the YAML markup will be
+      performed.
 
---dump-dict
+.. option:: --format-xml
 
-  Parse input data and build image data dictionary, but instead
-  of running the generator, dump data dictionary and exit. Useful
-  for debugging.
+   Format/Update Keg written image description to installed
+   KIWI schema and write the result description in XML markup
 
--v, --verbose
+   .. note::
+      Currently only toplevel header comments from the Keg
+      written image description will be preserved into the
+      formatted/updated KIWI XML file. Inline comments will
+      not be preserved.
 
-  Enable verbose output
+.. option:: -i IMAGE_VERSION, --image-version=IMAGE_VERSION
+
+   Set image version
+
+.. option:: -s, --write-source-info
+
+   Write a file per profile containing a list of all used source
+   locations. The files can used to generate a change log from the
+   recipes repository commit log.
+
+.. option:: -v, --verbose
+
+   Enable verbose output
+
+.. option:: --version
+
+   Print version
+
 
 EXAMPLE
 -------
 
 .. code:: bash
 
-   $ git clone https://github.com/SUSE-Enceladus/keg-recipes.git
+   git clone https://github.com/SUSE-Enceladus/keg-recipes.git
 
-   $ keg --recipes-root keg-recipes --dest-dir leap_description leap/jeos/15.2
+   keg --recipes-root keg-recipes --dest-dir leap_description leap/jeos/15.2

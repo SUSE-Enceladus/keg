@@ -77,7 +77,7 @@ Options:
         Enable verbose output
 
     --version
-       Print version
+        Print version
 """
 import docopt
 import logging

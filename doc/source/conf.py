@@ -41,8 +41,8 @@ default_role="py:obj"
 
 # General information about the project.
 project = 'Keg - Image Composition Tool'
-copyright = '2021, SUSE - Public Cloud Team'
-author = 'public-cloud-dev@suse.de'
+copyright = '2022, SUSE - Public Cloud Team'
+author = 'public-cloud-dev@susecloud.net'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -101,16 +101,24 @@ html_theme_options = {
 
 # The man page toctree documents.
 keg_doc = 'commands/keg'
+grc_doc = 'commands/generate_recipes_changelog'
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
     (
         keg_doc,
-        'keg::keg',
+        'keg',
         'Image Composition Tool',
         [author],
-        8
+        1
+    ),
+    (
+        grc_doc,
+        'generate_recipes_changelog',
+        'change log generator for keg images',
+        [author],
+        1
     )
 ]
 

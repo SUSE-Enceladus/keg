@@ -15,6 +15,8 @@ Keg Reference Guide
    recipes_basics
    image_definition
    data_modules
+   changelog_generator
+   obs_source_service
 
 .. sidebar:: Links
 
