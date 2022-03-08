@@ -16,23 +16,25 @@ expected_output = """\
 
 expected_output_yaml = """\
 - change: change1
+  date: '1970-01-01T00:00:01'
 - change: change2
+  date: '1970-01-01T00:00:00'
   details: |-
     verbose msg
 """
 
 side_effects_text = [
     'fake_commits\n',
-    'ts1 fake_commit_id1\n',
-    'ts2 fake_commit_id2\n',
+    '0 fake_commit_id1\n',
+    '1 fake_commit_id2\n',
     '- change1\n',
     '- change2\n'
 ]
 
 side_effects_yaml = [
     'fake_commits\n',
-    'ts1 fake_commit_id1\n',
-    'ts2 fake_commit_id2\n',
+    '0 fake_commit_id1\n',
+    '1 fake_commit_id2\n',
     'change1\n',
     '',
     'change2\n',
