@@ -48,6 +48,7 @@ import docopt
 import subprocess
 import sys
 import yaml
+from datetime import datetime
 
 
 class MultiStr(str):
@@ -109,6 +110,10 @@ def split_path(path, roots):
     sys.exit('path "{}" is outside git roots'.format(path))
 
 
+def get_date_from_epoch(epoch):
+    return datetime.utcfromtimestamp(int(epoch)).isoformat()
+
+
 def main():
     args = docopt.docopt(__doc__, version='0.1')
 
@@ -155,9 +160,16 @@ def main():
             sub = get_commit_message(commit[1], commit[2], '%s').lstrip('- ')
             body = MultiStr(get_commit_message(commit[1], commit[2], '%b').rstrip('\n'))
             if body:
-                msgs.append({'change': sub, 'details': body})
+                msgs.append(
+                    {
+                        'change': sub,
+                        'date': get_date_from_epoch(commit[0]),
+                        'details': body
+                    }
+                )
             else:
-                msgs.append({'change': sub})
+                msgs.append({'change': sub,
+                             'date': get_date_from_epoch(commit[0])})
         yaml.add_representer(MultiStr, repr_mstr, Dumper=yaml.SafeDumper)
         if args['-t']:
             log = {args['-t']: msgs}
