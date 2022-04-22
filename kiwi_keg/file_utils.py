@@ -93,7 +93,7 @@ def rmerge(src: keg_dict, dest: keg_dict, ref: keg_dict = None) -> keg_dict:
     """
     if not isinstance(dest, dict) and not isinstance(dest, AnnotatedMapping):
         raise KegDataError(
-            'Cannot rmerge, destination is not a mapping: {}'.format(type(dest))
+            'Cannot rmerge, destination is not a mapping: {} {}'.format(dest, type(dest))
         )
     if isinstance(src, dict):
         items = src.items()

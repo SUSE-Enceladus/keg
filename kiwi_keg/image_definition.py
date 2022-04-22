@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
+import copy
 import os
 from typing import (
     List, Optional
@@ -22,6 +23,7 @@ from typing import (
 from datetime import (
     datetime, timezone
 )
+from collections import OrderedDict
 
 # project
 from kiwi_keg import script_utils
@@ -107,7 +109,7 @@ class KegImageDefinition:
         self._data = self._dict_type({
             'generator': 'keg {}'.format(version.__version__),
             'timestamp': '{}'.format(utc_now_str),
-            'image source path': '{}'.format(self.image_name),
+            'image_source_path': '{}'.format(self.image_name),
             'archives': {}
         })
         try:
@@ -122,12 +124,14 @@ class KegImageDefinition:
 
         self._verify_basic_image_structure()
         if self._image_version:
-            self._data['image']['version'] = self._image_version
+            self._data['image']['preferences'][0]['version'] = self._image_version
 
         try:
-            self._update_profiles()
+            self._expand_includes(self._data)
             self._generate_config_scripts()
             self._generate_overlay_info()
+            if self._image_version:
+                self._data['image']['preferences'][0]['version'] = self._image_version
         except Exception as issue:
             raise KegDataError(
                 'Error generating profile data: {error}'.format(error=issue)
@@ -155,135 +159,75 @@ class KegImageDefinition:
                 )
             )
 
-    def _update_profiles(self):
+    def _expand_includes(self, data, key=None):
+        if not hasattr(data, '__iter__') or isinstance(data, str):
+            return
+        if isinstance(data, list):
+            for item in data:
+                self._expand_includes(item, key)
+            return
+        if '_include' in data.keys():
+            self._expand_include(data, key)
+        for subkey, value in data.items():
+            self._expand_includes(value, subkey)
+
+    def _expand_include(self, node, key):
         include_paths = self._data.get('include-paths')
-        if 'profiles' in self._data:
-            for profile_name in list(self._data['profiles'].keys()):
-                profile = self._dict_type({})
-                profile_data = self._data['profiles'][profile_name]
-                self._expand_profile_includes(
-                    profile_data,
-                    profile,
-                    include_paths,
-                    self._data['profiles'][profile_name]
-                )
-
-                # sort nested profiles, otherwise order may not be deterministic
-#                nested_profile_names = sorted(list(profile_data.keys()) - ['include', 'description'])
-                nested_profile_names = sorted([x for x in profile_data.keys() if x != 'include' and x != 'description'])
-
-                if nested_profile_names:
-                    profile['nested_profiles'] = nested_profile_names
-                    profile_params = profile.get('profile')
-                    if profile_params:
-                        # remove parameter section from base profile so it
-                        # won't prevent nested profile parameters from being
-                        # merged and also so the template does not have to
-                        # deal with it
-                        del profile['profile']
-
-                    nested_profiles = self._dict_type({})
-                    for nested_profile_name in nested_profile_names:
-                        nested_profiles[nested_profile_name] = self._dict_type({})
-                        nested_profile_data = self._data['profiles'][profile_name][nested_profile_name]
-                        nested_profile_data['base_profile'] = profile_name
-                        # copy base profile parameters (if any) into nested profile
-                        if profile_params:
-                            file_utils.rmerge(
-                                {'profile': profile_params},
-                                nested_profiles[nested_profile_name]
-                            )
-                        self._expand_profile_includes(
-                            nested_profile_data,
-                            nested_profiles[nested_profile_name],
-                            include_paths,
-                            profile
-                        )
-                    self._data['profiles'].update(nested_profiles)
-
-                self._data['profiles'][profile_name].update(profile)
-
-    def _expand_profile_includes(self, src, dest, include_paths, ref_profile=None):
-        if isinstance(src, AnnotatedMapping):
-            items = src.all_items()
-        else:
-            items = src.items()
-        for item, value in items:
-            if item == 'include':
-                profile_dict = file_utils.get_recipes(
-                    self.data_roots,
-                    value,
-                    include_paths,
-                    self._track_sources
-                )
+        includes = node.get('_include')
+        if includes:
+            if isinstance(includes, str):
+                includes = [includes]
+            incl_dict = file_utils.get_recipes(
+                self.data_roots,
+                includes,
+                include_paths,
+                self._track_sources
+            )
+            if incl_dict.get(key):
                 file_utils.rmerge(
-                    profile_dict,
-                    dest,
-                    ref_profile
+                    incl_dict[key],
+                    node
                 )
-            else:
-                file_utils.rmerge({item: value}, dest)
+            del node['_include']
+
+    def _get_attrib(self, data, attrib):
+        if not hasattr(data, '__iter__') or isinstance(data, str) or isinstance(data, list):
+            return None
+        return data.get('_attributes', {}).get(attrib)
 
     def _generate_config_scripts(self):
         script_dirs = [
             os.path.join(x, 'scripts') for x in self._data_roots
             if os.path.exists(os.path.join(x, 'scripts'))
         ]
-        self._config_script = script_utils.get_config_script(
-            self._data['profiles'], 'config', script_dirs
-        )
-        self._images_script = script_utils.get_config_script(
-            self._data['profiles'], 'setup', script_dirs
-        )
+        if self._data.get('config'):
+            self._config_script = script_utils.get_config_script(
+                 self._data['config'], script_dirs
+            )
+        if self._data.get('setup'):
+            self._images_script = script_utils.get_config_script(
+                 self._data['setup'], script_dirs
+            )
 
     def _generate_overlay_info(self):
-        for profile_name, profile_data in self._data['profiles'].items():
-            if not profile_data.get('overlayfiles'):
-                continue
-            archive_list = []
-
-            if profile_name == 'common':
-                default_archive_name = 'root'
-            else:
-                default_archive_name = profile_name
-                archive_list.append({'name': '{}.{}'.format(default_archive_name, self._archive_ext)})
-
-            for namespace, content in profile_data['overlayfiles'].items():
-                archive_name = content.get('archivename')
-                if archive_name:
-                    archive_list.append({'name': '{}.{}'.format(archive_name, self._archive_ext)})
-                else:
-                    archive_name = default_archive_name
-                if not content.get('include'):
-                    raise KegDataError('overlayfiles namespace {} lacks include secion'.format(namespace))
-                for inc in content['include']:
-                    self._add_dir_to_archive(archive_name, inc)
-
-            self._add_archive_tag(self._data['profiles'][profile_name], archive_list)
+        for archive in self._data.get('archive', []):
+            for ns, data in archive.items():
+                if not isinstance(data, self._dict_type) or not data.get('overlay'):
+                    continue
+                for overlay in data['overlay']:
+                    self._add_dir_to_archive(archive['name'], overlay)
 
     def _verify_basic_image_structure(self):
         try:
-            self._data['image']['name']
-            self._data['image']['specification']
-            self._data['profiles']
+            #self._data['image']['name']
+            #self._data['image']['description']['specification']
+            #self._data['profiles']
+            pass
         except KeyError as err:
             raise KegDataError(
                 'Image Definition: mandatory key {key} does not exist'.format(
                     key=err
                 )
-            )
-
-    def _add_archive_tag(self, dict_node, archive_list):
-        if archive_list:
-            file_utils.rmerge(
-                {
-                    'packages': {
-                        'image': {
-                            'archive': archive_list
-                        }
-                    }
-                },
-                dict_node
             )
 
     def _add_dir_to_archive(self, archive_name, overlay_module_name):
@@ -297,3 +241,6 @@ class KegImageDefinition:
         if not self._data['archives'].get(archive_name):
             self._data['archives'][archive_name] = []
         self._data['archives'][archive_name].append(src_dir)
+
+    def _handle_data_error(self, msg, node):
+        raise KegDataError(msg)
