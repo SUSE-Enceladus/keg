@@ -61,15 +61,15 @@ dict to merge into the main dict. Keg looks for a key in the include
 dict that matches to the key the `_include` statement is under.
 So for instance, let's assume  we have the following in the image definition:
 
-.. code::
-image:
-  preferences:
-    - _include: base/common
-  packages:
-    - _attributes:
-        type: image
-      _include:
-        - base/common
+.. code:: yaml
+  image:
+    preferences:
+      - _include: base/common
+    packages:
+      - _attributes:
+          type: image
+        _include:
+          - base/common
 
 The dictionary created from base/common is initially the same for both
 includes, but only preferences will be merged into preferences, and packages
@@ -84,11 +84,11 @@ For generating config.sh and images.sh, new top level keys was added to the
 main dictionary, namely `config` and `setup`. The structure is pretty simple:
 
 .. code:: yaml
-config:
-  - profiles: [Some-Profile, Another-Profile]
-    _include:
-      - some/stuff
-      - other/stuff
+  config:
+    - profiles: [Some-Profile, Another-Profile]
+      _include:
+        - some/stuff
+        - other/stuff
 
 The `_include` mechanism works the same as above and is used to pull modules
 in. The structure in the data path wrt configuration has not changed, so
@@ -104,13 +104,13 @@ defined under a new top-level key, and follows the same principle as the other
 definition bits:
 
 .. code:: yaml
-archive:
-  - name: root.tar.gz
-    _include:
-      - products/sles
-  - name: azure.tar.gz
-    _include:
-      - csp/azure
+  archive:
+    - name: root.tar.gz
+      _include:
+        - products/sles
+    - name: azure.tar.gz
+      _include:
+        - csp/azure
 
 Every `archive` item results in keg producing an archive with the given
 name. They can be referenced in the image definition accordingly to assign them
@@ -127,42 +127,42 @@ the preferences configuration need to be aligned to the kiwi schema, which
 means the existing configuration under `profile` needs to be mapped to
 `preferences`. For example,
 
-.. code: yaml
-profile:
-  parameters:
-    image: vmx
-    ...
+.. code:: yaml
+  profile:
+    parameters:
+      image: vmx
+      ...
 
 needs to be changed to
 
-.. code: yaml
-preferences:
-  type:
-    _attributes:
-      image: vmx
-      ...
+.. code:: yaml
+  preferences:
+    type:
+      _attributes:
+        image: vmx
+        ...
 
 Packages sections will need existing namespaces change to the new namespace
 tags and need to get a `package` key:
 
-.. code: yaml
-packages:
-  _map_attribute: name
-  _namespace_common:
-    package:
-      - some_package
-      - another_package
-      ...
+.. code:: yaml
+  packages:
+    _map_attribute: name
+    _namespace_common:
+      package:
+        - some_package
+        - another_package
+        ...
 
 The `_map_attribute` tag instructs the XML generator to map the list of strings
 (package names in this case) to a list of dictionaries that looks like this:
 
-.. code: yaml
-package:
-  - _attributes:
-      name: some_package
-  - _attributes:
-      name: another_package
+.. code:: yaml
+  package:
+    - _attributes:
+        name: some_package
+    - _attributes:
+        name: another_package
 
 This can be used to keep package lists more compact.
 
