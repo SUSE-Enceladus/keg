@@ -42,16 +42,17 @@ underscore to distinguish them from regular data tags. The following special
 keys exist:
 
 .. code::
-_attributes: XML attributes
-_comment: produces an XML comment in the output before the element defined by
-          the key the _comment key is attached to
-_include: merge in dictionary from given path
-_namespace*: used to namespace blocks (not related to XML namespaces);
-             namespace keys do not produce an XML element itself,
-             but a comment will be produced
-_map_attribute: defines an attribute strings get mapped to, convenience
-                feature
-_text: defines basic text content for an element
+
+  _attributes: XML attributes
+  _comment: produces an XML comment in the output before the element defined by
+            the key the _comment key is attached to
+  _include: merge in dictionary from given path
+  _namespace*: used to namespace blocks (not related to XML namespaces);
+               namespace keys do not produce an XML element itself,
+               but a comment will be produced
+  _map_attribute: defines an attribute strings get mapped to, convenience
+                  feature
+  _text: defines basic text content for an element
 
 Merging of dictionaries hasn't fundamentally changed. YAML files are read
 from top dir level to lower levels, so lower level keys replace the
@@ -62,6 +63,7 @@ dict that matches to the key the `_include` statement is under.
 So for instance, let's assume  we have the following in the image definition:
 
 .. code:: yaml
+
   image:
     preferences:
       - _include: base/common
@@ -84,6 +86,7 @@ For generating config.sh and images.sh, new top level keys was added to the
 main dictionary, namely `config` and `setup`. The structure is pretty simple:
 
 .. code:: yaml
+
   config:
     - profiles: [Some-Profile, Another-Profile]
       _include:
@@ -104,6 +107,7 @@ defined under a new top-level key, and follows the same principle as the other
 definition bits:
 
 .. code:: yaml
+
   archive:
     - name: root.tar.gz
       _include:
@@ -128,6 +132,7 @@ means the existing configuration under `profile` needs to be mapped to
 `preferences`. For example,
 
 .. code:: yaml
+
   profile:
     parameters:
       image: vmx
@@ -136,6 +141,7 @@ means the existing configuration under `profile` needs to be mapped to
 needs to be changed to
 
 .. code:: yaml
+
   preferences:
     type:
       _attributes:
@@ -146,6 +152,7 @@ Packages sections will need existing namespaces change to the new namespace
 tags and need to get a `package` key:
 
 .. code:: yaml
+
   packages:
     _map_attribute: name
     _namespace_common:
@@ -158,6 +165,7 @@ The `_map_attribute` tag instructs the XML generator to map the list of strings
 (package names in this case) to a list of dictionaries that looks like this:
 
 .. code:: yaml
+
   package:
     - _attributes:
         name: some_package
