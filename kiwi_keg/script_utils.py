@@ -37,7 +37,7 @@ def get_config_script(config_dict: Dict, script_dirs: List[str]) -> str:
     for config_section in config_dict:
         if content:
             content += '\n'
-        profiles = config_section.get('profiles')
+        profiles = config_section.get('_profiles')
         if profiles:
             content += '\nif [[ $kiwi_profiles = {} '.format(profiles[0])
             for profile in profiles[1:]:

@@ -48,7 +48,7 @@ class TestGenerateRecipesChangelog:
             sys.argv[0],
             '-r', 'fake_root:fake_commit..',
             '-f', 'text',
-            '../data/keg_output_source_info/log_sources_fake'
+            '../data/output/source_info/log_sources_fake'
         ]
 
     @patch('kiwi_keg.changelog_generator.generate_recipes_changelog.subprocess.run')
@@ -124,7 +124,7 @@ class TestGenerateRecipesChangelog:
     def test_broken_log(self):
         sys.argv = [
             sys.argv[0],
-            '../data/keg_output_source_info/log_sources_broken'
+            '../data/output/source_info/log_sources_broken'
         ]
         with raises(SystemExit) as err:
             main()
@@ -134,7 +134,7 @@ class TestGenerateRecipesChangelog:
         sys.argv = [
             sys.argv[0],
             '-r', 'INVALID',
-            '../data/keg_output_source_info/log_sources_broken'
+            '../data/output/source_info/log_sources_broken'
         ]
         with raises(SystemExit) as err:
             main()

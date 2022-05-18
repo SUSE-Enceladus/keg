@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
-import copy
 import os
 from typing import (
     List, Optional
@@ -23,14 +22,16 @@ from typing import (
 from datetime import (
     datetime, timezone
 )
-from collections import OrderedDict
+from schema import SchemaError
 
 # project
-from kiwi_keg import script_utils
+from kiwi_keg import dict_utils
 from kiwi_keg import file_utils
+from kiwi_keg import script_utils
 from kiwi_keg import version
 from kiwi_keg.exceptions import KegDataError
 from kiwi_keg.annotated_mapping import AnnotatedMapping, keg_dict, keg_dict_type
+from kiwi_keg.image_schema import ImageSchema
 
 
 class KegImageDefinition:
@@ -122,16 +123,18 @@ class KegImageDefinition:
                 'Error parsing image data: {error}'.format(error=issue)
             )
 
-        self._verify_basic_image_structure()
         if self._image_version:
             self._data['image']['preferences'][0]['version'] = self._image_version
 
         try:
             self._expand_includes(self._data)
-            self._generate_config_scripts()
-            self._generate_overlay_info()
             if self._image_version:
                 self._data['image']['preferences'][0]['version'] = self._image_version
+            ImageSchema().validate(self._data)
+            self._generate_config_scripts()
+            self._generate_overlay_info()
+        except SchemaError as err:
+            raise KegDataError('Image definition malformed: {}'.format(err))
         except Exception as issue:
             raise KegDataError(
                 'Error generating profile data: {error}'.format(error=issue)
@@ -174,9 +177,9 @@ class KegImageDefinition:
     def _expand_include(self, node, key):
         include_paths = self._data.get('include-paths')
         includes = node.get('_include')
+        if isinstance(includes, str):
+            includes = [includes]
         if includes:
-            if isinstance(includes, str):
-                includes = [includes]
             incl_dict = file_utils.get_recipes(
                 self.data_roots,
                 includes,
@@ -184,16 +187,11 @@ class KegImageDefinition:
                 self._track_sources
             )
             if incl_dict.get(key):
-                file_utils.rmerge(
+                dict_utils.rmerge(
                     incl_dict[key],
                     node
                 )
             del node['_include']
-
-    def _get_attrib(self, data, attrib):
-        if not hasattr(data, '__iter__') or isinstance(data, str) or isinstance(data, list):
-            return None
-        return data.get('_attributes', {}).get(attrib)
 
     def _generate_config_scripts(self):
         script_dirs = [
@@ -202,33 +200,20 @@ class KegImageDefinition:
         ]
         if self._data.get('config'):
             self._config_script = script_utils.get_config_script(
-                 self._data['config'], script_dirs
+                self._data['config'], script_dirs
             )
         if self._data.get('setup'):
             self._images_script = script_utils.get_config_script(
-                 self._data['setup'], script_dirs
+                self._data['setup'], script_dirs
             )
 
     def _generate_overlay_info(self):
         for archive in self._data.get('archive', []):
             for ns, data in archive.items():
-                if not isinstance(data, self._dict_type) or not data.get('overlay'):
+                if ns == 'name':
                     continue
                 for overlay in data['overlay']:
                     self._add_dir_to_archive(archive['name'], overlay)
-
-    def _verify_basic_image_structure(self):
-        try:
-            #self._data['image']['name']
-            #self._data['image']['description']['specification']
-            #self._data['profiles']
-            pass
-        except KeyError as err:
-            raise KegDataError(
-                'Image Definition: mandatory key {key} does not exist'.format(
-                    key=err
-                )
-            )
 
     def _add_dir_to_archive(self, archive_name, overlay_module_name):
         src_dir = None
@@ -241,6 +226,3 @@ class KegImageDefinition:
         if not self._data['archives'].get(archive_name):
             self._data['archives'][archive_name] = []
         self._data['archives'][archive_name].append(src_dir)
-
-    def _handle_data_error(self, msg, node):
-        raise KegDataError(msg)

@@ -1,0 +1,17 @@
+image:
+  profiles: Null
+  preferences:
+    - _include:
+        - base/common
+  packages:
+    - _attributes:
+        type: bootstrap
+      _include:
+        - base/bootstrap
+    - _attributes:
+        type: image
+      _include:
+        - base/common
+config:
+  - _include:
+      - base/common

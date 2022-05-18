@@ -125,15 +125,11 @@ def main():
                 image_definition.populate()
                 image_spec = image_definition.data['image']
                 images[image_src] = {
-                    'name': image_spec['name'],
+                    'name': image_spec['_attributes']['name'],
                     'desc': image_spec['description']['specification'],
-                    'ver': image_spec.get('version', 'n/a')
+                    'ver': image_spec['preferences'][0].get('version', 'n/a')
                 }
             except KegError as e:
-                # known exception, log information and exit
-                if args['--verbose']:
-                    import traceback
-                    traceback.print_exc()
                 log.error('{} is not a valid image: {}'.format(image_src, e))
         print('{:30s} {:30s} {:8s} {}'.format('Source', 'Name', 'Version', 'Description'))
         for image, spec in images.items():
@@ -147,15 +143,19 @@ def main():
             image_version=args['--image-version'],
             track_sources=args['--write-source-info']
         )
+        if args['--dump-dict']:
+            try:
+                image_definition.populate()
+            except KegError:  # pragma: no cover
+                pass
+            ap = AnnotatedPrettyPrinter(indent=2)
+            ap.pprint(image_definition.data)
+            return
         image_generator = KegGenerator(
             image_definition=image_definition,
             dest_dir=args['--dest-dir'],
             archs=args['-a']
         )
-        if args['--dump-dict']:
-            ap = AnnotatedPrettyPrinter(indent=2)
-            ap.pprint(image_definition.data)
-            return
         image_generator.create_kiwi_description(
             overwrite=args['--force']
         )

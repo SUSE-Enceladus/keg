@@ -1,0 +1,4 @@
+config:
+  scripts:
+    _namespace_blue_scripts:
+      - blue-stuff

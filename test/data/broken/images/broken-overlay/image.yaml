@@ -1,0 +1,37 @@
+image:
+  _attributes:
+    name: Leap15.2-JeOS
+    displayname: Leap15.2-JeOS
+    schemaversion: "6.2"
+  description:
+    _attributes:
+      type: system
+    author: The Team
+    contact: bob@example.net
+    specification: "Leap 15.2 guest image"
+  preferences:
+    version: 1.0.0
+  packages:
+    - _attributes:
+        type: image
+      _some_namespace:
+        package:
+          - _attributes:
+              name: some_pkg
+  users:
+    user:
+      - _attributes:
+          name: root
+          groups: root
+          home: /root
+          password: foo
+  repository:
+    - _attributes:
+        type: rpm-md
+      source:
+        _attributes:
+          path: obsrepositories:/
+archive:
+  - name: root.tar.gz
+    some_namespace:
+      overlay: [does_not_exist]

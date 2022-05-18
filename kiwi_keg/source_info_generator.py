@@ -19,6 +19,7 @@ import logging
 import os
 
 from kiwi_keg.image_definition import KegImageDefinition
+from kiwi_keg import dict_utils
 from kiwi_keg import file_utils
 from kiwi_keg import script_utils
 from kiwi_keg.exceptions import KegError
@@ -46,53 +47,35 @@ class SourceInfoGenerator:
         self.image_definition: KegImageDefinition = image_definition
         self.dest_dir: str = dest_dir
 
-    """
-    Write source info files for use with 'git log'
-
-    :param bool overwrite: Overwrite any existing files
-    """
     def write_source_info(self, overwrite: bool = False):
-        profiles = self.image_definition.data['profiles']
-        if list(profiles.keys()) == ['common']:
+        """
+        Write source info files for use with 'git log'
+
+        :param bool overwrite: Overwrite any existing files
+        """
+        profiles = self.image_definition.data['image'].get('profiles', {}).get('profile')
+        if not profiles:
+            src_info = self._get_mapping_sources(self.image_definition.data)
+            src_info += self._get_script_sources()
+            src_info += self._get_archive_sources()
             with self._open_source_info_file('log_sources', overwrite) as outf:
                 for r in self.image_definition.recipes_roots:
                     outf.write('root:{}\n'.format(r))
-                outf.write(self._get_source_info_root())
-                outf.write('\n')
-                outf.write(self._get_source_info_profile('common'))
+                outf.write('\n'.join(src_info))
                 outf.write('\n')
         else:
-            for profile_name in profiles:
-                if profile_name == 'common':
-                    continue
-                if profiles[profile_name].get('base_profile'):
-                    continue
-                top_src_info = self._get_source_info_root()
-                base_src_info = self._get_source_info_profile(profile_name)
-                nested_profiles = profiles[profile_name].get('nested_profiles')
-                if nested_profiles:
-                    for nested_profile in nested_profiles:
-                        with self._open_source_info_file(
-                            'log_sources_{}'.format(nested_profile), overwrite
-                        ) as outf:
-                            for r in self.image_definition.recipes_roots:
-                                outf.write('root:{}\n'.format(r))
-                            outf.write(top_src_info)
-                            outf.write('\n')
-                            outf.write(base_src_info)
-                            outf.write('\n')
-                            outf.write(self._get_source_info_profile(nested_profile))
-                            outf.write('\n')
-                else:
-                    with self._open_source_info_file(
-                        'log_sources_{}'.format(profile_name), overwrite
-                    ) as outf:
-                        for r in self.image_definition.recipes_roots:
-                            outf.write('root:{}\n'.format(r))
-                        outf.write(top_src_info)
-                        outf.write('\n')
-                        outf.write(base_src_info)
-                        outf.write('\n')
+            profile_names = [x['_attributes']['name'] for x in profiles]
+            for profile_name in profile_names:
+                src_info = self._get_mapping_sources(self.image_definition.data, profile_name)
+                src_info += self._get_script_sources(profile_name)
+                src_info += self._get_archive_sources(profile_name)
+                with self._open_source_info_file(
+                    'log_sources_{}'.format(profile_name), overwrite
+                ) as outf:
+                    for r in self.image_definition.recipes_roots:
+                        outf.write('root:{}\n'.format(r))
+                    outf.write('\n'.join(src_info))
+                    outf.write('\n')
 
     def _open_source_info_file(self, fname, overwrite):
         fpath = os.path.join(self.dest_dir, fname)
@@ -100,74 +83,82 @@ class SourceInfoGenerator:
         fobj = open(fpath, 'w')
         return fobj
 
-    def _get_source_info_root(self):
+    def _get_mapping_sources(self, data, profile=None):
         src_info: list = []
-        src_info = self._get_mapping_sources(self.image_definition.data, ['profiles'])
-        return '\n'.join(src_info)
+        # skip internal keys to avoid warning (plus 'archive' is handled separately as it lacks
+        # profiles attribute)
+        skip_keys = ['archive', 'archives', 'generator', 'timestamp', 'image_source_path', 'profiles']
+        if not hasattr(data, '__iter__') or isinstance(data, str):
+            return []
+        if not isinstance(data, AnnotatedMapping):
+            for item in data:
+                src_info += self._get_mapping_sources(item, profile)
+        else:
+            profiles = self._get_profiles_attrib(data)
+            if profiles and profile not in profiles:
+                return []
+            for key, value in data.items():
+                if key in skip_keys:
+                    continue
+                src_info.append(self._get_key_sources(key, data))
+                if hasattr(value, '__iter__') and not isinstance(value, str):
+                    src_info += self._get_mapping_sources(value, profile)
+            # keys may be deleted when merging, but info is preserved with __deleted_ prefix
+            for key in [x for x in data.all_keys() if x.startswith('__deleted_')]:
+                orig_key = key[10:]
+                if orig_key not in data.keys():
+                    src_info.append(self._get_key_sources(orig_key, data))
+        return src_info
 
-    def _get_source_info_profile(self, profile_name):
-        src_info: list = []
-        if profile_name not in self.image_definition.data['profiles'].keys():
-            raise KegError('Source info for nonexistent profile {} requested'.format(profile_name))
-        common_profile = self.image_definition.data['profiles'].get('common')
-        if common_profile:
-            src_info = self._get_mapping_sources(common_profile)
-            src_info += self._get_script_sources(common_profile)
-        if profile_name != 'common':
-            src_info += self._get_mapping_sources(
-                self.image_definition.data['profiles'][profile_name]
-            )
-            src_info += self._get_script_sources(
-                self.image_definition.data['profiles'][profile_name]
-            )
-        return '\n'.join(src_info)
+    def _get_key_sources(self, key, data):
+        src = data.get('__{}_source__'.format(key))
+        start = data.get('__{}_line_start__'.format(key))
+        end = data.get('__{}_line_end__'.format(key))
+        if src and start and end:
+            return 'range:{}:{}:{}'.format(start, end, src)
+        else:
+            log.warning('Source information for key {} missing or incomplete'.format(key))
+            return ''
 
-    def _get_mapping_sources(self, mapping, skip_keys=[]):
+    def _get_profiles_attrib(self, data):
+        if not isinstance(data, AnnotatedMapping):  # pragma: no cover
+            return [None]
+        profiles_attr = data.get('_profiles')
+        if not profiles_attr:
+            profiles_attr = dict_utils.get_attribute(data, 'profiles')
+        return profiles_attr
+
+    def _get_archive_profiles(self, archive_name):
+        profiles = []
+        for pkg_sect in self.image_definition.data['image']['packages']:
+            archives = pkg_sect.get('archive', [])
+            for archive_sect in archives:
+                if dict_utils.get_attribute(archive_sect, 'name') == archive_name:
+                    profiles += dict_utils.get_attribute(pkg_sect, 'profiles', [])
+        return profiles
+
+    def _get_archive_sources(self, profile: str = None):
         src_info: list = []
-        # skip internal keys to avoid warning
-        skip_keys += ['generator', 'timestamp', 'image source path',
-                      'archives', 'nested_profiles', 'base_profile']
-        if not isinstance(mapping, AnnotatedMapping):
-            raise KegError('_get_source_info: Object is not AnnotatedMapping: {}'.format(mapping))
-        for key, value in mapping.items():
-            if key in skip_keys:
+        for archive in self.image_definition.data.get('archive', []):
+            if profile:
+                profiles = self._get_archive_profiles(archive['name'])
+                if profiles and profile not in profiles:
+                    continue
+            src_info += self._get_mapping_sources(archive)
+            src_info += self.image_definition.data['archives'].get(archive['name'], [])
+        return src_info
+
+    def _get_script_sources(self, profile=''):
+        src_info: list = []
+        script_dirs = [
+            os.path.join(x, 'scripts') for x in self.image_definition.data_roots
+            if os.path.exists(os.path.join(x, 'scripts'))
+        ]
+        for config_sect in self.image_definition.data.get('config', []):
+            profiles = self._get_profiles_attrib(config_sect)
+            if profiles and profile not in profiles:
                 continue
-            if isinstance(value, AnnotatedMapping):
-                src_info += self._get_mapping_sources(value)
-            else:
-                if key == 'archive':
-                    src_info += self._get_archive_sources(value)
-                else:
-                    src = mapping.get('__{}_source__'.format(key))
-                    start = mapping.get('__{}_line_start__'.format(key))
-                    end = mapping.get('__{}_line_end__'.format(key))
-                    if src and start and end:
-                        src_info.append('range:{}:{}:{}'.format(start, end, src))
-                    else:
-                        log.warning('Source information for key {} missing or incomplete'.format(key))
-        return src_info
-
-    def _get_archive_sources(self, archives: list):
-        src_info: list = []
-        try:
-            for archive in archives:
-                archive_name = archive['name'].split('.')[0]
-                src_info += self.image_definition.data['archives'][archive_name]
-        except Exception as err:
-            log.warning('Error while looking up archive sources ({})'.format(err))
-        return src_info
-
-    def _get_script_sources(self, profile):
-        try:
-            src_info: list = []
-            script_dirs = [
-                os.path.join(x, 'scripts') for x in self.image_definition.data_roots
-                if os.path.exists(os.path.join(x, 'scripts'))
-            ]
-            scripts = profile['config']['scripts']
-            for ns, scriptlets in scripts.items():
+            for ns, scriptlets in config_sect.get('scripts', {}).items():
                 for scriptlet in scriptlets:
                     src_info += [script_utils.get_script_path(script_dirs, scriptlet)]
-        except KeyError:
-            pass
         return src_info
