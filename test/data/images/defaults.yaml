@@ -1,12 +1,26 @@
-schema: vm
 image:
-  author: The Team
-  contact: bob@example.net
-archs:
-  - x86_64
-users:
-  - name: root
-    groups:
-      - root
-    home: /root
-    password: foo
+  _attributes:
+    schemaversion: "6.2"
+  description:
+    _attributes:
+      type: system
+    author: The Team
+    contact: bob@example.net
+  profiles:
+    profile: []
+  preferences: []
+  users:
+    user:
+      - _attributes:
+          name: root
+          groups: root
+          home: /root
+          password: foo
+  repository:
+    - _attributes:
+        type: rpm-md
+      source:
+        _attributes:
+          path: obsrepositories:/
+image-config-comments:
+  obs-multibuild: "OBS-Profiles: @BUILD_FLAVOR@"

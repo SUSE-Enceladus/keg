@@ -68,6 +68,24 @@ class AnnotatedMapping(MutableMapping):
         else:
             self._mapping.update(data)
 
+    def to_dict(self):
+        d = {}
+        for key, value in self.items():
+            d[key] = self._to_plain(value)
+        return d
+
+    @staticmethod
+    def _to_plain(data):
+        if isinstance(data, AnnotatedMapping):
+            return data.to_dict()
+        elif hasattr(data, '__iter__') and not isinstance(data, str):
+            d = type(data)()
+            for item in data:
+                d.append(AnnotatedMapping._to_plain(item))
+            return d
+        else:
+            return data
+
 
 class AnnotatedPrettyPrinter(pprint.PrettyPrinter):
     def _format(self, obj, *args, **kwargs):

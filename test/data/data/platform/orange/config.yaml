@@ -1,0 +1,4 @@
+config:
+  scripts:
+    _namespace_orange_scripts:
+      - orange-stuff

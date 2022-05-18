@@ -25,6 +25,7 @@ from collections import OrderedDict
 from xml.sax.saxutils import XMLGenerator
 from xml.sax.xmlreader import AttributesImpl
 
+from kiwi_keg import dict_utils
 from kiwi_keg import file_utils
 from kiwi_keg.image_definition import KegImageDefinition
 from kiwi_keg.kiwi_description import KiwiDescription
@@ -76,8 +77,6 @@ class KegGenerator:
         self.image_definition.populate()
 
         self.image_schema: Optional[str] = self.image_definition.data.get('schema')
-        #if not self.image_definition.data['image']['preferences'][0].get('version'):
-        #    raise KegDataError('Keg Generator: image has no version')
 
     def create_kiwi_description(self, overwrite: bool = False) -> None:
         file_utils.raise_on_file_exists(self.kiwi_description, overwrite)
@@ -98,6 +97,9 @@ class KegGenerator:
         :param bool overwrite:
             Override destination contents, default is: False
         """
+        if not self.image_schema:
+            raise KegError('No template schema defined')
+
         kiwi_template = self._read_template(
             '{}.kiwi.templ'.format(self.image_schema)
         )
@@ -235,11 +237,9 @@ class KegGenerator:
             with open(mbuild_file, 'w') as mbuild_obj:
                 mbuild_obj.write('<multibuild>\n')
                 for profile in profiles:
-                    profile_name = profile.get('_attributes', {}).get('name')
+                    profile_name = dict_utils.get_attribute(profile, 'name')
                     if profile_name:
                         mbuild_obj.write('    <flavor>{}</flavor>\n'.format(profile_name))
-                    else:
-                        raise KegDataError('profile definition lacks name attribute')
                 mbuild_obj.write('</multibuild>\n')
 
     @staticmethod
@@ -308,17 +308,11 @@ class KegGenerator:
             map_attribute=None,
             filter_attributes={}
     ):
-        if key == '_comment':
-            content_handler.ignorableWhitespace(depth * indent)
-            content_handler.comment(str(value))
-            content_handler.ignorableWhitespace('\n')
-            return
-
         if not isinstance(value, list):
             value = [value]
 
         for val in value:
-            if not val:
+            if val is None:  # pragma: no cover
                 continue
             elif isinstance(val, bool):
                 val = 'true' if val else 'false'
@@ -394,7 +388,8 @@ class KegGenerator:
         if children:
             content_handler.ignorableWhitespace('\n')
         for ck, cv in children:
-            self._create_xml_node(ck, cv, content_handler, depth+child_indent, indent, map_attribute, filter_attributes)
+            self._create_xml_node(ck, cv, content_handler, depth + child_indent,
+                                  indent, map_attribute, filter_attributes)
         if cdata:
             content_handler.characters(cdata)
         if children:
@@ -413,7 +408,7 @@ class ContentGenerator(XMLGenerator):
 
 
 class NodeAttributes(AttributesImpl):
-    def __init__(self, attrs, arch=None):
+    def __init__(self, attrs):
         self._attrs = {}
         for attr, value in attrs.items():
             if not hasattr(value, '__iter__') or isinstance(value, str):
@@ -423,23 +418,17 @@ class NodeAttributes(AttributesImpl):
             else:
                 self._attrs[attr] = self._dict_to_string(value)
 
-    def hasattrib(self, attrib):
-        return attrib in self._attrs
-
-    def getattrib(self, attrib):
-        return self._attrs.get(attrib)
-
     def _dict_to_string(self, data):
         valstr = ''
         for key, val in data.items():
             if val:
                 valstr += '{space}{key}={value}'.format(
-                    space=' '*(len(valstr)>0),
+                    space=' ' * (len(valstr) > 0),
                     key=key,
                     value=str(val)
                 )
             else:
-                valstr += ' '*(len(valstr)>0)+key
+                valstr += ' ' * (len(valstr) > 0) + key
         return valstr
 
     def __repr__(self):

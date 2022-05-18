@@ -1,0 +1,1 @@
+Configure some blue parameters

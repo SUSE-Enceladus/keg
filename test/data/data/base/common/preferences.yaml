@@ -1,0 +1,7 @@
+preferences:
+  keytable: us.map.gz
+  locale: en_US
+  packagemanager: zypper
+  rpm-check-signatures: False
+  timezone: UTC
+  version: 1.0.0
