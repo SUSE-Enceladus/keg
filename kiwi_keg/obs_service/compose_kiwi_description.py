@@ -23,7 +23,7 @@ Usage:
         [--version-bump=<true|false>]
         [--update-changelogs=<true|false>]
         [--update-revisions=<true|false>]
-        [--force]
+        [--force=<true|false>]
     compose_kiwi_description -h | --help
     compose_kiwi_description --version
 
@@ -60,8 +60,9 @@ Options:
     --update-revisions=<true|false>
         Whether '_keg_revisions' should be updated. [default: true]
 
-    --force
-        Refresh image description even if there are no new commits.
+    --force=<true|false>
+        If true, refresh image description even if there are no new commits.
+        [default: false]
 """
 import glob
 import docopt
@@ -223,7 +224,7 @@ def main() -> None:
     repos_with_commits = list(filter(lambda x: x.has_commits() is True, repos.values()))
     if not repos_with_commits:
         log.warning('No repository has new commits.')
-        if not args['--force']:
+        if args['--force'] != 'true':
             log.info('Aborting.')
             sys.exit()
 
@@ -277,7 +278,7 @@ def main() -> None:
 
         if not have_changes:
             log.warning('Image has no changes.')
-            if not args['--force']:
+            if args['--force'] != 'true':
                 log.info('Deleting generated files.')
                 for f in next(os.walk(args['--outdir']))[2]:
                     os.remove(os.path.join(args['--outdir'], f))
