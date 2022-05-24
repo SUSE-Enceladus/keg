@@ -187,7 +187,7 @@ class TestFetchFromKeg:
             'develop',
             '--outdir',
             'obs_out',
-            '--disable-version-bump'
+            '--version-bump=false'
         ]
         xml_data = Mock()
         preferences = Mock()
@@ -215,7 +215,6 @@ class TestFetchFromKeg:
         with patch('builtins.open', create=True), raises(SystemExit), self._caplog.at_level(logging.WARNING):
             main()
 
-        assert 'Generating changes file but version bump is disabled. Using old version.' in self._caplog.text
         assert 'Image has no changes.' in self._caplog.text
 
         mock_Path_create.assert_called_once_with('obs_out')

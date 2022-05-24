@@ -19,9 +19,10 @@
 Usage:
     compose_kiwi_description --git-recipes=<git_clone_source> ... --image-source=<path> --outdir=<obs_out>
         [--git-branch=<name>] ...
-        [--disable-version-bump]
-        [--disable-update-changelog]
-        [--disable-update-revisions]
+        [--image-version=<VERSION>]
+        [--version-bump=<true|false>]
+        [--update-changelogs=<true|false>]
+        [--update-revisions=<true|false>]
         [--force]
     compose_kiwi_description -h | --help
     compose_kiwi_description --version
@@ -42,14 +43,22 @@ Options:
         At the time the service is called through the OBS API
         this option is set.
 
-    --disable-version-bump
-        Do not increment the patch version number.
+   --image-version=<VERSION>
+        Set image version to VERSION. If no version is given, the old version
+        will be used with the patch number increased by one.
 
-    --disable-update-changelog
-        Do not update 'changes.yaml'.
+    --version-bump=<true|false>
+        Whether the patch version number should be incremented. Ignored if
+        '--image-version' is set. If set to 'false' and '--image-version' is
+        not set, the image version defined in the recipes will be used. If no
+        image version is defined, image description generation will fail.
+        [default: true]
 
-    --disable-update-revisions
-        Do not update '_keg_revisions'.
+    --update-changelogs=<true|false>
+        Whether 'changes.yaml' files should be updated. [default: true]
+
+    --update-revisions=<true|false>
+        Whether '_keg_revisions' should be updated. [default: true]
 
     --force
         Refresh image description even if there are no new commits.
@@ -199,7 +208,7 @@ def main() -> None:
     if len(args['--git-branch']) > len(args['--git-recipes']):
         sys.exit('Number of --git-branch arguments must not exceed number of git repos.')
 
-    handle_changelog = not args['--disable-update-changelog']
+    handle_changelog = args['--update-changelogs'] == 'true'
 
     repos = {}
     for repo, branch in itertools.zip_longest(args['--git-recipes'], args['--git-branch']):
@@ -218,18 +227,19 @@ def main() -> None:
             log.info('Aborting.')
             sys.exit()
 
-    image_version = None
+    image_version = args['--image-version']
     old_kiwi_config = None
     if os.path.exists('config.kiwi'):
         old_kiwi_config = 'config.kiwi'
 
-    if not args['--disable-version-bump'] and old_kiwi_config:
-        # if old config.kiwi exists, increment patch version number
-        version = get_image_version(old_kiwi_config)
-        if version:
-            ver_elements = version.split('.')
-            ver_elements[2] = f'{int(ver_elements[2]) + 1}'
-            image_version = '.'.join(ver_elements)
+    if not image_version:
+        if args['--version-bump'] == 'true' and old_kiwi_config:
+            # if old config.kiwi exists, increment patch version number
+            version = get_image_version(old_kiwi_config)
+            if version:
+                ver_elements = version.split('.')
+                ver_elements[2] = f'{int(ver_elements[2]) + 1}'
+                image_version = '.'.join(ver_elements)
 
     image_definition = KegImageDefinition(
         image_name=args['--image-source'],
@@ -258,10 +268,6 @@ def main() -> None:
         have_changes = False
 
         if not image_version:
-            if old_kiwi_config:
-                log.warning(
-                    'Generating changes file but version bump is disabled. Using old version.'
-                )
             image_version = get_image_version(os.path.join(args['--outdir'], 'config.kiwi'))
 
         for source_log, flavor in get_log_sources(os.path.join(args['--outdir'])):
@@ -284,6 +290,6 @@ def main() -> None:
             # clean up source log
             os.remove(source_log)
 
-    if not args['--disable-update-revisions']:
+    if args['--update-revisions'] == 'true':
         # capture current commits
         update_revisions(repos, args['--outdir'])
