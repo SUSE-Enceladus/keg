@@ -81,16 +81,16 @@ class KegGenerator:
     def create_kiwi_description(self, overwrite: bool = False) -> None:
         file_utils.raise_on_file_exists(self.kiwi_description, overwrite)
         if not self.image_schema:
-            self.create_xml_description(overwrite)
+            self.create_xml_description()
         else:
             log.info(
                 'Using KIWI schema: {keg_schema}'.format(
                     keg_schema=self.image_schema
                 )
             )
-            self.create_template_description(overwrite)
+            self.create_template_description()
 
-    def create_template_description(self, overwrite: bool = False) -> None:
+    def create_template_description(self) -> None:
         """
         Creates KIWI config.xml from a KegImageDefinition.
 
@@ -110,7 +110,7 @@ class KegGenerator:
             kiwi_config.write(kiwi_document)
             kiwi_config.write('\n')
 
-    def create_xml_description(self, overwrite) -> None:
+    def create_xml_description(self) -> None:
         with open(self.kiwi_description, 'w') as kiwi_config:
             content_handler = ContentGenerator(out=kiwi_config, encoding='utf-8', short_empty_elements=True)
             content_handler.startDocument()
