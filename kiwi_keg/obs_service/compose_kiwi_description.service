@@ -12,16 +12,20 @@
     <description>Keg path in git source pointing to the image description. The path must be relative to the images/ directory</description>
     <required/>
   </parameter>
-  <parameter name="disable-version-bump">
-    <description>Do not increment the patch version number [default: False]</description>
+  <parameter name="image-version">
+    <description> Set image version to VERSION. If no version is given, the old version will be used with the patch number increased by one.</description>
   </parameter>
-  <parameter name="disable-update-changelog">
-    <description>Do not update changes.yaml [default: False]</description>
+  <parameter name="version-bump">
+    <description>Whether the patch version number should be incremented. Ignored if '--image-version' is set. If set to 'false' and '--image-version' is not set, the image version defined in the recipes will be used. If no image version is defined, image description generation will fail.  [default: true]
+    </description>
   </parameter>
-  <parameter name="disable-update-revisions">
-    <description>Do not update _keg_revisions [default: False]</description>
+  <parameter name="update-changelogs">
+    <description> Whether 'changes.yaml' files should be updated. [default: true]</description>
+  </parameter>
+  <parameter name="update-revisions">
+    <description>Whether '_keg_revisions' should be updated. [default: true]</description>
   </parameter>
   <parameter name="force">
-    <description>Refresh description even if there are no new commits [default: False]</description>
+    <description>If 'true' refresh image description even if there are no new commits [default: false]</description>
   </parameter>
 </service>
