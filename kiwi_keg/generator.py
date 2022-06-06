@@ -47,7 +47,7 @@ class KegGenerator:
     :param str dest_dir: Destination directory
     """
     def __init__(
-            self, image_definition: KegImageDefinition, dest_dir: str, archs: list = []
+        self, image_definition: KegImageDefinition, dest_dir: str, archs: list = []
     ):
         if not os.path.isdir(dest_dir):
             raise KegError(
