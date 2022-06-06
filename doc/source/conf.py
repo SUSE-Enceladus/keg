@@ -71,9 +71,9 @@ pygments_style = 'sphinx'
 todo_include_todos = True
 
 extlinks = {
-    'issue': ('https://github.com/SUSE-Enceladus/keg/issues/%s', '#'),
-    'pr': ('https://github.com/SUSE-Enceladus/keg/pull/%s', 'PR #'),
-    'ghkeg': ('https://github.com/SUSE-Enceladus/keg/blob/main/%s', '')
+    'issue': ('https://github.com/SUSE-Enceladus/keg/issues/%s', 'issue %s'),
+    'pr': ('https://github.com/SUSE-Enceladus/keg/pull/%s', 'PR %s'),
+    'ghkeg': ('https://github.com/SUSE-Enceladus/keg/blob/main/%s', None)
 }
 
 
