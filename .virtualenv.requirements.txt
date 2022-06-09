@@ -17,5 +17,7 @@ anymarkup
 # xml parsing
 lxml
 
+schema
+
 # Template engine used for producing config.kiwi
 Jinja2

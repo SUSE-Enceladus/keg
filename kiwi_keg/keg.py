@@ -1,4 +1,4 @@
-# Copyright (c) 2021 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2022 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -22,7 +22,7 @@ Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)... 
            [--format-xml|--format-yaml] [--disable-root-tar]
            [--disable-multibuild] [--dump-dict]
            [-i IMAGE_VERSION|--image-version=IMAGE_VERSION]
-           [-d DEST_DIR] [-fv]
+           [-d DEST_DIR] [-a ARCH]... [-fv]
            [-s|--write-source-info] SOURCE
        keg -h | --help
        keg --version
@@ -67,6 +67,10 @@ Options:
 
     -i IMAGE_VERSION, --image-version=IMAGE_VERSION
         Set image version
+
+    -a ARCH
+        Generate image description for architecture ARCH (can be used
+        multiple times)
 
     -s, --write-source-info
         Write a file per profile containing a list of all used source
@@ -121,9 +125,9 @@ def main():
                 image_definition.populate()
                 image_spec = image_definition.data['image']
                 images[image_src] = {
-                    'name': image_spec['name'],
-                    'desc': image_spec['specification'],
-                    'ver': image_spec.get('version', 'n/a')
+                    'name': image_spec['_attributes']['name'],
+                    'desc': image_spec['description']['specification'],
+                    'ver': image_spec['preferences'][0].get('version', 'n/a')
                 }
             except KegError as e:
                 log.error('{} is not a valid image: {}'.format(image_src, e))
@@ -139,14 +143,19 @@ def main():
             image_version=args['--image-version'],
             track_sources=args['--write-source-info']
         )
-        image_generator = KegGenerator(
-            image_definition=image_definition,
-            dest_dir=args['--dest-dir']
-        )
         if args['--dump-dict']:
+            try:
+                image_definition.populate()
+            except KegError:  # pragma: no cover
+                pass
             ap = AnnotatedPrettyPrinter(indent=2)
             ap.pprint(image_definition.data)
             return
+        image_generator = KegGenerator(
+            image_definition=image_definition,
+            dest_dir=args['--dest-dir'],
+            archs=args['-a']
+        )
         image_generator.create_kiwi_description(
             overwrite=args['--force']
         )
@@ -175,6 +184,9 @@ def main():
             source_info_generator.write_source_info(overwrite=args['--force'])
     except KegError as issue:
         # known exception, log information and exit
+        if args['--verbose']:
+            import traceback
+            traceback.print_exc()
         log.error('%s: %s', type(issue).__name__, format(issue))
         sys.exit(1)
     except KeyboardInterrupt:

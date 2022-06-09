@@ -1,0 +1,9 @@
+include-paths:
+  - leap15/1
+  - leap15/2
+image:
+  _attributes:
+    name: Leap15.2-JeOS
+    displayname: Leap15.2-JeOS
+  description:
+    specification: "Leap 15.2 guest image"

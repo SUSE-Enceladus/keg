@@ -1,5 +1,0 @@
-packages:
-  image:
-    foo-profile-package:
-      - name: some-foo
-        arch: x86_64
