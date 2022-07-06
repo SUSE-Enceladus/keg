@@ -42,7 +42,7 @@ class ImageSchema:
                         'specification': And(str)
                     },
                     Optional('profiles'): {
-                        'profile': [{
+                        Optional('profile'): [{
                             '_attributes': {
                                 'name': And(str),
                                 'description': And(str)
@@ -132,7 +132,7 @@ class ImageSchema:
                         },
                         {
                             'services': {
-                                Or(str, {'name': And(str), Optional('enable'): And(bool)}, ignore_extra_keys=True)
+                                str: [Or(str, {'name': And(str), Optional('enable'): And(bool)}, ignore_extra_keys=True)]
                             },
                         },
                         {
@@ -161,7 +161,7 @@ class ImageSchema:
                         },
                         {
                             'services': {
-                                Or(str, {'name': And(str), Optional('enable'): And(bool)}, ignore_extra_keys=True)
+                                str: [Or(str, {'name': And(str), Optional('enable'): And(bool)}, ignore_extra_keys=True)]
                             },
                         },
                         {
@@ -176,7 +176,7 @@ class ImageSchema:
                     {
                         'name': And(str),
                         str: {
-                            'overlay': [str]
+                            '_include_overlays': [str]
                         }
                     }
                 ]
