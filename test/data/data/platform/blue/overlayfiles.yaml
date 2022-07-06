@@ -1,4 +1,4 @@
 archive:
   _namespace_blue_archive:
-    overlay:
+    _include_overlays:
       - blue-special-config
