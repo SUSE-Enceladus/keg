@@ -34,4 +34,4 @@ image:
 archive:
   - name: root.tar.gz
     some_namespace:
-      overlay: [does_not_exist]
+      _include_overlays: [does_not_exist]

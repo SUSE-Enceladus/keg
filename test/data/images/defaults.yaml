@@ -6,9 +6,8 @@ image:
       type: system
     author: The Team
     contact: bob@example.net
-  profiles:
-    profile: []
-  preferences: []
+  profiles: {}
+  preferences: {}
   users:
     user:
       - _attributes:

@@ -42,13 +42,13 @@ image:
 config:
   - _include:
       - base/common
-  - _profiles: [Blue]
+  - profiles: [Blue]
     _include:
       - platform/blue
-  - _profiles: [Orange]
+  - profiles: [Orange]
     _include:
       - platform/orange
-  - _profiles: [Blue,Orange]
+  - profiles: [Blue,Orange]
     _include:
       - platform/common
 setup:
