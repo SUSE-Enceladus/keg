@@ -192,6 +192,9 @@ class KegImageDefinition:
                     node
                 )
             del node['_include']
+            if isinstance(node, AnnotatedMapping):
+                # preserve source info
+                node['__deleted__include'] = {}
 
     def _generate_config_scripts(self):
         script_dirs = [
