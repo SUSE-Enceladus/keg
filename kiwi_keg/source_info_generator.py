@@ -46,6 +46,7 @@ class SourceInfoGenerator:
             )
         self.image_definition: KegImageDefinition = image_definition
         self.dest_dir: str = dest_dir
+        self.internal_toplevel_keys = ['archive', 'archives', 'generator', 'timestamp', 'image_source_path']
 
     def write_source_info(self, overwrite: bool = False):
         """
@@ -55,7 +56,7 @@ class SourceInfoGenerator:
         """
         profiles = self.image_definition.data['image'].get('profiles', {}).get('profile')
         if not profiles:
-            src_info = self._get_mapping_sources(self.image_definition.data)
+            src_info = self._get_mapping_sources(self.image_definition.data, profile=None, skip_keys=self.internal_toplevel_keys)
             src_info += self._get_script_sources()
             src_info += self._get_archive_sources()
             with self._open_source_info_file('log_sources', overwrite) as outf:
@@ -66,7 +67,7 @@ class SourceInfoGenerator:
         else:
             profile_names = [x['_attributes']['name'] for x in profiles]
             for profile_name in profile_names:
-                src_info = self._get_mapping_sources(self.image_definition.data, profile_name)
+                src_info = self._get_mapping_sources(self.image_definition.data, profile_name, skip_keys=self.internal_toplevel_keys)
                 src_info += self._get_script_sources(profile_name)
                 src_info += self._get_archive_sources(profile_name)
                 with self._open_source_info_file(
@@ -83,11 +84,8 @@ class SourceInfoGenerator:
         fobj = open(fpath, 'w')
         return fobj
 
-    def _get_mapping_sources(self, data, profile=None):
+    def _get_mapping_sources(self, data, profile=None, skip_keys=[]):
         src_info: list = []
-        # skip internal keys to avoid warning (plus 'archive' is handled separately as it lacks
-        # profiles attribute)
-        skip_keys = ['archive', 'archives', 'generator', 'timestamp', 'image_source_path', 'profiles']
         if not hasattr(data, '__iter__') or isinstance(data, str):
             return []
         if not isinstance(data, AnnotatedMapping):
@@ -100,9 +98,16 @@ class SourceInfoGenerator:
             for key, value in data.items():
                 if key in skip_keys:
                     continue
-                src_info.append(self._get_key_sources(key, data))
-                if hasattr(value, '__iter__') and not isinstance(value, str):
+                if key == 'profile' and isinstance(value, list):
+                    # special case for image:profiles; select only matching ones
+                    for item in value:
+                        item_name = dict_utils.get_attribute(item, 'name')
+                        if item_name == profile:
+                            src_info += self._get_mapping_sources(item)
+                elif hasattr(value, '__iter__') and not isinstance(value, str):
                     src_info += self._get_mapping_sources(value, profile)
+                else:
+                    src_info.append(self._get_key_sources(key, data))
             # keys may be deleted when merging, but info is preserved with __deleted_ prefix
             for key in [x for x in data.all_keys() if x.startswith('__deleted_')]:
                 orig_key = key[10:]
@@ -123,7 +128,10 @@ class SourceInfoGenerator:
     def _get_profiles_attrib(self, data):
         if not isinstance(data, AnnotatedMapping):  # pragma: no cover
             return [None]
-        profiles_attr = data.get('_profiles')
+        profiles_attr = data.get('profiles')
+        if isinstance(profiles_attr, AnnotatedMapping):
+            # special case for image:profiles node; return None to avoid skipping image def
+            return None
         if not profiles_attr:
             profiles_attr = dict_utils.get_attribute(data, 'profiles')
         return profiles_attr

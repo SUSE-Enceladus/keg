@@ -192,6 +192,9 @@ class KegImageDefinition:
                     node
                 )
             del node['_include']
+            if isinstance(node, AnnotatedMapping):
+                # preserve source info
+                node['__deleted__include'] = {}
 
     def _generate_config_scripts(self):
         script_dirs = [
@@ -212,7 +215,7 @@ class KegImageDefinition:
             for ns, data in archive.items():
                 if ns == 'name':
                     continue
-                for overlay in data['overlay']:
+                for overlay in data['_include_overlays']:
                     self._add_dir_to_archive(archive['name'], overlay)
 
     def _add_dir_to_archive(self, archive_name, overlay_module_name):
