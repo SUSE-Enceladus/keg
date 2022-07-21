@@ -24,7 +24,7 @@
         <timezone>UTC</timezone>
     </preferences>
     <preferences profiles="Blue">
-        <type bootloader="grub2" bootpartition="false" firmware="efi" filesystem="xfs" format="vhd-fixed" image="vmx" kernelcmdline="console=ttyS0">
+        <type bootloader="grub2" bootpartition="false" firmware="efi" filesystem="xfs" format="vhd-fixed" image="vmx" kernelcmdline="console=ttyS0 console=tty1">
             <size>30720</size>
         </type>
     </preferences>
