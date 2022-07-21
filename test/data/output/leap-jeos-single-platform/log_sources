@@ -6,6 +6,7 @@ range:6:6:../data/images/./defaults.yaml
 range:7:7:../data/images/./defaults.yaml
 range:8:8:../data/images/./defaults.yaml
 range:9:9:../data/images/leap-jeos-single-platform/15.2/image.yaml
+range:2:2:../data/images/leap-jeos-single-platform/content.yaml
 range:2:2:../data/data/base/common/preferences.yaml
 range:3:3:../data/data/base/common/preferences.yaml
 range:4:4:../data/data/base/common/preferences.yaml
@@ -21,11 +22,14 @@ range:20:20:../data/images/./defaults.yaml
 range:23:23:../data/images/./defaults.yaml
 range:8:8:../data/images/leap-jeos-single-platform/content.yaml
 range:2:2:../data/data/./package_defattr.yaml
+range:4:5:../data/data/base/bootstrap/packages.yaml
 range:10:11:../data/images/leap-jeos-single-platform/content.yaml
 range:12:12:../data/images/leap-jeos-single-platform/content.yaml
 range:2:2:../data/data/./package_defattr.yaml
+range:4:6:../data/data/base/common/packages.yaml
 range:14:15:../data/images/leap-jeos-single-platform/content.yaml
 range:25:25:../data/images/./defaults.yaml
+range:4:5:../data/data/base/common/config.yaml
 range:7:7:../data/data/base/common/config.yaml
 range:8:8:../data/data/base/common/config.yaml
 range:9:9:../data/data/base/common/config.yaml
@@ -35,4 +39,5 @@ range:18:18:../data/data/base/common/config.yaml
 range:19:19:../data/data/base/common/config.yaml
 range:20:20:../data/data/base/common/config.yaml
 range:17:18:../data/images/leap-jeos-single-platform/content.yaml
+range:2:4:../data/images/leap-jeos-single-platform/15.2/image.yaml
 ../data/data/scripts/base-stuff.sh
