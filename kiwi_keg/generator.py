@@ -422,12 +422,13 @@ class NodeAttributes(AttributesImpl):
         valstr = ''
         for key, val in data.items():
             if isinstance(val, list):
-                for v in val:
-                    valstr += '{space}{key}={value}'.format(
-                        space=' ' * (len(valstr) > 0),
-                        key=key,
-                        value=str(v)
-                    )
+                if len(val):
+                    for v in val:
+                        valstr += '{space}{key}={value}'.format(
+                            space=' ' * (len(valstr) > 0),
+                            key=key,
+                            value=str(v)
+                        )
                 else:
                     valstr += ' ' * (len(valstr) > 0) + key
             else:
