@@ -261,6 +261,7 @@ def main() -> None:
     image_generator.create_overlays(
         disable_root_tar=False, overwrite=True
     )
+    image_generator.create_multibuild_file(overwrite=True)
 
     if handle_changelog:
         sig = SourceInfoGenerator(image_definition, dest_dir=args['--outdir'])
