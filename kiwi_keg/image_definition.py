@@ -123,9 +123,6 @@ class KegImageDefinition:
                 'Error parsing image data: {error}'.format(error=issue)
             )
 
-        if self._image_version:
-            self._data['image']['preferences'][0]['version'] = self._image_version
-
         try:
             self._expand_includes(self._data)
             if self._image_version:

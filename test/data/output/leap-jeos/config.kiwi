@@ -16,12 +16,12 @@
         <profile name="Orange" description="Image for Orange Platform"/>
     </profiles>
     <preferences>
-        <version>1.0.0</version>
         <keytable>us.map.gz</keytable>
         <locale>en_US</locale>
         <packagemanager>zypper</packagemanager>
         <rpm-check-signatures>false</rpm-check-signatures>
         <timezone>UTC</timezone>
+        <version>1.0.0</version>
     </preferences>
     <preferences profiles="Blue">
         <type bootloader="grub2" bootpartition="false" firmware="efi" filesystem="xfs" format="vhd-fixed" image="vmx" kernelcmdline="console=ttyS0 console=tty1">

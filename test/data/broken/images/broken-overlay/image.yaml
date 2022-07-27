@@ -10,7 +10,7 @@ image:
     contact: bob@example.net
     specification: "Leap 15.2 guest image"
   preferences:
-    version: 1.0.0
+    - version: 1.0.0
   packages:
     - _attributes:
         type: image
