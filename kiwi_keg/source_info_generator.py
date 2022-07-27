@@ -105,7 +105,12 @@ class SourceInfoGenerator:
                         if item_name == profile:
                             src_info += self._get_mapping_sources(item)
                 elif hasattr(value, '__iter__') and not isinstance(value, str):
-                    src_info += self._get_mapping_sources(value, profile)
+                    src_info_nested = self._get_mapping_sources(value, profile)
+                    if src_info_nested:
+                        src_info += src_info_nested
+                    else:
+                        # no nested keys inside this key ; add key sources
+                        src_info.append(self._get_key_sources(key, data))
                 else:
                     src_info.append(self._get_key_sources(key, data))
             # keys may be deleted when merging, but info is preserved with __deleted_ prefix
