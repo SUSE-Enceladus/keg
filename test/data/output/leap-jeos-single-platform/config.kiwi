@@ -11,12 +11,12 @@
         <specification>Leap 15.2 guest image</specification>
     </description>
     <preferences>
-        <version>1.0.0</version>
         <keytable>us.map.gz</keytable>
         <locale>en_US</locale>
         <packagemanager>zypper</packagemanager>
         <rpm-check-signatures>false</rpm-check-signatures>
         <timezone>UTC</timezone>
+        <version>1.0.0</version>
     </preferences>
     <users>
         <user name="root" groups="root" home="/root" password="foo"/>
