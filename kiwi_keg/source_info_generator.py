@@ -110,8 +110,7 @@ class SourceInfoGenerator:
                     # and also profile specific attributes.
                     if all(isinstance(i, AnnotatedMapping) for i in value):
                         src_info.append(self._get_key_def_source(key, data))
-                        for v in value:
-                            src_info += self._get_mapping_sources(v, profile)
+                        src_info += self._get_mapping_sources(value, profile)
                     else:
                         src_info.append(self._get_key_sources(key, data))
                 elif isinstance(value, AnnotatedMapping):
