@@ -104,13 +104,19 @@ class SourceInfoGenerator:
                         item_name = dict_utils.get_attribute(item, 'name')
                         if item_name == profile:
                             src_info += self._get_mapping_sources(item)
-                elif hasattr(value, '__iter__') and not isinstance(value, str):
-                    src_info_nested = self._get_mapping_sources(value, profile)
-                    if src_info_nested:
-                        src_info += src_info_nested
+                elif isinstance(value, list):
+                    # We can't simply add the source of the list as one block,
+                    # because it may contain keys included from other sources,
+                    # and also profile specific attributes.
+                    if all(isinstance(i, AnnotatedMapping) for i in value):
+                        src_info.append(self._get_key_def_source(key, data))
+                        for v in value:
+                            src_info += self._get_mapping_sources(v, profile)
                     else:
-                        # no nested keys inside this key ; add key sources
                         src_info.append(self._get_key_sources(key, data))
+                elif isinstance(value, AnnotatedMapping):
+                    src_info.append(self._get_key_def_source(key, data))
+                    src_info += self._get_mapping_sources(value, profile)
                 else:
                     src_info.append(self._get_key_sources(key, data))
             # keys may be deleted when merging, but info is preserved with __deleted_ prefix
@@ -126,6 +132,15 @@ class SourceInfoGenerator:
         end = data.get('__{}_line_end__'.format(key))
         if src and start and end:
             return 'range:{}:{}:{}'.format(start, end, src)
+        else:
+            log.warning('Source information for key {} missing or incomplete'.format(key))
+            return ''
+
+    def _get_key_def_source(self, key, data):
+        src = data.get('__{}_source__'.format(key))
+        start = data.get('__{}_line_start__'.format(key))
+        if src and start:
+            return 'range:{}:{}:{}'.format(start, start, src)
         else:
             log.warning('Source information for key {} missing or incomplete'.format(key))
             return ''
