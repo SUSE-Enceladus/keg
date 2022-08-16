@@ -67,8 +67,13 @@ class SafeTrackerLoader(yaml.loader.SafeLoader):
             value = self.construct_object(value_node, deep=deep)
             mapping[key] = value
             mapping['__{}_source__'.format(key)] = self._source
-            mapping['__{}_line_start__'.format(key)] = value_node.start_mark.line + 1
-            mapping['__{}_line_end__'.format(key)] = value_node.end_mark.line + 1
+            mapping['__{}_line_start__'.format(key)] = key_node.start_mark.line + 1
+            # for multi-line values, end_mark points to the next line, so no +1 needed
+            # in case it's single line, +1 is needed, so adjust if necessary
+            end_line = value_node.end_mark.line
+            if end_line <= value_node.start_mark.line:
+                end_line += 1
+            mapping['__{}_line_end__'.format(key)] = end_line
         return mapping
 
     def construct_yaml_map(self, node):

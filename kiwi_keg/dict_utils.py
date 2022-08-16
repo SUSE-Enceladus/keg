@@ -55,7 +55,7 @@ def rmerge(src: keg_dict, dest: keg_dict) -> keg_dict:
             node = dest.setdefault(key, type(value)({}))
             rmerge(value, node)
         elif value is None:
-            if dest.get(key):
+            if dest.get(key) is not None:
                 del dest[key]
                 if isinstance(src, AnnotatedMapping):
                     dest[f'__deleted_{key}'] = {}

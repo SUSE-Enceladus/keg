@@ -58,3 +58,12 @@ class TestSourceInfoGenerator:
         with self._caplog.at_level(logging.WARNING):
             generator._get_mapping_sources(am)
         assert 'Source information for key foo missing or incomplete' in self._caplog.text
+        am = AnnotatedMapping({'foo': [AnnotatedMapping({'bar': 'batz'})]})
+        with self._caplog.at_level(logging.WARNING):
+            generator._get_mapping_sources(am)
+        assert 'Source information for key foo missing or incomplete' in self._caplog.text
+
+    def test_get_mapping_sources_plain(self):
+        generator = SourceInfoGenerator(self.image_definition, '/tmp')
+        result = generator._get_mapping_sources('foo')
+        assert result == []
