@@ -112,11 +112,11 @@ class ImageSchema:
                     Or(
                         {
                             'files': {
-                                str: {
-                                    Optional('append'): And(str),
+                                str: [{
+                                    Optional('append'): And(bool),
                                     'content': And(str),
                                     'path': And(str)
-                                }
+                                }]
                             }
                         },
                         {
@@ -141,11 +141,11 @@ class ImageSchema:
                     Or(
                         {
                             'files': {
-                                str: {
-                                    Optional('append'): And(str),
+                                str: [{
+                                    Optional('append'): And(bool),
                                     'content': And(str),
                                     'path': And(str)
-                                }
+                                }]
                             }
                         },
                         {
