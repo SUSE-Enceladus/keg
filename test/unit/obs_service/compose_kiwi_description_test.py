@@ -137,7 +137,7 @@ class TestFetchFromKeg:
             image_version='1.1.2'
         )
         mock_KegGenerator.assert_called_once_with(
-            image_definition=image_definition, dest_dir='obs_out'
+            image_definition=image_definition, dest_dir='obs_out', archs=[]
         )
         image_generator.create_kiwi_description.assert_called_once_with(
             overwrite=True
@@ -250,7 +250,7 @@ class TestFetchFromKeg:
             image_version=None
         )
         mock_KegGenerator.assert_called_once_with(
-            image_definition=image_definition, dest_dir='obs_out'
+            image_definition=image_definition, dest_dir='obs_out', archs=[]
         )
         image_generator.create_kiwi_description.assert_called_once_with(
             overwrite=True
