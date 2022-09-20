@@ -12,12 +12,10 @@ from kiwi_keg.exceptions import KegError
 
 expected_list_output = """\
 Source                         Name                           Version  Description
-leap/15                        Leap15-JeOS                    1.0.42   Leap 15 guest image
-leap/15.1                      Leap15.1-JeOS                  1.0.42   Leap 15.1 guest image
-leap/15.2                      Leap15.2-JeOS                  1.0.42   Leap 15.2 guest image
-leap_nested_profiles/15.2      Leap15.2-JeOS                  1.0.42   Leap 15.2 guest image
-leap_no_overlays               Leap15-JeOS                    1.0.42   Leap 15 guest image
-leap_single_build              Leap15.2-JeOS                  1.0.42   Leap 15.2 guest image
+leap-jeos-single-platform/15.1 Leap15.1-JeOS                  1.0.0    Leap 15.1 guest image
+leap-jeos-single-platform/15.2 Leap15.2-JeOS                  1.0.0    Leap 15.2 guest image
+leap-jeos/15.1                 Leap15.1-JeOS                  1.0.0    Leap 15.1 guest image
+leap-jeos/15.2                 Leap15.2-JeOS                  1.0.0    Leap 15.2 guest image
 """
 
 
@@ -50,7 +48,7 @@ class TestKeg:
                 track_sources=False
             )
             mock_KegGenerator.assert_called_once_with(
-                image_definition=image_definition, dest_dir='some-target'
+                image_definition=image_definition, dest_dir='some-target', archs=[]
             )
             image_generator.create_kiwi_description.assert_called_once_with(
                 overwrite=False
@@ -86,7 +84,7 @@ class TestKeg:
                 track_sources=True
             )
             mock_KegGenerator.assert_called_once_with(
-                image_definition=image_definition, dest_dir='some-target'
+                image_definition=image_definition, dest_dir='some-target', archs=[]
             )
             image_generator.create_kiwi_description.assert_called_once_with(
                 overwrite=False
@@ -162,6 +160,15 @@ class TestKeg:
             cap = capsys.readouterr()
             assert cap.out == expected_list_output
 
+    def test_keg_list_recipes_broken(self, capsys):
+        sys.argv = [
+            sys.argv[0], '--list-recipes',
+            '--recipes-root', '../data/broken'
+        ]
+        with self._caplog.at_level(logging.ERROR):
+            main()
+            assert 'is not a valid image' in self._caplog.text
+
     @patch('kiwi_keg.keg.AnnotatedPrettyPrinter')
     @patch('kiwi_keg.keg.KegImageDefinition')
     @patch('kiwi_keg.keg.KegGenerator')
@@ -173,8 +180,6 @@ class TestKeg:
         ]
         image_definition = Mock()
         mock_KegImageDefinition.return_value = image_definition
-        image_generator = Mock()
-        mock_KegGenerator.return_value = image_generator
         pprinter = Mock()
         mock_pprinter.return_value = pprinter
         with self._caplog.at_level(logging.DEBUG):
@@ -185,7 +190,5 @@ class TestKeg:
                 image_version=None,
                 track_sources=False
             )
-            mock_KegGenerator.assert_called_once_with(
-                image_definition=image_definition, dest_dir='some-target'
-            )
+            image_definition.populate.assert_called_once()
             pprinter.pprint.assert_called_once_with(image_definition.data)

@@ -1,0 +1,4 @@
+config:
+  scripts:
+    _namespace_common_scripts:
+      - common-stuff

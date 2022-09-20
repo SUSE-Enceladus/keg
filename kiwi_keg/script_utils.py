@@ -1,4 +1,4 @@
-# Copyright (c) 2021 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2022 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -25,7 +25,7 @@ from typing import (
 from kiwi_keg.exceptions import KegError
 
 
-def get_config_script(profiles_dict: Dict, config_key: str, script_dirs: List[str]) -> str:
+def get_config_script(config_dict: Dict, script_dirs: List[str]) -> str:
     """
     Return image configuration script.
 
@@ -34,27 +34,23 @@ def get_config_script(profiles_dict: Dict, config_key: str, script_dirs: List[st
     :param: List[str] script_dirs: Directories to scan for script snippets
     """
     content = ''
-    profile = profiles_dict.get('common')
-    if profile:
-        config_root = profile.get(config_key)
-        if config_root:
-            content += get_profile_section(config_root, script_dirs)
-    for profile, profile_data in profiles_dict.items():
-        if profile == 'common':
-            continue
-        config_root = profile_data.get(config_key)
-        if config_root:
-            kiwi_profiles = profile_data.get('nested_profiles', [profile])
-            content += '\nif [[ $kiwi_profiles = {} '.format(kiwi_profiles[0])
-            for p in kiwi_profiles[1:]:
-                content += '|| $kiwi_profiles = {} '.format(p)
+    for config_section in config_dict:
+        if content:
+            content += '\n'
+        profiles = config_section.get('profiles')
+        if profiles:
+            content += '\nif [[ $kiwi_profiles = {} '.format(profiles[0])
+            for profile in profiles[1:]:
+                content += '|| $kiwi_profiles = {} '.format(profile)
             content += ']]; then\n'
-            content += get_profile_section(config_root, script_dirs, '    ')
+            content += get_script_section(config_section, script_dirs, '    ')
             content += 'fi\n'
+        else:
+            content += get_script_section(config_section, script_dirs)
     return content
 
 
-def get_profile_section(config_section: Dict, script_dirs: List[str], indent: str = '') -> str:
+def get_script_section(config_section: Dict, script_dirs: List[str], indent: str = '') -> str:
     """
     Return scriptlet for given profile.
 
@@ -154,7 +150,7 @@ def get_services_section(service_items: Dict, ns: str) -> str:
             else:
                 service_name = item['name']
                 enable = item['enable']
-            if service_name.endswith('timer'):
+            if service_name.endswith('timer') or service_name.endswith('target'):
                 content += 'systemctl enable {}\n'.format(service_name)
             else:
                 if enable:

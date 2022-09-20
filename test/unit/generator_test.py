@@ -1,40 +1,27 @@
+import glob
 import tarfile
-import filecmp
 import tempfile
 import os
 from mock import (
-    patch, Mock, call
+    patch, Mock
 )
 from pathlib import Path
 from pytest import raises
-import shutil
 
-from kiwi_keg.generator import KegGenerator
+from kiwi_keg.generator import KegGenerator, NodeAttributes
 from kiwi_keg.image_definition import KegImageDefinition
 from kiwi_keg.exceptions import KegError
+
+
+def assert_files_equal(file1, file2):
+    assert open(file1, 'r').read() == open(file2, 'r').read()
 
 
 class TestKegGenerator:
     def setup(self):
         self.image_definition = KegImageDefinition(
-            image_name='leap/15.2', recipes_roots=['../data']
+            image_name='leap-jeos/15.2', recipes_roots=['../data'], image_version='1.0.0'
         )
-
-    @patch('os.path.isdir')
-    def test_setup_raises_no_kiwi_schema_configured(self, mock_os_path_is_dir):
-        mock_os_path_is_dir.return_value = True
-        self.image_definition.populate = Mock()
-        with raises(KegError):
-            KegGenerator(self.image_definition, 'dest-dir')
-
-    @patch('os.path.isdir')
-    def test_setup_raises_no_version_set(self, mock_os_path_is_dir):
-        mock_os_path_is_dir.return_value = True
-        self.image_definition.populate = Mock()
-        self.image_definition.data['schema'] = 'vm'
-        self.image_definition.data['image'] = {}
-        with raises(KegError):
-            KegGenerator(self.image_definition, 'image')
 
     @patch('os.path.exists')
     @patch('os.path.isdir')
@@ -83,13 +70,40 @@ class TestKegGenerator:
         utc_now.strftime.return_value = 'time-string'
         mock_datetime.now.return_value = utc_now
         with tempfile.TemporaryDirectory() as tmpdirname:
+            generator = KegGenerator(self.image_definition, tmpdirname, archs=['x86_64'])
+            generator.create_kiwi_description(
+                overwrite=True
+            )
+            assert_files_equal('../data/output/leap-jeos/config.kiwi', tmpdirname + '/config.kiwi')
+
+    @patch('kiwi_keg.image_definition.datetime')
+    @patch('kiwi_keg.image_definition.version')
+    def test_create_kiwi_description_single_build(
+        self, mock_keg_version, mock_datetime
+    ):
+        self.image_definition = KegImageDefinition(
+            image_name='leap-jeos-single-platform/15.2', recipes_roots=['../data'], image_version='1.0.0'
+        )
+        mock_keg_version.__version__ = 'keg_version'
+        utc_now = Mock()
+        utc_now.strftime.return_value = 'time-string'
+        mock_datetime.now.return_value = utc_now
+        with tempfile.TemporaryDirectory() as tmpdirname:
             generator = KegGenerator(self.image_definition, tmpdirname)
             generator.create_kiwi_description(
                 overwrite=True
             )
-            assert filecmp.cmp(
-                '../data/keg_output/config.kiwi', tmpdirname + '/config.kiwi'
-            ) is True
+            assert_files_equal('../data/output/leap-jeos-single-platform/config.kiwi', tmpdirname + '/config.kiwi')
+            assert not os.path.exists(os.path.join(tmpdirname, '_multibuild'))
+
+    def test_create_template_description(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            generator = KegGenerator(self.image_definition, tmpdirname)
+            with raises(KegError) as exception_info:
+                generator.create_template_description()
+            assert 'No template schema defined' in str(exception_info.value)
+            generator.image_schema = 'vm'
+            generator.create_template_description()
 
     @patch('kiwi_keg.generator.KiwiDescription')
     def test_format_kiwi_description(self, mock_KiwiDescription):
@@ -112,9 +126,9 @@ class TestKegGenerator:
         with tempfile.TemporaryDirectory() as tmpdirname:
             generator = KegGenerator(self.image_definition, tmpdirname)
             generator.create_custom_scripts(overwrite=True)
-            assert filecmp.cmp(
-                '../data/keg_output/config.sh', tmpdirname + '/config.sh'
-            ) is True
+            assert_files_equal(
+                '../data/output/leap-jeos/config.sh', tmpdirname + '/config.sh'
+            )
 
     @patch('kiwi_keg.generator.KegGenerator._read_template')
     def test_create_custom_scripts_no_template(self, mock_read_template):
@@ -122,108 +136,37 @@ class TestKegGenerator:
             mock_read_template.side_effect = KegError('no such teamplate')
             generator = KegGenerator(self.image_definition, tmpdirname)
             generator.create_custom_scripts(overwrite=True)
-            assert filecmp.cmp(
-                '../data/keg_output/config_fallback_header.sh', tmpdirname + '/config.sh'
-            ) is True
+            assert_files_equal(
+                '../data/output/leap-jeos/config_fallback_header.sh', tmpdirname + '/config.sh'
+            )
 
-    @patch('kiwi_keg.image_definition.datetime')
-    @patch('kiwi_keg.image_definition.version')
-    @patch('kiwi_keg.generator.shutil.rmtree')
-    @patch('kiwi_keg.generator.tarfile.open')
-    @patch('kiwi_keg.generator.os.makedirs')
-    @patch('kiwi_keg.generator.shutil.copy')
-    def test_create_overlays(
-        self, mock_shutil_copy, mock_os_makedirs, mock_tarfile_open,
-        mock_shutil_rmtree, mock_keg_version, mock_datetime
-    ):
-        mock_add = Mock()
-        mock_tarfile_open.return_value.__enter__.return_value.add = mock_add
-
-        mock_keg_version.__version__ = 'keg_version'
-        utc_now = Mock()
-        utc_now.strftime.return_value = 'time-string'
-        mock_datetime.now.return_value = utc_now
-
-        overlay_src_root = '../data/data/overlayfiles'
+    def test_create_overlays(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
-            shutil.copyfile('../data/keg_output/config.kiwi', tmpdirname + '/config.kiwi')
-            fake_root = os.path.join(tmpdirname, 'root')
-            os.mkdir(fake_root)
-
+            os.mkdir(os.path.join(tmpdirname, 'root'))
             generator = KegGenerator(self.image_definition, tmpdirname)
-            generator.create_kiwi_description(overwrite=True)
             generator.create_overlays(disable_root_tar=True, overwrite=True)
 
-            mock_shutil_rmtree.assert_called_once_with(fake_root)
-            calls = [
-                call(fake_root),
-                call(os.path.join(fake_root, '.'), exist_ok=True),
-                call(os.path.join(fake_root, 'etc'), exist_ok=True)
-            ]
-            mock_os_makedirs.assert_has_calls(calls)
-            calls = [
-                call(
-                    os.path.join(overlay_src_root, 'base/etc/hosts'),
-                    os.path.join(fake_root, 'etc'),
-                    follow_symlinks=False
-                ),
-                call(
-                    os.path.join(overlay_src_root, 'csp/aws/etc/resolv.conf'),
-                    os.path.join(fake_root, 'etc'),
-                    follow_symlinks=False
-                )
-            ]
-            mock_shutil_copy.assert_has_calls(calls, any_order=True)
+            tf_gen = tarfile.open(os.path.join(tmpdirname, 'blue.tar.gz'), 'r')
+            tf_ref = tarfile.open('../data/output/leap-jeos/blue.tar.gz', 'r')
+            assert tf_gen.list() == tf_ref.list()
+            assert os.path.exists(os.path.join(tmpdirname, 'root/etc/motd'))
 
-            leap_tarball_dir = os.path.join(tmpdirname, 'leap_15_2.tar.gz')
-            other_tarball_dir = os.path.join(tmpdirname, 'other.tar.gz')
-
-            assert mock_tarfile_open.call_args_list == [
-                call(leap_tarball_dir, "w:gz"),
-                call(other_tarball_dir, "w:gz")
-            ]
-            calls = [
-                call(
-                    name=os.path.join(overlay_src_root, 'products/leap/15.2/etc'),
-                    arcname='etc',
-                    filter=KegGenerator._tarinfo_set_root
-                ),
-                call(
-                    name=os.path.join(overlay_src_root, 'products/leap/15.2/usr'),
-                    arcname='usr',
-                    filter=KegGenerator._tarinfo_set_root
-                ),
-                call(
-                    name=os.path.join(overlay_src_root, 'csp/aws/etc'),
-                    arcname='etc',
-                    filter=KegGenerator._tarinfo_set_root
-                )
-            ]
-            mock_add.assert_has_calls(calls, any_order=True)
-
-            with raises(KegError) as kegerror:
+            with raises(KegError) as exception_info:
                 generator.create_overlays(disable_root_tar=True, overwrite=False)
-                assert kegerror == KegError(
-                    '{target} exists, use force to overwrite.'.format(target=fake_root)
-                )
 
-            assert filecmp.cmp(
-                '../data/keg_output_overlay/config.kiwi', tmpdirname + '/config.kiwi'
-            ) is True
+            expected_err = '{target}/root exists, use force to overwrite.'.format(target=tmpdirname)
+            assert str(exception_info.value) == expected_err
 
-    @patch('shutil.copy')
-    def test_create_no_overlays_configuration_provided(self, mock_shutil_copy):
-        image_definition = KegImageDefinition(
-            image_name='leap_no_overlays', recipes_roots=['../data']
-        )
+    def test_create_overlays_no_archive(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
-            generator = KegGenerator(image_definition, tmpdirname)
-            generator.create_overlays(False)
-            assert not mock_shutil_copy.called
+            generator = KegGenerator(self.image_definition, tmpdirname)
+            del self.image_definition._data['archives']
+            generator.create_overlays()
+            assert glob.glob(os.path.join(tmpdirname, '*tar.gz')) == []
 
     def test_add_dir_to_tar(self):
         image_definition = KegImageDefinition(
-            image_name='leap/15.2', recipes_roots=['../data']
+            image_name='leap-jeos/15.2', recipes_roots=['../data']
         )
         with tempfile.TemporaryDirectory() as tmpdir:
             dir1_path = os.path.join(tmpdir, 'dir1')
@@ -256,8 +199,13 @@ class TestKegGenerator:
         with tempfile.TemporaryDirectory() as tmpdir:
             generator = KegGenerator(self.image_definition, tmpdir)
             generator.create_multibuild_file(overwrite=False)
-            assert filecmp.cmp(
-                '../data/keg_output/_multibuild', tmpdir + '/_multibuild'
+            assert_files_equal(
+                '../data/output/leap-jeos/_multibuild', tmpdir + '/_multibuild'
             )
             with raises(KegError):
                 generator.create_multibuild_file(overwrite=False)
+
+    def test_nodeattributes(self):
+        attribs = {'str': 'strval', 'dict': {'item': 'value', 'flagitem': []}, 'list': ['item1', 'item2']}
+        na = NodeAttributes(attribs)
+        assert str(na) == "{'str': 'strval', 'dict': 'item=value flagitem', 'list': 'item1,item2'}"

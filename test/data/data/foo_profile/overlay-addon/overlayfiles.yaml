@@ -1,4 +1,0 @@
-overlayfiles:
-  foo-addon:
-    include:
-      - csp/aws

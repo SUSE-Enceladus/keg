@@ -1,8 +1,0 @@
-profiles:
-  common:
-    include:
-      - base/jeos
-  other:
-    description: Some Other Profile
-    include:
-      - foo_profile/overlay-addon

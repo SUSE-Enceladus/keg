@@ -1,0 +1,15 @@
+preferences:
+  type:
+    _attributes:
+      bootloader: grub2
+      bootpartition: "false"
+      firmware: efi
+      filesystem: xfs
+      format: vhd-fixed
+      image: vmx
+      kernelcmdline:
+        console: [ttyS0, tty1]
+    size:
+      _attibutes:
+        unit: M
+      _text: 30720

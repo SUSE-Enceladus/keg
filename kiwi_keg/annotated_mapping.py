@@ -1,4 +1,4 @@
-# Copyright (c) 2021 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2022 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -67,6 +67,24 @@ class AnnotatedMapping(MutableMapping):
             self._mapping.update(data._mapping)
         else:
             self._mapping.update(data)
+
+    def to_dict(self):
+        d = {}
+        for key, value in self.items():
+            d[key] = self._to_plain(value)
+        return d
+
+    @staticmethod
+    def _to_plain(data):
+        if isinstance(data, AnnotatedMapping):
+            return data.to_dict()
+        elif hasattr(data, '__iter__') and not isinstance(data, str):
+            d = type(data)()
+            for item in data:
+                d.append(AnnotatedMapping._to_plain(item))
+            return d
+        else:
+            return data
 
 
 class AnnotatedPrettyPrinter(pprint.PrettyPrinter):

@@ -1,4 +1,4 @@
-# Copyright (c) 2021 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2022 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -261,6 +261,7 @@ def main() -> None:
     image_generator.create_overlays(
         disable_root_tar=False, overwrite=True
     )
+    image_generator.create_multibuild_file(overwrite=True)
 
     if handle_changelog:
         sig = SourceInfoGenerator(image_definition, dest_dir=args['--outdir'])

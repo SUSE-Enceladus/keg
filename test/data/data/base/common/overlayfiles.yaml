@@ -1,0 +1,4 @@
+archive:
+  _namespace_common:
+    _include_overlays:
+      - motd

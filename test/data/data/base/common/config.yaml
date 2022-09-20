@@ -1,0 +1,24 @@
+config:
+  scripts:
+    common-scripts:
+      - base-stuff
+  files:
+    common-files:
+      - path: /etc/some.conf
+        append: True
+        content: "Some config"
+  services:
+    common-services:
+      - some-service
+      - name: other-service
+        enable: False
+      - some.timer
+  sysconfig:
+    common-sysconfig:
+      - file: /etc/sysconfig/language
+        name: RC_LANG
+        value: "C.UTF-8"
+setup:
+  scripts:
+    common-scripts:
+      - base-stuff

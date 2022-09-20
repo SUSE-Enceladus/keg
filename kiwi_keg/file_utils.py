@@ -1,4 +1,4 @@
-# Copyright (c) 2021 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2022 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -24,7 +24,8 @@ from typing import (
 import os
 import collections.abc
 import yaml
-from kiwi_keg.exceptions import KegDataError, KegError
+from kiwi_keg import dict_utils
+from kiwi_keg.exceptions import KegError
 from kiwi_keg.annotated_mapping import AnnotatedMapping, keg_dict
 
 log = logging.getLogger('keg')
@@ -66,8 +67,13 @@ class SafeTrackerLoader(yaml.loader.SafeLoader):
             value = self.construct_object(value_node, deep=deep)
             mapping[key] = value
             mapping['__{}_source__'.format(key)] = self._source
-            mapping['__{}_line_start__'.format(key)] = value_node.start_mark.line + 1
-            mapping['__{}_line_end__'.format(key)] = value_node.end_mark.line + 1
+            mapping['__{}_line_start__'.format(key)] = key_node.start_mark.line + 1
+            # for multi-line values, end_mark points to the next line, so no +1 needed
+            # in case it's single line, +1 is needed, so adjust if necessary
+            end_line = value_node.end_mark.line
+            if end_line <= value_node.start_mark.line:
+                end_line += 1
+            mapping['__{}_line_end__'.format(key)] = end_line
         return mapping
 
     def construct_yaml_map(self, node):
@@ -75,51 +81,6 @@ class SafeTrackerLoader(yaml.loader.SafeLoader):
         yield data
         value = self.construct_mapping(node)
         data.update(value)
-
-
-def rmerge(src: keg_dict, dest: keg_dict, ref: keg_dict = None) -> keg_dict:
-    """
-    Merge two dictionaries recursively,
-    preserving all properties found in src.
-    Updating 'dest' to the latest value, if property is not a dict
-    or adding them in the right key, if it is while keeping the existing
-    key-values. If 'ref' is given, only items _not_ in ref will be merged.
-
-    Example:
-    src = {'a': 'foo', 'b': {'c': 'bar'}}
-    dest = {'a': 'baz', 'b': {'d': 'more_bar'}}
-
-    Result: {'a': 'foo', 'b': {'d': 'more_bar', 'c': 'bar'}}
-    """
-    if not isinstance(dest, dict) and not isinstance(dest, AnnotatedMapping):
-        raise KegDataError(
-            'Cannot rmerge, destination is not a mapping: {}'.format(type(dest))
-        )
-    if isinstance(src, dict):
-        items = src.items()
-    elif isinstance(src, AnnotatedMapping):
-        items = src.all_items()
-    else:
-        raise KegDataError(
-            'Cannot rmerge, source mapping type not supported: {}'.format(type(src))
-        )
-
-    for key, value in items:
-        ref_node = None
-        if ref:
-            ref_node = ref.get(key)
-        if isinstance(value, dict) or isinstance(value, AnnotatedMapping):
-            node = dest.setdefault(key, type(value)({}))
-            rmerge(value, node, ref_node)
-            if not node:
-                del dest[key]
-        elif ref_node is None:
-            if value is None:
-                if dest.get(key):
-                    del dest[key]
-            else:
-                dest[key] = value
-    return dest
 
 
 def get_recipes(
@@ -152,7 +113,7 @@ def get_recipes(
             log.debug(f'Reading: {desc_file}')
             with open(desc_file, 'r') as f:
                 desc_yaml = yaml.load(f, Loader=yaml_loader)
-            rmerge(desc_yaml, merged_tree)
+            dict_utils.rmerge(desc_yaml, merged_tree)
             files_read.append(desc_file)
     return merged_tree
 
