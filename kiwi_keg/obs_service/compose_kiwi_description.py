@@ -20,6 +20,7 @@ Usage:
     compose_kiwi_description --git-recipes=<git_clone_source> ... --image-source=<path> --outdir=<obs_out>
         [--git-branch=<name>] ...
         [--image-version=<VERSION>]
+        [--arch=<arch>] ...
         [--version-bump=<true|false>]
         [--update-changelogs=<true|false>]
         [--update-revisions=<true|false>]
@@ -37,6 +38,9 @@ Options:
     --image-source=<path>
         Keg path in git source pointing to the image description.
         The path must be relative to the images/ directory.
+
+    --arch=<arch>
+        Set build architecture to arch (multiples allowed, optional).
 
     --outdir=<obs_out>
         Output directory to store data produced by the service.
@@ -250,7 +254,8 @@ def main() -> None:
     )
     image_generator = KegGenerator(
         image_definition=image_definition,
-        dest_dir=args['--outdir']
+        dest_dir=args['--outdir'],
+        archs=args['--arch']
     )
     image_generator.create_kiwi_description(
         overwrite=True
