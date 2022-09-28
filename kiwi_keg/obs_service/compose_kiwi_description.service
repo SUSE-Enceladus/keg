@@ -15,6 +15,9 @@
   <parameter name="image-version">
     <description> Set image version to VERSION. If no version is given, the old version will be used with the patch number increased by one.</description>
   </parameter>
+  <parameter name="arch">
+    <description>set build architecture</description>
+  </parameter>
   <parameter name="version-bump">
     <description>Whether the patch version number should be incremented. Ignored if '--image-version' is set. If set to 'false' and '--image-version' is not set, the image version defined in the recipes will be used. If no image version is defined, image description generation will fail.  [default: true]
     </description>
