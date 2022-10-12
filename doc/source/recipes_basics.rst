@@ -3,70 +3,94 @@
 Recipes Basics
 ==============
 
-To produce image descriptions, keg must be provided with source data, also
-called `keg recipes`. Unlike kiwi descriptions, keg recipes can be composed of
-an arbitrary number of files, which allows to create building blocks for
-images. Keg does not mandate a specific structure of the recipes data, with the
-exception that it expects certain types of source data in specific directories,
-but how you want to structure the data is up to you.
+To produce image descriptions, `keg` must be provided with source data, also
+called `keg recipes`. Unlike `KIWI` descriptions, `keg recipes` can be
+composed of an arbitrary number of files, which allows for creating building
+blocks for image descriptions. `Keg` does not mandate a specific structure of
+the recipes data, with the exception that it expects certain types of source
+data in specific directories.
 
 This document describes the fundamental `keg recipes` structure and how `keg`
 processes input data to generate an image definition.
 
-Recipes Data Types
-------------------
+Recipes Data Layout
+-------------------
 
-There are several types of source data in `keg recipes`:
+Essentially, a `keg recipes` repository conists of three top-level directories
+which contain different types of configuration data. Those three are:
 
-1. Image Definitions
+1. Image Definitions: :file:`images`
 
-  Defines image properties and composition. Image definitions must be placed in
-  the :file:`images` directory in the recipes root directory. Input format is
-  `yaml`.
+   The :file:`images` directory contains all image definitions. An image
+   defintion specifies the properties and content of the image description to
+   generate. Include statements in the image definition allow to reference
+   chunks of content from the data modules. Image definitions are specifed in
+   YAML format, can be modular and support data inheritence. See
+   :ref:`image_definition` for details.
 
-  See :ref:`image_definition` for details.
+2. Data Modules: :file:`data`
 
-2. Data Specifications
+   The :file:`data` dictory contains different bits of configuration and
+   content data that can be used to compose an image description. There are
+   three different types of data modules:
 
-  Specifies profile parameters, package lists, image setup configuration, and
-  overlay data configuration. Data specifications must be placed in the
-  :file:`data` directory. The sub directories :file:`data/scripts` and
-  :file:`data/overlayfiles` are reserved for configuration scriptlets and
-  overlay files (see below). Everything else under :file:`data` is considered
-  data module specification with input format `yaml`.
+   2.1 Image Definition Modules
 
-  2.1 Image Configuration Scripts
+   Any directory in :file:`data` that is not file:`scripts` or
+   file:`overlayfiles` is considered a module, or module tree, for image
+   definition data. Those modules can be referenced in the image definitions
+   using `_include` statements. The data is in YAML format and spports
+   inheritence.
 
-    Image descriptions may include configuration scripts, which `keg` can compose
-    from scriptlets. Those must be placed in :file:`data/scripts`. All files
-    need to have a `.sh` suffix. Format is `bash`.
+   2.2 Image Configuration Scriptlets
 
-  2.2 Overlay Data
+   Scriptlets can be used to compose optional configuration shell scripts that
+   `KIWI` can run during the build process. The scriptlets are located in
+   :file:`data/scripts`.
+
+   2.3 Overlay Files
 
     Image description may include overlay files that get copied into the target
     image. `Keg` can create overlay archives from overlay data directories.
-    Those must be placed in :file:`data/overlayfiles`.
+    Overlay files trees are located in :file:`data/overlayfiles`.
 
   See :ref:`data_modules` for details on data modules.
 
-3. Schema Templates
+3. Schema Templates: :file:`schemas`
 
-  `Keg` uses `jinja2` templates to produce the target `config.kiwi` file. The
-  template defines the output structure, which is provided with the full image
-  description as composed by `keg`. Templates need to be in :file:`data/schemas`.
+  `Keg` uses Jinja2 templates to produce the the headers for :file:`config.sh`
+  and :file:`images.sh`. Both are optional and `keg` will write a fallback
+  header if they are missing. Additionally, a Jinja2 template can be used
+  to generate :file:`config.kiwi` instead of using the internal XML generator.
+
 
 Source Data Format and Processing
 ---------------------------------
 
 This section contains some general information about how `keg` handles its
-source data. An image description is internally represented by a data
-dictionary with a certain structure. This dictionary gets composed by parsing
-source image definition and data files referenced by the image definition
-and merging them into a dictionary. Image definitions as well as data modules
-are used by referencing a directory (under :file:`images` or :file:`data`
-respectively), which may be several layers of directories under the root
-directory. When parsing those, `keg` will also read any yaml file that is
-in a directory above the referenced one, and merge all source data into
-one dictionary, with the lower (i.e. more specific) layers taking precedence
-over upper (i.e. more generic) ones. This inheritance mechanism is intended to
-reduce data duplication.
+source data.
+
+An image description is internally represented by a data dictionary with a
+certain structure. This dictionary gets composed by parsing source image
+definition and data files referenced by the image definition and merging them
+into a dictionary.
+
+Image definitions as well as data modules are used by referencing a directory
+(under :file:`images` or :file:`data` respectively), which may be several
+layers of directories under the root directory. When parsing those, `keg` will
+also read any :file:`.yaml` file that is in a directory above the referenced
+one, and merge all source data into one dictionary, with the lower (i.e. more
+specific) layers taking precedence over upper (i.e. more generic) ones. This
+inheritance mechanism is intended to reduce data duplication.
+
+`Keg` uses namespaces in the image definition to group certain bits of
+information (for instance, a list of packages) which can be overwritten in
+derived modules, allowing for creating specialized versions of data modules
+for specific use case or different image description versions.
+
+Once everything is merged, the resulting dictionary is validated against the
+image definition schema, to ensure its structure is correct and all required
+keys are present. If that is the case, `keg` runs the image dictionary through
+its XML generator to produce a `config.kiwi` file. In case the image
+definition contains configuration scripts or overlay archives specifications,
+`keg` will generate those as well.

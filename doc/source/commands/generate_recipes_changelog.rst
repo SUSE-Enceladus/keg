@@ -80,6 +80,7 @@ The change log will have the following format:
 
   1.1.8:
     - change: git message subject
+      date: git commit UTC timestamp
       details: |-
         git message body
     ...

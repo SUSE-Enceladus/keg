@@ -35,6 +35,38 @@ BYOS image for several cloud service provider frameworks.
 The parameters `<git-recipes>` and `<git-branch>` may be used multiple times if
 the image description should be composed from more than one repository.
 
+There are a few additional optional parameters:
+
+* `arch` (string)
+
+Set build target architecture. Can be used multiple times.
+
+* `image-version` (string)
+
+Set image version. If no version is given, the version number of the existing
+image description will be used with the patch level increased by one.
+
+* `version-bump` (true|false)
+
+Whether the patch version number should be incremented. Ignored if
+`--image-version` is set. If set to `false` and `--image-version` is not set,
+the image version defined in the recipes will be used. If no image version is
+defined, image description generation will fail. Default is `true`.
+
+* `update-changelogs` (true|false)
+
+Whether :file:`changes.yaml` files should be updated. Default is `true`.
+
+* `update-revisions` (true|false)
+
+Whether :file:`_keg_revisions` (used for storing current commit IDs) should be
+updated. Default is `true`.
+
+* `force` (true|false)
+
+If true, refresh image description even if there are no new commits. Default
+is `false`.
+
 The system the source service is run on needs to have `keg` and
 `obs-service-keg` installed. Refer to the `Using Source Services
 <https://openbuildservice.org/help/manuals/obs-user-guide/cha.obs.source_service.html>`_

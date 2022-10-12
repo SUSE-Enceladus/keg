@@ -3,97 +3,381 @@
 Image Definition
 ================
 
+In `keg` terminology, an image definition is the data set that specifies the
+KIWI image description that should be generated. `keg` reads image definition
+from the `images` directory in the `recipes` root directory.
+
 `Keg` considers all leaf directories in :file:`images` to be image definitions.
-This means by parsing any yaml file from those directories and all yaml files
+This means by parsing any YAML file from those directories and all YAML files
 in any parent directory and merging their data into a dictionary, a complete
 image definition needs to be available in the resulting dictionary. There is no
-specific hierarchy required in :file:`images`. You can use any level of sub
-directories to use any level of inheritance, or simply just to group image
+specific hierarchy required in :file:`images`. Any level of sub directories can
+be used to create multiple levels of inheritance, or simply just to group image
 definitions. Example directory layout::
 
   images/
          opensuse/
                   defaults.yaml
                   leap/
-                       profiles.yaml
+                       content.yaml
                        15.2/
                             image.yaml
                        15.3/
                             image.yaml
 
 This example layout defines two images, `opensuse/leap/15.2` and
-`opensuse/leap/15.3`. It uses inheritance to define a common profile for both
-image definitions, and to set some `opensuse` specific defaults. Running `keg
--d output_dir opensuse/leap/15.3` would merge data from the following files in
-the show order::
+`opensuse/leap/15.3`. It uses inheritance to define a common content
+definition for both image definitions, and to set some `opensuse` specific
+defaults. Running :command:`keg -d output_dir opensuse/leap/15.3` would merge
+data from the following files in the show order::
 
   images/opensuse/defaults.yaml
-  images/opensuse/leap/profiles.yaml
+  images/opensuse/leap/content.yaml
   images/opensuse/leap/15.3/image.yaml
+
+All keys from the individual YAML files that are in the given tree will be
+merged into a dictionary that defines the image to be generated.
+
 
 Image Definition Structure
 --------------------------
 
-To properly define an image, the dictionary produced from merging the
-dictionaries from a given input path need to have the following structure:
+An image definition dictionary is composed of several parts that define
+different parts of the image. The actual image description, configuration
+scripts, overlay archives. All parts are defined under a top-level key
+in the dictionary. There are additional top-level keys that affect data
+parsing and generator selection.
+
+The top-level keys are as follows:
+
+image
+^^^^^
+
+The image dictionary. This is the only mandatory top-level key. It defines
+the content of the :file:`config.kiwi` file `keg` should generate and is
+essentially a YAML version of `KIWI's` image description (typically in XML). It
+contains all image configuration properties, package lists, and references to
+overlay archives. There is a number of special keys that influence how `keg`
+constructs the dictionary and generates the XML output. The basic structure is
+as follows:
 
 .. code:: yaml
 
-  archs:
-    - string
-    ...
-  include-paths:
-    - string
-    ...
   image:
-    author: string
-    contact: string
-    name: string
-    specification: string
-    version: integer.integer.integer
-  profiles:
-    common:
-      include:
-        - string
+    _attributes:
+      schemaversion: "<schema_maj>.<schema_min>"
+      name: <image_name>
+      displayname: <image_boot_title>
+    description:
+      _attributes:
+        type: <system_type>
+      author: <author_name>
+      contact: <author_email>
+    preferences:
+      - version: <version_string>
+      - _attributes:
+          profiles:
+            - <profile_name>
+            ...
+        type:
+          _attributes:
+            image: <image_type>
+              kernelcmdline:
+              <kernel_param>: <kernel_param_value>
+              ...
+            ...
+          size:
+            _attributes:
+              unit: <size_unit>
+            _text: <disk_size>
+      ...
+    users:
+      user:
+        - _attributes:
+            name: <user_name>
+            groups: <user_groups>
+            home: <user_home>
+            password: <user_password>
+	...
+    packages:
+      - _attributes:
+          type: image|bootstrap
+          profiles:
+            - <profile>
+	    ...
+        archive:
+          _attributes:
+            name: <archive_filename>
+        <namespace>:
+          package:
+            - _attributes:
+                name: <package_name>
+                arch: <package_arch>
+	    ...
         ...
-    profile1:
-      include:
-        - string
+      ...
+    profiles:
+      profile:
+        - _attributes:
+            name: <profile_name>
+            description: <profile_description>
         ...
-    ...
-  schema: string
-  users:
-    - name: string
-      groups:
-        - string
+
+This only outlines the structure and includes some of the configuration keys
+that `KIWI` supports. See `KIWI Image Description
+<https://documentation.suse.com/kiwi/9/single-html/kiwi/index.html#image-description>`_
+for full details.
+
+For the purpose of generating the `KIWI` XML image description, any key in the
+`image` dictionary that is not a plain data type is converted to an XML element
+in the `KIWI` image description, with the tag name being the key name. Any key
+that starts with an `_` has a special meaning. The following are supported:
+
+  `_attributes`
+
+If a key contains a sub key called `_attributes`, it instructs the XML
+generator to produce an attribute for the XML element  with the given key name
+and value as its name-value pair. If value is not a plain data type, it is
+converted to a string, which allows for complex attributes being split over
+different files and also for redefinition on lower levels. For example:
+
+.. code:: yaml
+
+  type:
+    _attributes:
+      image: vmx
+      kernelcmdline:
+        console: ttyS0
+        debug: []
+
+Would generate the following XML element:
+
+.. code:: xml
+
+  <type image="vmx" kernelcmdline="console=ttyS0 debug"/>
+
+The empty list used as value for `debug` means the attribute parameter is
+valueless (i.e. a flag).
+
+  `_text`
+
+If a key contains a key called `_text`, its value is considered the element's
+content string.
+
+  `_namespace[_name]`
+
+Any key that start with `_namespace` does not produce an XML element in the
+output. Namespaces are used to group data and allow for an inheritance and
+overwrite mechanism. Namespaces produce comments in the XML output that
+states which namespace the enclosed data was part of.
+
+  `_map_attribute`
+
+If a key contains a key `_map_attribute`, which needs to be a string type,
+any `_attribute` key under the key that is a simple list instead of the
+actually required mapping, is automatically converted to a mapping with the
+attribute key equal to `_map_attribute` value. For example:
+
+.. code:: yaml
+
+  packages:
+    _map_attribute: name
+    _namespace_some_pkgs:
+      package:
+        - pkg1
+        - pkg2
+
+Is automatically converted to:
+
+.. code:: yaml
+
+  packages:
+    _namespace_some_pkgs:
+    package:
+      - _attribute:
+          name: pkg1
+      - _attribute:
+          name: pkg1
+    archive:
+      - _attributes:
+          name: archive1.tar.gz
+
+This allows for making lists of elements that all have the same attribute
+(which package lists typically have) more compact and readable.
+
+
+  `_comment[_name]`
+
+Any key that has a key that starts with `_comment` will have a comment above
+it in the XML output, reading the value of the `_comment` key (needs to be
+a string).
+
+
+.. _imgdef_config:
+
+config
+^^^^^^
+
+The config dictionary defines the content of the :file:`config.sh` file `keg`
+should generate. :file:`config.sh` is a script that `KIWI` runs during the image
+prepare step and can be used to modify the image's configuration. The
+:file:`config` dictionary structure is as follows:
+
+.. code:: yaml
+
+  config:
+    - profiles:
+        - <profile_name>
         ...
-      home: string
-      password: string
+      files:
+        <namespace>:
+          - path: <file>
+            append: bool (defaults to False if missing)
+            content: string
+          ...
+	...
+      scripts:
+        <namespace>:
+          - <script>
+          ...
+	...
+      services:
+        <namespace>:
+          - <service_name>
+          - name: <service_name>
+            enable: bool
+	  ...
+	...
+      sysconfig:
+        <namespace>:
+          - file: <sysconfig_file>
+            name: <sysconfig_variable>
+            value: string
+	  ...
+	...
     ...
 
+Each list item in `config` produces a section in :file:`config.sh`, with the
+optional `profiles` key defining for which image profile that section should
+apply. Each item can have the following keys (all are optional, but there has
+to be at least one):
+
+`files` defines files that should be created (or overwritten if existing) with
+the given `content` or have `content` appended to in :file:`config.sh`.
+
+`scripts` defines which scriptlets should be included. `<script>` refers to
+a file :file:`data/scripts/<script>.sh` in the recipes tree.
+
+`services` defines which systemd services and timers should be enabled or
+disabled in the image. The short version (just a string) means the
+string is the service name and it should be enabled.
+
+`sysconfig` defines which existing sysconfig variables should the altered.
 
 .. note::
 
-  `schema` corresponds to a template file in :file:`schema` (with
-  ``.kiwi.templ`` extension added). The schema defines the output structure and
-  hence the input structure is dependent on what schema is used.
+  `<namespace>` defines a namespace with the same purpose as in the `image`
+  dictionary, but `config` namespaces don't have to start with `_`, but are
+  allowed to.
 
-  Some of the listed dictionary items are not strictly required by keg but
-  they are used by the template provided in the `keg-recipes repository
-  <https://github.com/SUSE-Enceladus/keg-recipes>`__.
+setup
+^^^^^
+
+The config dictionary defines the content of the :file:`images.sh` file `keg`
+should generate. This script is run by `KIWI` during the image create step. Its
+structure is identical to `config`.
+
+See `User defined scripts
+<https://documentation.suse.com/kiwi/9/single-html/kiwi/index.html#working-with-kiwi-user-defined-scripts>`__
+in the `KIWI` documentation for more details on user scripts.
+
+
+.. _imgdef_archive:
+
+archive
+^^^^^^^
+
+The archive dictionary defines the content of overlay tar archives, that can be
+included in the image via the `archive` sub-section of the `packages` section
+of the `image` dictionary. The structure is as follows:
+
+.. code:: yaml
+
+  archive:
+    - name: <archive_filename>
+      <namespace>:
+        _include_overlays:
+          - <overlay_module>
+          ...
+    ...
+
+When generating the image description, `keg` will produce a tar archive for
+each entry in `archive` with the given file name, with its contents being
+composed of all files that are in the listed overlay modules. Each module
+references a directory in :file:`data/overlayfiles`.
+
+`Keg` automatically compresses the archive based on the file name extension.
+Supported are `gz`, `bz2`, `xz`, or no extension for uncompressed archive.
 
 .. note::
 
-  Image definitions that define a `common` profile only in the `profiles`
-  section are considered single-build and definitions with additional
-  profiles are considered multi-build. Single-build image descriptions
-  produce a single image binary, with all configuration properties included in
-  the `common` profile. Multi-build image descriptions produce an image binary
-  per profile, with each profile using all configuration properties included in
-  the corresponding profile section and the `common` profile. Since the
-  generated image description depends on the used template this may not apply
-  for custom templates.
+  The archive name `root.tar` (regardless of compression extension) is
+  automatically included in all profiles (if there are any) by `KIWI`.
+  It is not necessary to include it explicitly in the image definition.
 
-The `profiles` section is what defines the image configuration and data
-composition. Any list item in `include` refers to a directory under
-:file:`data`.
+
+The _include Statement
+----------------------
+
+`Keg` supports importing parts of the image definition from other directory
+trees within the recipes to allow for modularization. For that purpose, a key
+in the image dictionary may have a sub-key called `_include`. Its value is a
+list of strings, each of which points to a directory in the `data`
+sub-directory of the recipes root. To process the instruction, `keg` generates
+another dictionary from all YAML files in the referenced directory trees (the
+same mechanism as when parsing the `images` tree applies). It then looks up the
+key in that dictionary that is equal to the parent key of the `_include` key,
+and replaces the `_include` key with its contents. That means, if the
+`_include` statement is below a key called `packages`, only data under
+`packages` in the include dictionary will be copied into the image definition
+dictionary. This allows for having different types of configuration data in the
+same directory and including them in different places in the image definition.
+See :ref:`data_modules` for details on data modules.
+
+Additional Configuration Directives
+-----------------------------------
+
+There are two additional optional top-level image definition keys that
+affect how the image definition dictionary is composed and the image
+description is generated:
+
+include-paths
+^^^^^^^^^^^^^
+
+The `include-paths` key defines a list of search paths that get appended 
+when `_include` statements are processed. This allows for having different
+versions of data modules and still share the most of an image definition
+between different versions. See :ref:`data_modules` for details.
+
+schema
+^^^^^^
+
+`Keg` starting with version 2.0.0 has an internal XML generator to produce
+`KIWI` image descriptions. Previously, a Jinja2 template was used to convert
+the image dictionary that `keg` constructed into a `KIWI` image description.
+Using a Jinja2 template is still supported and can be configured as follows
+in the image definition:
+
+.. code:: yaml
+
+  schema: <template>
+
+In this case, instead of running the XML generator, `keg` would read the
+file :file:`<template>.kiwi.templ` from the `schemas` directory in the recipes
+root directory and run it trough the Jinja2 engine.
+
+.. note::
+
+  While using a Jinja2 template would in theory allow to operate on different
+  input data structures, the internal schema validator requires the image
+  definition to comply with what `keg` expects.

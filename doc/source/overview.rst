@@ -12,78 +12,74 @@ Overview
 Conceptual Overview
 -------------------
 
-Keg is a tool which helps to create and manage image descriptions suitable
-for the `KIWI <https://osinside.github.io/kiwi/>`__ appliance builder. 
-While `keg` can be used to manage a single image definition the tool provides
-no considerable advantage in such a use case. The primary use case for keg
-are situations where many image descriptions must be managed and the
-image descriptions have considerable overlap with respect to content
-and setup.
+Keg is a tool which helps to create and manage image descriptions for use with
+the `KIWI <https://osinside.github.io/kiwi/>`__ appliance builder. A `KIWI`
+image description consists of a single XML document that specifies type,
+configuration, and content of the image to build. Optionally there can be
+configuration scripts and overlay archives added to an image description,
+which allow for further configuration and additional content.
 
-The key component for `keg` is a data structure called `recipes`.
-This data structure is expected to contain all information necessary to
-create KIWI image descriptions. `keg` is implemented such that data inheritance 
-is possible to reduce data duplication in the `recipes`.
+Since `KIWI` image descriptions are monolithic, maintaining a number of image
+descriptions that have considerable overlap with respect to content and setup
+can be cumbersome and error-prone. `Keg` attempts to alleviate that by
+allowing image descriptions to be broken into modules. Those modules can be
+composed in different ways in so called image definitions, and modules can
+inherit from parent modules which allows for fine-tuning for specific image
+setups. Configuration scripts and overlay archives can also be generated in a
+modular fashion.
 
-The `recipes` consist of three major components:
+The collection of source data required for `keg` to produce image descriptions
+is called `recipes`. `Keg recipes` are typically kept in a `git` repository,
+and `keg` has support for producing change logs from `git` commit history, but
+this is not a requirement. A `recipes` repository provides `keg` with the
+information how an image description is to be composed as well as the content
+of the components.
 
-Data Building Blocks: :file:`data`
-  Independent collection of components used in KIWI image
-  descriptions. This includes for example information about
-  packages, repositories or custom script code and more.
-  A building block should be created to represent a certain
-  functionality or to provide a capability for a certain
-  target distribution such that it can be used in a variety
-  of different image descriptions. 
+The basic principle of operation is that when `keg` is executed, it is pointed
+to a directory within the `recipes` repository and it reads any YAML files in
+that directory and any parent directories and merges their contents into a
+dictionary. How the image definition data is structured and composed is not
+relevant, as long as the resulting dictionary represents a valid image
+definition. This allows for a lot of flexibility in the layout of a `recipes`
+repository. The `SUSE Public Cloud Keg Recipes repository
+<https://github.com/SUSE-Enceladus/keg-recipes>`__ provides an example of a
+highly modular one with strong use of inheritance.
 
-Image Definitions: :file:`images`
-  Formal instructions which building blocks should be used for
-  the specified image
-
-Schema Templates: :file:`schemas`
-  Templates to implement Syntax and Semantic of image description
-  files as required by KIWI
-
-The setup of the `recipes` is the most time consuming
-part when using Keg. Example definitions for the `recipes`
-can be found here:
-`Public Cloud Keg Recipes <https://github.com/SUSE-Enceladus/keg-recipes>`__
-
-For more details on how `keg` processes `recipes` data, see section
+For more details on what constitutes a `recipes` repository, see section
 :ref:`recipes_basics` (ff).
 
 Working With Keg
 ----------------
 
-Using `keg` is a two step process:
+To create an image description, `keg` obviously needs to be installed, as well
+as `KIWI`, as the latter is used by `keg` to validate the final image
+description. See :ref:`installation` for information about how to install
+`keg`, and `KIWI Installation
+<https://osinside.github.io/kiwi/installation.html>`_ about how to install
+`KIWI`.
 
-1. Fetch or create an `image definition tree`
-
-2. Call the `keg` commandline utility to create a KIWI image description
-
-For the above to work, Keg needs to be installed as described in
-:ref:`installation`. In addition install KIWI, see
-https://osinside.github.io/kiwi/installation.html.
-
-If all software components are installed, `keg` can be utilized like
-the following example shows:
+Additionally, a `recipes` repository is required. The following example uses
+the aforementioned SUSE Public Cloud keg recipes:
 
 .. code:: shell-session
 
     $ git clone https://github.com/SUSE-Enceladus/keg-recipes.git
 
-    $ keg --recipes-root keg-recipes --dest-dir leap_description \
-          leap/jeos/15.2
+    $ mkdir sles15-sp4-byos
 
-After the `keg` command completes the destination directory specified
-with `--dest-dir` contains and image description that can be processed
-with KIWI to build an image. For more details about KIWI image descriptions,
-see https://osinside.github.io/kiwi/image_description.html.
+    $ keg --recipes-root keg-recipes --dest-dir sles15-sp4-byos \
+          cross-cloud/sles/byos/15-sp4
 
-With KIWI installed you can build the image with the `keg` created image
-description as follows:
+After the `keg` command completes the destination directory specified with
+`--dest-dir` contains a description for a SUSE Linux Enterprise Server 15 SP4
+image for use in the Public Clouds. It can be processed with KIWI to build an
+image. For more details about KIWI image descriptions, see
+https://osinside.github.io/kiwi/image_description.html.
 
-.. code:: shell-session
-
-    $ sudo kiwi-ng system build --description leap_description \
-          --target-dir leap_image
+`Keg` also provides support for producing image descriptions for use with the
+`Open Build Service
+<https://openbuildservice.org/help/manuals/obs-user-guide/>`_. It can generate
+`_multibuild` files that are required by `OBS` for image descriptions with
+multiple profiles, and it comes with an `OBS Source Service` plug-in for
+automating generating image descriptions. See :ref:`keg_obs_source_service`
+for details.
