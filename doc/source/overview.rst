@@ -51,7 +51,7 @@ For more details on what constitutes a `recipes` repository, see section
 Working With Keg
 ----------------
 
-To create an image description, `keg` obviously needs to be installed, as well
+To create an image description, `keg` needs to be installed, as well
 as `KIWI`, as the latter is used by `keg` to validate the final image
 description. See :ref:`installation` for information about how to install
 `keg`, and `KIWI Installation

@@ -37,7 +37,7 @@ instance to create slightly different versions of modules for use with
 different image versions while still sharing most of the image definition
 between those versions.
 
-For this purpose, the `keg` supports the `include-paths` directive in the image
+For this purpose, `keg` supports the `include-paths` directive in the image
 definition. Include paths are paths that get appended to any source path and
 those get scanned for input files as well. See the following image definition
 as an example:
@@ -78,8 +78,8 @@ versions, if necessary.
 
 When merging the included dictionaries into the main dictionary, `keg` only
 copies the dictionary under the top level key that matches the key under
-which the `_include` statement is. That mean, assuming the YAML files collected
-from the above trees resulted in the following dictionary:
+which the `_include` statement is. That means, assuming the YAML files
+collected from the above trees resulted in the following data structure:
 
 .. code:: yaml
 
@@ -101,7 +101,7 @@ from the above trees resulted in the following dictionary:
       services:
         - sshd
 
-Would result in dictionary like this:
+Would result in a data structure like this:
 
 .. code:: yaml
 
@@ -128,7 +128,7 @@ Would result in dictionary like this:
         - sshd
 
 
-Merging based on the parent key allows for grouping for different types of
+Merging based on the parent key allows for grouping of different types of
 configuration data in one data module.
 
 
@@ -136,12 +136,12 @@ Image Configuration Scriptlets
 ------------------------------
 
 Configuration scriptlets are individual script snippets that can be used
-to generate image configurations script. `KIWI` runs those scripts at
+to generate image configuration scripts. `KIWI` runs those scripts at
 certain points in the image build process. They can be used to do changes
 to the system's configuration.
 
 The scriptlets are located in :file:`data/scripts` and are required to have a
-:file:`.sh` suffix. The are referenced in the `scripts` lists of the `config`
+:file:`.sh` suffix. These are referenced in the `scripts` lists of the `config`
 or `setup` sections in the image definition (without the :file:`.sh` suffix). 
 See :ref:`imgdef_config` for details on the `config` section.
 
@@ -151,7 +151,7 @@ Overlay Files
 `KIWI` image descriptions can contain optional overlay archives, which will be
 extracted into the system's root directory before the image is created.
 Overlay files are located in sub-directories in :file:`data/overlayfiles`,
-which each sub-directory representing an overlay files module. Any directory
+with each sub-directory representing an overlay files module. Any directory
 structure under the module's top directory is preserved.
 
 Overlay files modules can be referenced in the `archive` section of the image

@@ -30,7 +30,7 @@ which contain different types of configuration data. Those three are:
 
 2. Data Modules: :file:`data`
 
-   The :file:`data` dictory contains different bits of configuration and
+   The :file:`data` directory contains different bits of configuration and
    content data that can be used to compose an image description. There are
    three different types of data modules:
 
@@ -58,7 +58,7 @@ which contain different types of configuration data. Those three are:
 
 3. Schema Templates: :file:`schemas`
 
-  `Keg` uses Jinja2 templates to produce the the headers for :file:`config.sh`
+  `Keg` uses Jinja2 templates to produce the headers for :file:`config.sh`
   and :file:`images.sh`. Both are optional and `keg` will write a fallback
   header if they are missing. Additionally, a Jinja2 template can be used
   to generate :file:`config.kiwi` instead of using the internal XML generator.
