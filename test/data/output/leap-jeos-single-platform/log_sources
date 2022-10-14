@@ -45,8 +45,6 @@ range:2:2:../data/data/base/common/packages.yaml
 range:3:5:../data/data/base/common/packages.yaml
 range:13:14:../data/images/leap-jeos-single-platform/content.yaml
 range:2:2:../data/images/leap-jeos-single-platform/content.yaml
-range:24:24:../data/images/./defaults.yaml
-range:25:25:../data/images/./defaults.yaml
 range:15:15:../data/images/leap-jeos-single-platform/content.yaml
 range:2:2:../data/data/base/common/config.yaml
 range:3:4:../data/data/base/common/config.yaml

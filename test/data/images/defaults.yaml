@@ -21,5 +21,3 @@ image:
       source:
         _attributes:
           path: obsrepositories:/
-image-config-comments:
-  obs-multibuild: "OBS-Profiles: @BUILD_FLAVOR@"

@@ -154,7 +154,8 @@ def main():
         image_generator = KegGenerator(
             image_definition=image_definition,
             dest_dir=args['--dest-dir'],
-            archs=args['-a']
+            archs=args['-a'],
+            gen_profiles_comment=not args['--disable-multibuild']
         )
         image_generator.create_kiwi_description(
             overwrite=args['--force']

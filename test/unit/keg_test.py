@@ -48,7 +48,10 @@ class TestKeg:
                 track_sources=False
             )
             mock_KegGenerator.assert_called_once_with(
-                image_definition=image_definition, dest_dir='some-target', archs=[]
+                image_definition=image_definition,
+                dest_dir='some-target',
+                archs=[],
+                gen_profiles_comment=True
             )
             image_generator.create_kiwi_description.assert_called_once_with(
                 overwrite=False
@@ -84,7 +87,10 @@ class TestKeg:
                 track_sources=True
             )
             mock_KegGenerator.assert_called_once_with(
-                image_definition=image_definition, dest_dir='some-target', archs=[]
+                image_definition=image_definition,
+                dest_dir='some-target',
+                archs=[],
+                gen_profiles_comment=True
             )
             image_generator.create_kiwi_description.assert_called_once_with(
                 overwrite=False
