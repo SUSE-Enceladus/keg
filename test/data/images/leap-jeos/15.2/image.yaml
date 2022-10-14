@@ -7,3 +7,5 @@ image:
     displayname: Leap15.2-JeOS
   description:
     specification: "Leap 15.2 guest image"
+image-config-comments:
+  some-comment: "Some comment"

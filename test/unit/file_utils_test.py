@@ -45,7 +45,6 @@ class TestUtils:
                                                           'home': '/root',
                                                           'name': 'root',
                                                           'password': 'foo'}}]}},
-            'image-config-comments': {'obs-multibuild': 'OBS-Profiles: @BUILD_FLAVOR@'},
             'setup': [{'_include': ['base/common']}],
         }
 

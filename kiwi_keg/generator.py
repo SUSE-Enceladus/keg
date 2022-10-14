@@ -47,7 +47,7 @@ class KegGenerator:
     :param str dest_dir: Destination directory
     """
     def __init__(
-        self, image_definition: KegImageDefinition, dest_dir: str, archs: list = []
+        self, image_definition: KegImageDefinition, dest_dir: str, archs: list = [], gen_profiles_comment=True
     ):
         if not os.path.isdir(dest_dir):
             raise KegError(
@@ -67,6 +67,7 @@ class KegGenerator:
         self.image_definition: KegImageDefinition = image_definition
         self.dest_dir: str = dest_dir
         self.archs = archs
+        self.gen_profiles_comment = gen_profiles_comment
         loaders = []
         for root in reversed(image_definition.recipes_roots):
             loaders.append(FileSystemLoader(os.path.join(root, 'schemas')))
@@ -122,6 +123,12 @@ class KegGenerator:
                 content_handler.ignorableWhitespace('\n')
                 for comment in obs_comments.values():
                     content_handler.comment(comment)
+                    content_handler.ignorableWhitespace('\n')
+            profiles = self.image_definition.data['image'].get('profiles', {}).get('profile')
+            if self.gen_profiles_comment and profiles:
+                if not obs_comments or 'OBS-Profiles: @BUILD_FLAVOR@' not in obs_comments.values():
+                    content_handler.ignorableWhitespace('\n')
+                    content_handler.comment('OBS-Profiles: @BUILD_FLAVOR@')
                     content_handler.ignorableWhitespace('\n')
             if self.archs:
                 arch_comment = 'OBS-ExclusiveArch: {}'.format(
