@@ -9,6 +9,24 @@ Overview
    an image description with `keg` which can be used to build an appliance
    with the `KIWI <https://osinside.github.io/kiwi/>`__ appliance builder.
 
+.. note::
+
+   Copyright © 2022 SUSE LLC and contributors. All rights reserved.
+
+   Except where otherwise noted, this document is licensed under Creative
+   Commons Attribution-ShareAlike 4.0 International (CC-BY-SA 4.0):
+   https://creativecommons.org/licenses/by-sa/4.0/legalcode.
+
+   For SUSE trademarks, see http://www.suse.com/company/legal/. All third-party
+   trademarks are the property of their respective owners. Trademark symbols (®, ™
+   etc.) denote trademarks of SUSE and its affiliates. Asterisks (*) denote
+   third-party trademarks.
+
+   All information found in this book has been compiled with utmost attention
+   to detail. However, this does not guarantee complete accuracy. Neither SUSE
+   LLC, its affiliates, the authors nor the translators shall be held liable for
+   possible errors or the consequences thereof.
+
 Conceptual overview
 -------------------
 
