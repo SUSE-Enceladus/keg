@@ -347,7 +347,7 @@ See :ref:`data_modules` for details on data modules.
 Additional Configuration Directives
 -----------------------------------
 
-There are two additional optional top-level image definition keys that
+There are three additional optional top-level image definition sections that
 affect how the image definition dictionary is composed and the image
 description is generated:
 
@@ -358,6 +358,35 @@ The `include-paths` key defines a list of search paths that get appended
 when `_include` statements are processed. This allows for having different
 versions of data modules and still share the most of an image definition
 between different versions. See :ref:`data_modules` for details.
+
+image-config-comments
+^^^^^^^^^^^^^^^^^^^^^
+
+This section allows to add top-level comments in the produced `KIWI` file.
+The format is as follows:
+
+.. code:: yaml
+
+  image-config-comments:
+    <comment_name>: <comment>
+    ...
+
+`<comment_name>` is just a name and is not included in the generated output.
+Comments can be used to include arbitrary information in the image description.
+Some comments have a special meaning for processing image descriptions by the
+Open Build Service, for instance the `OBS-Profiles` directive that is required
+to process multi-profile image descriptions. See
+`<https://osinside.github.io/kiwi/working_with_images/build_in_buildservice.html>`__
+for details.
+
+.. note::
+
+  Keg generates some comments automatically. In case the image definition has
+  multiple profiles and the `--disable-multibuild` command line switch is not
+  set, it will add an `OBS-Profiles: @BUILD_FLAVOR@` comment. In case the
+  image description is generated for one or more specific architectures
+  via the `-a` command line option, the apprpriate `OBS-ExclusiveArch`
+  comment is added.
 
 schema
 ^^^^^^
