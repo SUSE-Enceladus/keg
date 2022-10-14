@@ -1,6 +1,6 @@
 .. _image_definition:
 
-Image Definition
+Image definition
 ================
 
 In `keg` terminology, an image definition is the data set that specifies the
@@ -39,7 +39,7 @@ All keys from the individual YAML files that are in the given tree will be
 merged into a dictionary that defines the image to be generated.
 
 
-Image Definition Structure
+Image definition structure
 --------------------------
 
 An image definition dictionary is composed of several parts that define
@@ -326,7 +326,7 @@ Supported are `gz`, `bz2`, `xz`, or no extension for uncompressed archive.
   It is not necessary to include it explicitly in the image definition.
 
 
-The _include Statement
+The _include statement
 ----------------------
 
 `Keg` supports importing parts of the image definition from other directory
@@ -344,7 +344,7 @@ dictionary. This allows for having different types of configuration data in the
 same directory and including them in different places in the image definition.
 See :ref:`data_modules` for details on data modules.
 
-Additional Configuration Directives
+Additional configuration directives
 -----------------------------------
 
 There are three additional optional top-level image definition sections that

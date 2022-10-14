@@ -1,6 +1,6 @@
 .. _recipes_basics:
 
-Recipes Basics
+Recipes basics
 ==============
 
 To produce image descriptions, `keg` must be provided with source data, also
@@ -13,7 +13,7 @@ data in specific directories.
 This document describes the fundamental `keg recipes` structure and how `keg`
 processes input data to generate an image definition.
 
-Recipes Data Layout
+Recipes data layout
 -------------------
 
 Essentially, a `keg recipes` repository conists of three top-level directories
@@ -64,7 +64,7 @@ which contain different types of configuration data. Those three are:
   to generate :file:`config.kiwi` instead of using the internal XML generator.
 
 
-Source Data Format and Processing
+Source data format and processing
 ---------------------------------
 
 This section contains some general information about how `keg` handles its

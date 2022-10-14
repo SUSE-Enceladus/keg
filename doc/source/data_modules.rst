@@ -1,6 +1,6 @@
 .. _data_modules:
 
-Data Modules
+Data modules
 ============
 
 Data modules are essentially directories in the :file:`data` tree. There are
@@ -24,7 +24,7 @@ three different kinds of data modules:
   Overlay files are stored under :file:`data/overlayfiles`.
 
 
-Image Definition Modules
+Image definition modules
 ------------------------
 
 Any directory under :file:`data` that is not `scripts` or `overlayfiles`
@@ -132,7 +132,7 @@ Merging based on the parent key allows for grouping of different types of
 configuration data in one data module.
 
 
-Image Configuration Scriptlets
+Image configuration scriptlets
 ------------------------------
 
 Configuration scriptlets are individual script snippets that can be used
@@ -145,7 +145,7 @@ The scriptlets are located in :file:`data/scripts` and are required to have a
 or `setup` sections in the image definition (without the :file:`.sh` suffix). 
 See :ref:`imgdef_config` for details on the `config` section.
 
-Overlay Files
+Overlay files
 -------------
 
 `KIWI` image descriptions can contain optional overlay archives, which will be

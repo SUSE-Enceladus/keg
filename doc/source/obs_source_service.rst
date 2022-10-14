@@ -1,6 +1,6 @@
 .. _keg_obs_source_service:
 
-Keg OBS Source Service
+Keg OBS source service
 ======================
 
 The `OBS Source Service` for `keg` provides a mechanism to produce `kiwi` image

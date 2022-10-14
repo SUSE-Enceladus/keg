@@ -9,7 +9,7 @@ Overview
    an image description with `keg` which can be used to build an appliance
    with the `KIWI <https://osinside.github.io/kiwi/>`__ appliance builder.
 
-Conceptual Overview
+Conceptual overview
 -------------------
 
 Keg is a tool which helps to create and manage image descriptions for use with
@@ -48,7 +48,7 @@ highly modular one with strong use of inheritance.
 For more details on what constitutes a `recipes` repository, see section
 :ref:`recipes_basics` (ff).
 
-Working With Keg
+Working with keg
 ----------------
 
 To create an image description, `keg` needs to be installed, as well
