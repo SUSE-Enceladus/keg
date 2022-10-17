@@ -13,9 +13,9 @@ three different kinds of data modules:
 
 2. Image Configuration Scriptlets
 
-  Configuration scriptlets that are stored in :file:`data/scripts`.
+  Configuration scriptlets are stored in :file:`data/scripts`.
   Those scriptlets can be used to compose an image configuration script or
-  image setup script (`config` and `setup` key in the image definition.
+  image setup script `config` and `setup` key in the image definition.
 
 3. Overlay Files
 
