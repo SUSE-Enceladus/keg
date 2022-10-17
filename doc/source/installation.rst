@@ -6,8 +6,9 @@ Installation
 .. note::
 
     This document describes how to install Keg. Currently `keg` is
-    available from `PyPi <https://pypi.org/project/kiwi_keg/>`__ and
-    from the `openSUSE Build Service <https://build.opensuse.org/>`__
+    available from `PyPi <https://pypi.org/project/kiwi_keg/>`__ and from the
+    `openSUSE Build Service
+    <https://build.opensuse.org/package/show/Cloud:Tools/python-kiwi_keg/>`__
     for several openSUSE distributions.
 
 
