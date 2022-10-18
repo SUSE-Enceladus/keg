@@ -94,6 +94,19 @@ image for use in the Public Clouds. It can be processed with KIWI to build an
 image. For more details about KIWI image descriptions, see
 https://osinside.github.io/kiwi/image_description.html.
 
+`Recipes` used to generate an image description can be spread over multiple
+repositories. For that purpose, the `--recipes-root` command line argument may
+be given multiple times, with each one specifying a different `recipes`
+repository. Repositories will be searched in the order they are specified, and
+for any dictionary key, config scriptlet, or overlay archive module that
+exists in multiple repositories, the one that is read last will be used.
+
+Using multiple repositories for `recipes` can be useful in some
+situations. For example, if some parts of `recipes` data are public and some
+private, they can be kept in different repositories. It could also be used to
+base `recipes` on an upstream repository and only maintain additional image
+definitions or modifications in a separate repository.
+
 `Keg` also provides support for producing image descriptions for use with the
 `Open Build Service
 <https://openbuildservice.org/help/manuals/obs-user-guide/>`_. It can generate
