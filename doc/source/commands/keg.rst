@@ -91,7 +91,7 @@ OPTIONS
    KIWI schema and write the result description in XML markup
 
    .. note::
-      Currently only toplevel header comments from the Keg
+      Currently only top-level header comments from the Keg
       written image description will be preserved into the
       formatted/updated KIWI XML file. Inline comments will
       not be preserved.
@@ -99,6 +99,11 @@ OPTIONS
 .. option:: -i IMAGE_VERSION, --image-version=IMAGE_VERSION
 
    Set image version
+
+.. option:: -a ARCH
+
+   Generate image description for architecture ARCH (can be used
+   multiple times)
 
 .. option:: -s, --write-source-info
 

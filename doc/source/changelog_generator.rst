@@ -1,6 +1,6 @@
 .. _changelog_generator:
 
-Generating Change Logs
+Generating change logs
 ======================
 
 `Keg` comes with a separate tool that can be used to produce a change log
@@ -12,7 +12,7 @@ To produce a change log for an image description, the description needs to
 be generated with source info tracking enabled in :program:`keg` (`-s` command
 line switch).
 
-Source Info Tracking
+Source info tracking
 --------------------
 
 With source info tracking enabled, `keg` will write one or more source info
@@ -44,7 +44,7 @@ This enables the change log generator to produce a change log using the
 git commit history, selecting only commits that apply to the generated
 image description.
 
-Change Log Generator
+Change log generator
 --------------------
 
 The generated source info log files, together with the `keg-recipes`
@@ -58,7 +58,7 @@ to narrow down the applicable commit range as well as some formatting
 options. Refer to :ref:`generate_recipes_changelog` command overview
 for details.
 
-Integration in OBS Source Service
+Integration in OBS source service
 ---------------------------------
 
 The `keg` distribution contains a module for integrating with the Open Build

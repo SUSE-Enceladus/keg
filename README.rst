@@ -15,7 +15,10 @@ Contributing
 
 keg is written in Python, it uses `tox <https://tox.readthedocs.io/en/latest/>`_
 to setup a development environment for the desired Python version. Make
-sure the Python development headers are installed (e.g. `python36-devel`)
+sure the Python development headers are installed (e.g. `python36-devel`).
+KIWI uses `jing` for detailed error reporting in case schema validation fails.
+This cannot be installed by pip, so you may want also make sure this is
+installed on your system.
 
 Currently, there are 5 targets for tox:
 

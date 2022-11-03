@@ -1,26 +1,62 @@
 .. _data_modules:
 
-Data Modules
+Data modules
 ============
 
-Data modules are essentially directories in the :file:`data` tree. Inheritance
-rules apply similarly to the image definition tree, but additionally, `keg`
-supports cross inheritance for data modules. Cross inheritance is useful to
-inherit configuration changes from previous versions. This can be specified in
-the image definition using the `include-paths` list. Include paths are paths
-that get appended to any source path and those get scanned for input files as
-well. For example, let's assume you have the following configuration in your
-image definition:
+Data modules are essentially directories in the :file:`data` tree. There are
+three different kinds of data modules:
+
+1. Image Definition Modules
+
+  Any part of the image definition can be in a data module that is
+  included by the `_include` statement from the main image definition.
+
+2. Image Configuration Scriptlets
+
+  Configuration scriptlets are stored in :file:`data/scripts`.
+  Those scriptlets can be used to compose an image configuration script or
+  image setup script `config` and `setup` key in the image definition.
+
+3. Overlay Files
+
+  Files that can be directly included in the image description and will be
+  copied into the image's file system by `KIWI` during the build process.
+  Overlay files are stored under :file:`data/overlayfiles`.
+
+
+Image definition modules
+------------------------
+
+Any directory under :file:`data` that is not `scripts` or `overlayfiles`
+is considered an image definition data module and may be included in the
+main image definition using the `_include` statement.
+
+Inheritance rules apply similarly to the image definition tree, but
+additionally, `keg` supports sub-versions of data modules. This can be used for
+instance to create slightly different versions of modules for use with
+different image versions while still sharing most of the image definition
+between those versions.
+
+For this purpose, `keg` supports the `include-paths` directive in the image
+definition. Include paths are paths that get appended to any source path and
+those get scanned for input files as well. See the following image definition
+as an example:
 
 .. code:: yaml
 
   include-paths:
     leap15/1
     leap15/2
-  profiles:
-    common:
-      include:
-        base/common
+  image:
+    preferences:
+      - _include:
+          - base/common
+    packages:
+      - _include:
+          - base/common
+    config:
+      - _include:
+          - base/common
 
 
 This tells `keg`, when adding data from directory :file:`data/base/common` to
@@ -28,6 +64,7 @@ the image data dictionary, to also look into sub directories :file:`leap15/2`,
 :file:`leap15/1`, and :file:`leap15` (through inheritance). This would lead to
 the following directories being scanned::
 
+  data
   data/common
   data/common/base
   data/common/base/leap15
@@ -35,132 +72,88 @@ the following directories being scanned::
   data/common/base/leap15/2
 
 This allows for example to put generic configuration bits in
-:file:`common/base`, Leap 15 specific configuration in
-:file:`common/base/leap15`, and adjust the configuration for minor versions, if
-necessary.
+:file:`data/common/base`, Leap 15 specific configuration in
+:file:`data/common/base/leap15`, and adjust the configuration for minor
+versions, if necessary.
 
-When building the dictionary, `keg` will parse all input files referenced
-in the `profiles` section and merge them into the main dictionary. The
-following section describes the structure used in the data section.
-
-
-Data Module Dictionary Structure
---------------------------------
-
-This section describes the input parameters used by the data modules.
-
-.. note::
-
-   This assumes the schema template provided in the `keg-recipes repository
-   <https://github.com/SUSE-Enceladus/keg-recipes>`. Custom templates may
-   require different input data.
+When merging the included dictionaries into the main dictionary, `keg` only
+copies the dictionary under the top level key that matches the key under
+which the `_include` statement is. That means, assuming the YAML files
+collected from the above trees resulted in the following data structure:
 
 .. code:: yaml
 
-  profile:
-    bootloader:
-      kiwi_bootloader_param: string
-      ...
-    parameters:
-      kiwi_preferences_type_param: string
-      ...
-      kernelcmdline:
-        kernel_param: value
-        kernel_multi_param: [value, value]
-        ...
-    size: integer
+  preferences:
+    locale: en_US
+    timezone: UTC
+    type:
+      _attributes:
+        firmware: efi
+        image: vmx
   packages:
-    packages_type:
-      namespace:
-        - string
-        - name: string
-          arch: string
+    _namespace_base_packages:
+      package:
+        - bash
+        - glibc
+        - kernel-default
   config:
-    files:
-      namespace:
-        - path: /path/to/file
-          append: bool
-          content: string
-        ...
-    scripts:
-      namespace:
-        - string
-        ....
-    sysconfig:
-      namespace:
-        - file: /etc/sysconfig/file
-          name: VARIABLE_NAME
-          value: VARIABLE_VALUE
-        ...
-    services:
-      namespace:
-        - string
-        - name: string
-          enable: bool
-        ...
-  setup:
-    (same as config)
-  overlayfiles:
-    namespace:
-      include:
-        - string
-        ...
-    namespace_named_archive:
-      archivename: string
-      include:
-        - string
-        ...
+    _namespace_base_services:
+      services:
+        - sshd
 
-.. note::
+Would result in a data structure like this:
 
-  For multi-build image definitions, any module that defines `profile`
-  parameters must be included in the profile specific section of the image
-  definition. Inclusion in the `common` profile only works for single-build
-  image definitions.
+.. code:: yaml
 
-Namespace may be any name. Namespaces exist to allow for dictionaries to be
-merged without overwriting keys from inherited dictionaries, except where this
-is wanted. Using the same namespace in a more specific dictionary (i.e. a lower
-level directory) can be used to change or even remove that namespace (for the
-latter set it to `Null`).
+  include-paths:
+    leap15/1
+    leap15/2
+  image:
+    preferences:
+      locale: en_US
+      timezone: UTC
+      type:
+        _attributes:
+          firmware: efi
+          image: vmx
+    packages:
+      _namespace_base_packages:
+        package:
+          - bash
+          - glibc
+          - kernel-default
+  config:
+    _namespace_base_services:
+      services:
+        - sshd
 
-`kiwi_bootloader_param` refers to any bootloader type parameter supported by
-`kiwi <https://documentation.suse.com/kiwi/9/html/kiwi/building-types.html#disk-bootloader>`__.
 
-`kiwi_preferences_type_param` refers to any preferences type parameter supported
-by `kiwi` (see `\<preferences\>\<type\> in kiwi documentation
-<https://documentation.suse.com/kiwi/9/html/kiwi/image-description.html#sec-preferences>`__).
+Merging based on the parent key allows for grouping of different types of
+configuration data in one data module.
 
-`kernelcmdline` is not a string that is direct copied into the appropriate
-`kiwi` parameter but a dictionary that defines kernel parameters individually,
-with each key representing a kernel parameter. This allows to inherit parts of
-the kernel command line from other modules. There are two notations for
-parameters.  `kernel_param: value` will be translated into a single
-`kernel_param=value`, and `kernel_multi_param: [value, value, ...]` will add
-`kernel_multi_param` multiple times for each value from the given list.
 
-`packages_type` can be `bootstrap` or `image` (see `kiwi documentation
-<https://documentation.suse.com/kiwi/9/html/kiwi/image-description.html#sec-packages>`__).
-The items in the package list have two possible notations. Either just a plain
-string, which is considered to be the package name, or a dictionary with keys
-`name` (the package name) and `arch` (the build architecture for which the
-package should be included).
+Image configuration scriptlets
+------------------------------
 
-List items in `config` `script` refer to files in :file:`data/scripts` (with
-:file:`.sh` appended by `keg`) and the content of those will be added to the
-:file:`config.sh` script.
+Configuration scriptlets are individual script snippets that can be used
+to generate image configuration scripts. `KIWI` runs those scripts at
+certain points in the image build process. They can be used to do changes
+to the system's configuration.
 
-List items in `config` `services` refer to system service that should be
-enabled or disabled in the image. Analogue to packages, there are two supported
-version, a short one containing only the service name, or a long one that
-allows to specify whether the service should be enabled or disabled).
+The scriptlets are located in :file:`data/scripts` and are required to have a
+:file:`.sh` suffix. These are referenced in the `scripts` lists of the `config`
+or `setup` sections in the image definition (without the :file:`.sh` suffix). 
+See :ref:`imgdef_config` for details on the `config` section.
 
-`setup` has the same structure as `config` but the data will be used to
-generated :file:`images.sh` instead of :file:`config.sh`.
+Overlay files
+-------------
 
-List items in `overlayfiles` refer to directories under
-:file:`data/overlayfiles`. Files from those directories will be copied into
-an overlay archive to be included in the image, either a generic or a profile
-specific one (depending on where the data module was included), or a named one
-in case `archivename` tag is used.
+`KIWI` image descriptions can contain optional overlay archives, which will be
+extracted into the system's root directory before the image is created.
+Overlay files are located in sub-directories in :file:`data/overlayfiles`,
+with each sub-directory representing an overlay files module. Any directory
+structure under the module's top directory is preserved.
 
+Overlay files modules can be referenced in the `archive` section of the image
+definition using the `_include_overlays` directive. See :ref:`imgdef_archive` for
+details.
