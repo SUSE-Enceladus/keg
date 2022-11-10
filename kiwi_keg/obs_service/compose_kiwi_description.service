@@ -31,4 +31,7 @@
   <parameter name="force">
     <description>If 'true' refresh image description even if there are no new commits [default: false]</description>
   </parameter>
+  <parameter name="generate-multibuild">
+    <description>If 'true', generate a _multibuild file if the image definition has profiles defined. [default: true]</description>
+  </parameter>
 </service>

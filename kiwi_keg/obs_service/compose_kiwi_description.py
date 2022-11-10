@@ -25,6 +25,7 @@ Usage:
         [--update-changelogs=<true|false>]
         [--update-revisions=<true|false>]
         [--force=<true|false>]
+        [--generate-multibuild=<true|false>]
     compose_kiwi_description -h | --help
     compose_kiwi_description --version
 
@@ -67,6 +68,10 @@ Options:
     --force=<true|false>
         If true, refresh image description even if there are no new commits.
         [default: false]
+
+    --generate-multibuild=<true|false>
+        If true, generate a _multibuild file if the image definition has
+        profiles defined. [default: true]
 """
 import glob
 import docopt
@@ -266,7 +271,8 @@ def main() -> None:
     image_generator.create_overlays(
         disable_root_tar=False, overwrite=True
     )
-    image_generator.create_multibuild_file(overwrite=True)
+    if args['--generate-multibuild']:
+        image_generator.create_multibuild_file(overwrite=True)
 
     if handle_changelog:
         sig = SourceInfoGenerator(image_definition, dest_dir=args['--outdir'])
