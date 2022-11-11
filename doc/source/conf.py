@@ -122,4 +122,4 @@ man_pages = [
     )
 ]
 
-intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
+intersphinx_mapping = {'python': ('intersphinx_mapping', None)}
