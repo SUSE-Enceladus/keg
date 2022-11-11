@@ -71,6 +71,8 @@ Summary:        KEG - Image Composition Tool
 Group:          Development/Languages/Python
 Requires:       python%{python3_pkgversion}-docopt
 Requires:       python%{python3_pkgversion}-kiwi >= 9.21.21
+Requires:       python%{python3_pkgversion}-Jinja2
+Requires:       python%{python3_pkgversion}-schema
 Requires:       python%{python3_pkgversion}-setuptools
 %if 0%{?ubuntu} || 0%{?debian}
 Requires:       python%{python3_pkgversion}-yaml
@@ -86,12 +88,13 @@ Requires:       python%{python3_pkgversion}-cerberus
 %description -n python%{python3_pkgversion}-kiwi_keg
 KEG is an image composition tool for KIWI image descriptions
 
-%package -n obs-service-keg
+%package -n obs-service-compose_kiwi_description
 Summary:        An OBS service: generate KIWI description using KEG
 Group:          Development/Tools/Building
 Requires:       python%{python3_pkgversion}-kiwi_keg
+Requires:       git
 
-%description -n obs-service-keg
+%description -n obs-service-compose_kiwi_description
 This is a source service for openSUSE Build Service.
 
 The source service produces a KIWI image description through KEG from one or
@@ -123,9 +126,9 @@ make buildroot=%{buildroot}/ docdir=%{_defaultdocdir}/ install_package_docs
 %{python3_sitelib}/kiwi_keg*
 %{_defaultdocdir}/python-kiwi_keg/LICENSE
 %{_defaultdocdir}/python-kiwi_keg/README
-%doc %{_mandir}/man8/*
+%doc %{_mandir}/man1/*
 
-%files -n obs-service-keg
+%files -n obs-service-compose_kiwi_description
 %{_usr}/lib/obs/service
 
 %changelog
