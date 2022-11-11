@@ -20,12 +20,12 @@ install_package_docs:
 
 install:
 	# manual pages
-	install -d -m 755 ${buildroot}usr/share/man/man8
-	for man in doc/build/man/*.8; do \
+	install -d -m 755 ${buildroot}usr/share/man/man1
+	for man in doc/build/man/*.1; do \
 		test -e $$man && gzip -f $$man || true ;\
 	done
-	for man in doc/build/man/*.8.gz; do \
-		install -m 644 $$man ${buildroot}usr/share/man/man8 ;\
+	for man in doc/build/man/*.1.gz; do \
+		install -m 644 $$man ${buildroot}usr/share/man/man1 ;\
 	done
 	# keg obs service
 	install -d -m 755 ${buildroot}usr/lib/obs/service
