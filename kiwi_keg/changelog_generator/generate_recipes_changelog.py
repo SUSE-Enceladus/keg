@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-#
 # Copyright (c) 2022 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.

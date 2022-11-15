@@ -32,7 +32,7 @@ config = {
         'kiwi>=9.21.21',
         'PyYAML'
     ],
-    'packages': ['kiwi_keg'],
+    'packages': ['kiwi_keg','kiwi_keg.changelog_generator','kiwi_keg.obs_service'],
     'entry_points': {
         'console_scripts': [
             'keg=kiwi_keg.keg:main',

@@ -43,7 +43,7 @@
 %endif
 
 Name:           python-kiwi_keg
-Version:        %%VERSION
+Version:        2.0.0
 Release:        0
 Url:            https://github.com/SUSE-Enceladus/keg
 Summary:        KEG - Image Composition Tool
@@ -53,12 +53,13 @@ License:        GPL-3.0-or-later
 Packager:       Public Cloud Team <public-cloud-dev@suse.de>
 %endif
 Group:          %{pygroup}
-Source:         kiwi_keg-%{version}.tar.gz
+Source:         keg-%{version}.tar.gz
 Source1:        %{name}-rpmlintrc
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python%{python3_pkgversion}-%{develsuffix}
 BuildRequires:  python%{python3_pkgversion}-Jinja2
 BuildRequires:  python%{python3_pkgversion}-setuptools
+BuildRequires:  python%{python3_pkgversion}-Sphinx
 BuildRequires:  fdupes
 BuildArch:      noarch
 
@@ -102,11 +103,14 @@ more given git repositories that contain keg-recipes source tree. It supports
 auto-generation of change log files from commit history.
 
 %prep
-%setup -q -n kiwi_keg-%{version}
+%setup -q -n keg-%{version}
 
 %build
 # Build Python 3 version
 python3 setup.py build
+
+# Build man pages
+make -C doc man
 
 %install
 # Install Python 3 version
