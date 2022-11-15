@@ -42,7 +42,7 @@ class KegImageDefinition:
         self,
         image_name: str,
         recipes_roots: List[str],
-        image_version: str = None,
+        image_version: Optional[str] = None,
         archive_ext: str = 'tar.gz',
         track_sources: bool = False
     ):
