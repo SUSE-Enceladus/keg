@@ -84,7 +84,7 @@ class SafeTrackerLoader(yaml.loader.SafeLoader):
 
 
 def get_recipes(
-    roots: List[str], sub_dirs: List[str], include_paths: List[str] = None, track_sources: bool = False
+    roots: List[str], sub_dirs: List[str], include_paths: List[str] = [], track_sources: bool = False
 ) -> keg_dict:
     """
     Return a new yaml tree including the data of all the source files for
@@ -119,7 +119,7 @@ def get_recipes(
 
 
 def load_scripts(
-    roots: List[str], sub_dir: str, include_paths: List[str] = None
+    roots: List[str], sub_dir: str, include_paths: List[str] = []
 ) -> Dict[str, str]:
     """
     Return a dict containing the name of the scripts and its content for

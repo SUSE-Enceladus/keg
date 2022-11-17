@@ -30,7 +30,8 @@ config = {
         'docopt',
         'Jinja2',
         'kiwi>=9.21.21',
-        'PyYAML'
+        'PyYAML',
+        'schema'
     ],
     'packages': ['kiwi_keg','kiwi_keg.changelog_generator','kiwi_keg.obs_service'],
     'entry_points': {

@@ -164,7 +164,7 @@ class SourceInfoGenerator:
                     profiles += dict_utils.get_attribute(pkg_sect, 'profiles', [])
         return profiles
 
-    def _get_archive_sources(self, profile: str = None):
+    def _get_archive_sources(self, profile=None):
         src_info: list = []
         for archive in self.image_definition.data.get('archive', []):
             if profile:
