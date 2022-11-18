@@ -43,7 +43,7 @@
 %endif
 
 Name:           python-kiwi-keg
-Version:        2.0.1
+Version:        2.0.2
 Release:        0
 Url:            https://github.com/SUSE-Enceladus/keg
 Summary:        KEG - Image Composition Tool
