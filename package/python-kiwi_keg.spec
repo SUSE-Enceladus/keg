@@ -54,7 +54,6 @@ Packager:       Public Cloud Team <public-cloud-dev@suse.de>
 %endif
 Group:          %{pygroup}
 Source:         keg-%{version}.tar.gz
-Source1:        %{name}-rpmlintrc
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python%{python3_pkgversion}-%{develsuffix}
 BuildRequires:  python%{python3_pkgversion}-Jinja2
