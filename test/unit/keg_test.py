@@ -16,6 +16,7 @@ leap-jeos-single-platform/15.1 Leap15.1-JeOS                  1.0.0    Leap 15.1
 leap-jeos-single-platform/15.2 Leap15.2-JeOS                  1.0.0    Leap 15.2 guest image
 leap-jeos/15.1                 Leap15.1-JeOS                  1.0.0    Leap 15.1 guest image
 leap-jeos/15.2                 Leap15.2-JeOS                  1.0.0    Leap 15.2 guest image
+missing-include/15.2           Leap15.2-JeOS                  1.0.0    Leap 15.2 guest image
 """
 
 
