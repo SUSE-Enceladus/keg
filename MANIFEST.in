@@ -2,6 +2,7 @@
 
 graft kiwi_keg/changelog_generator
 graft kiwi_keg/obs_service
+graft doc
 graft package
 
 include Makefile
