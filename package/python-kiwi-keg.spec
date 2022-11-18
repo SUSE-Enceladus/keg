@@ -84,7 +84,6 @@ Requires:       python%{python3_pkgversion}-Cerberus
 %else
 Requires:       python%{python3_pkgversion}-cerberus
 %endif
-Obsoletes:      python%{python3_pkgversion}-kiwi_keg <= 2.0.1
 
 %description -n python%{python3_pkgversion}-kiwi-keg
 KEG is an image composition tool for KIWI image descriptions
