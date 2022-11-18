@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
+import logging
 import os
 from typing import (
     List, Optional
@@ -33,6 +34,7 @@ from kiwi_keg.exceptions import KegDataError
 from kiwi_keg.annotated_mapping import AnnotatedMapping, keg_dict, keg_dict_type
 from kiwi_keg.image_schema import ImageSchema
 
+log = logging.getLogger('keg')
 
 class KegImageDefinition:
     """
@@ -177,6 +179,10 @@ class KegImageDefinition:
         if isinstance(includes, str):
             includes = [includes]
         if includes:
+            for incl in includes:
+                include_exists = [os.path.exists(os.path.join(x, incl)) for x in self.data_roots]
+                if True not in include_exists:
+                    log.info(f'Include "{incl}" does not exist (still including parent directories)')
             incl_dict = file_utils.get_recipes(
                 self.data_roots,
                 includes,
