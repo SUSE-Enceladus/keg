@@ -1,10 +1,15 @@
-from pytest import raises
+import logging
+from pytest import raises, fixture
 
 from kiwi_keg.image_definition import KegImageDefinition
 from kiwi_keg.exceptions import KegError
 
 
 class TestKegImageDefinition:
+    @fixture(autouse=True)
+    def inject_fixtures(self, caplog):
+        self._caplog = caplog
+
     def setup(self):
         self.keg_definition = KegImageDefinition(
             image_name='leap-jeos/15.2', recipes_roots=['../data'], image_version='1.0.0'
@@ -59,3 +64,11 @@ class TestKegImageDefinition:
             keg_definition.populate()
         assert 'No such overlay files module' in \
             str(exception_info.value)
+
+    def test_include_logs_missing(self):
+        keg_definition = KegImageDefinition(
+            image_name='missing-include/15.2', recipes_roots=['../data'], image_version='1.0.0'
+        )
+        with self._caplog.at_level(logging.INFO):
+            keg_definition.populate()
+            assert 'Include "platform/notblue" does not exist' in self._caplog.text

@@ -36,6 +36,7 @@ from kiwi_keg.image_schema import ImageSchema
 
 log = logging.getLogger('keg')
 
+
 class KegImageDefinition:
     """
     Class for constructing a keg image definition from recipes
