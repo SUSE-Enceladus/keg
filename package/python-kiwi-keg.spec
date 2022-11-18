@@ -42,8 +42,8 @@
 %global develsuffix devel
 %endif
 
-Name:           python-kiwi_keg
-Version:        %%VERSION
+Name:           python-kiwi-keg
+Version:        2.0.1
 Release:        0
 Url:            https://github.com/SUSE-Enceladus/keg
 Summary:        KEG - Image Composition Tool
@@ -53,19 +53,20 @@ License:        GPL-3.0-or-later
 Packager:       Public Cloud Team <public-cloud-dev@suse.de>
 %endif
 Group:          %{pygroup}
-Source:         kiwi_keg-%{version}.tar.gz
+Source:         keg-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python%{python3_pkgversion}-%{develsuffix}
 BuildRequires:  python%{python3_pkgversion}-Jinja2
 BuildRequires:  python%{python3_pkgversion}-setuptools
+BuildRequires:  python%{python3_pkgversion}-Sphinx
 BuildRequires:  fdupes
 BuildArch:      noarch
 
 %description
 KEG is an image composition tool for KIWI image descriptions
 
-# python3-kiwi_keg
-%package -n python%{python3_pkgversion}-kiwi_keg
+# python3-kiwi-keg
+%package -n python%{python3_pkgversion}-kiwi-keg
 Summary:        KEG - Image Composition Tool
 Group:          Development/Languages/Python
 Requires:       python%{python3_pkgversion}-docopt
@@ -83,14 +84,15 @@ Requires:       python%{python3_pkgversion}-Cerberus
 %else
 Requires:       python%{python3_pkgversion}-cerberus
 %endif
+Obsoletes:      python%{python3_pkgversion}-kiwi_keg <= 2.0.1
 
-%description -n python%{python3_pkgversion}-kiwi_keg
+%description -n python%{python3_pkgversion}-kiwi-keg
 KEG is an image composition tool for KIWI image descriptions
 
 %package -n obs-service-compose_kiwi_description
 Summary:        An OBS service: generate KIWI description using KEG
 Group:          Development/Tools/Building
-Requires:       python%{python3_pkgversion}-kiwi_keg
+Requires:       python%{python3_pkgversion}-kiwi-keg
 Requires:       git
 
 %description -n obs-service-compose_kiwi_description
@@ -101,11 +103,14 @@ more given git repositories that contain keg-recipes source tree. It supports
 auto-generation of change log files from commit history.
 
 %prep
-%setup -q -n kiwi_keg-%{version}
+%setup -q -n keg-%{version}
 
 %build
 # Build Python 3 version
 python3 setup.py build
+
+# Build man pages
+make -C doc man
 
 %install
 # Install Python 3 version
@@ -117,14 +122,14 @@ make buildroot=%{buildroot}/ docdir=%{_defaultdocdir}/ install
 # Install LICENSE and README
 make buildroot=%{buildroot}/ docdir=%{_defaultdocdir}/ install_package_docs
 
-%files -n python%{python3_pkgversion}-kiwi_keg
-%dir %{_defaultdocdir}/python-kiwi_keg
+%files -n python%{python3_pkgversion}-kiwi-keg
+%dir %{_defaultdocdir}/python-kiwi-keg
 %dir %{_usr}/lib/obs
 %{_bindir}/generate_recipes_changelog
 %{_bindir}/keg
 %{python3_sitelib}/kiwi_keg*
-%{_defaultdocdir}/python-kiwi_keg/LICENSE
-%{_defaultdocdir}/python-kiwi_keg/README
+%{_defaultdocdir}/python-kiwi-keg/LICENSE
+%{_defaultdocdir}/python-kiwi-keg/README
 %doc %{_mandir}/man1/*
 
 %files -n obs-service-compose_kiwi_description

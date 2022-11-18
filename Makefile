@@ -5,6 +5,7 @@ python_lookup_name = python$(python_version)
 python = $(shell which $(python_lookup_name))
 
 LC = LC_MESSAGES
+PKG = python-kiwi-keg
 
 version := $(shell \
     $(python) -c \
@@ -12,11 +13,11 @@ version := $(shell \
 )
 
 install_package_docs:
-	install -d -m 755 ${buildroot}${docdir}/python-kiwi_keg
+	install -d -m 755 ${buildroot}${docdir}/$(PKG)
 	install -m 644 LICENSE \
-		${buildroot}${docdir}/python-kiwi_keg/LICENSE
+		${buildroot}${docdir}/$(PKG)/LICENSE
 	install -m 644 README.rst \
-		${buildroot}${docdir}/python-kiwi_keg/README
+		${buildroot}${docdir}/$(PKG)/README
 
 install:
 	# manual pages
@@ -58,15 +59,12 @@ build: clean tox
 	# restore original setup.py backed up from sed
 	mv setup.pye setup.py
 	# update rpm changelog using reference file
-	helper/update_changelog.py --since package/python-kiwi_keg.changes > \
-		dist/python-kiwi_keg.changes
-	helper/update_changelog.py --file package/python-kiwi_keg.changes >> \
-		dist/python-kiwi_keg.changes
-	# update package version in spec file
-	cat package/python-kiwi_keg-spec-template | \
-		sed -e s'@%%VERSION@${version}@' > dist/python-kiwi_keg.spec
-	# provide rpm rpmlintrc
-	cp package/python-kiwi_keg-rpmlintrc dist
+	helper/update_changelog.py --since package/$(PKG).changes > \
+		dist/$(PKG).changes
+	helper/update_changelog.py --file package/$(PKG).changes >> \
+		dist/$(PKG).changes
+	# copy spec file
+	cp package/$(PKG).spec dist/
 
 pypi: clean tox
 	$(python) setup.py sdist upload
