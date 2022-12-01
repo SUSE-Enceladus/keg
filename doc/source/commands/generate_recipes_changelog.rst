@@ -1,7 +1,7 @@
 .. _generate_recipes_changelog:
 
-generated_recipes_changelog
-===========================
+generate_recipes_changelog
+==========================
 
 .. _generate_recipes_changelog_synopsis:
 
@@ -9,6 +9,8 @@ SYNOPSIS
 --------
 
 **generate_recipes_changelog** [*options*] <logfile>
+
+.. _generate_recipes_changelog_description:
 
 DESCRIPTION
 -----------
@@ -22,7 +24,7 @@ The exit status is 0 in case a change log was generated successfully, 1
 in case an error occurred, or 2 in case no error occurred but generated
 change log is empty.
 
-.. _generate_recipes_changelog_options:
+.. _generate_recipes_changelog_args:
 
 ARGUMENTS
 ---------
@@ -31,14 +33,16 @@ logfile
 
   A source info log file produced by :program:`keg`.
 
+.. _generate_recipes_changelog_options:
+
 OPTIONS
 -------
 
-.. option:: -o OUTPUT_FILE
+-o OUTPUT_FILE
 
    Write output to OUTPUT_FILE (stdout if omitted)
 
-.. option:: -r PATH:REV
+-r PATH:REV
 
    Set git revision range to REV for repo at PATH
 
@@ -47,18 +51,20 @@ OPTIONS
       This can be used to select only newer changes from a previous change log
       generator run. See EXAMPLE below.
 
-.. option:: -f FORMAT
+-f FORMAT
 
    Output format, 'text' or 'yaml' [default: yaml]
 
-.. option:: -m MSG_FORMAT
+-m MSG_FORMAT
 
    Format spec for commit messages (see 'format:<string>' in 'man git-log')
    [default: - %s] (only used with text format)
 
-.. option:: -t ROOT_TAG
+-t ROOT_TAG
 
    Use ROOT_TAG for yaml output (e.g. image version)
+
+.. _generate_recipes_changelog_example:
 
 EXAMPLE
 -------
