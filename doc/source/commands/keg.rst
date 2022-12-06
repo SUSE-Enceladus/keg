@@ -8,6 +8,8 @@ SYNOPSIS
 
 **keg** [*options*] <*source*>
 
+.. _keg_description:
+
 DESCRIPTION
 -----------
 
@@ -28,7 +30,7 @@ can be found in the
 `Public Cloud Keg Recipes <https://github.com/SUSE-Enceladus/keg-recipes>`__
 repository.
 
-.. _keg_options:
+.. _keg_args:
 
 ARGUMENTS
 ---------
@@ -37,45 +39,47 @@ source
 
   Path to image source under RECIPES_ROOT/images
 
+.. _keg_options:
+
 OPTIONS
 -------
 
 .. program:: keg
 
-.. option:: -r RECIPES_ROOT, --recipes-root=RECIPES_ROOT
+-r RECIPES_ROOT, --recipes-root=RECIPES_ROOT
 
    Root directory of keg recipes. Can be used more than once. Elements
    from later roots may overwrite earlier one.
 
-.. option:: -d DEST_DIR, --dest-dir=DEST_DIR
+-d DEST_DIR, --dest-dir=DEST_DIR
 
    Destination directory for generated description [default: .]
 
-.. option:: --disable-multibuild
+--disable-multibuild
 
    Option to disable creation of OBS _multibuild file (for image
    definitions with multiple profiles). [default: false]
 
-.. option:: --disable-root-tar
+--disable-root-tar
 
    Option to disable the creation of root.tar.gz in destination directory.
    If present, an overlay tree will be created instead.
    [default: false]
 
-.. option:: --dump-dict
+--dump-dict
 
    Dump generated data dictionary to stdout instead of generating an image
    description. Useful for debugging.
 
-.. option:: -l, --list-recipes
+-l, --list-recipes
 
    List available images that can be created with the current recipes
 
-.. option:: -f, --force
+-f, --force
 
    Force mode (ignore errors, overwrite files)
 
-.. option:: --format-yaml
+--format-yaml
 
    Format/Update Keg written image description to installed
    KIWI schema and write the result description in YAML markup
@@ -85,7 +89,7 @@ OPTIONS
       generated KIWI description to the YAML markup will be
       performed.
 
-.. option:: --format-xml
+--format-xml
 
    Format/Update Keg written image description to installed
    KIWI schema and write the result description in XML markup
@@ -96,29 +100,31 @@ OPTIONS
       formatted/updated KIWI XML file. Inline comments will
       not be preserved.
 
-.. option:: -i IMAGE_VERSION, --image-version=IMAGE_VERSION
+-i IMAGE_VERSION, --image-version=IMAGE_VERSION
 
    Set image version
 
-.. option:: -a ARCH
+-a ARCH
 
    Generate image description for architecture ARCH (can be used
    multiple times)
 
-.. option:: -s, --write-source-info
+-s, --write-source-info
 
    Write a file per profile containing a list of all used source
    locations. The files can used to generate a change log from the
    recipes repository commit log.
 
-.. option:: -v, --verbose
+-v, --verbose
 
    Enable verbose output
 
-.. option:: --version
+--version
 
    Print version
 
+
+.. _keg_example:
 
 EXAMPLE
 -------
