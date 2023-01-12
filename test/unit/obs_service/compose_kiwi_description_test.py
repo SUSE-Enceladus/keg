@@ -156,7 +156,7 @@ class TestFetchFromKeg:
             call('obs_out/log_sources_flavor2')
         ]
         source_info_generator.write_source_info.assert_called_once()
-        mock_update_revisions.called_once_with([temp_dir.name, temp_dir.name])
+        mock_update_revisions.assert_called_once()
 
     @patch('kiwi_keg.obs_service.compose_kiwi_description.update_revisions')
     @patch('os.walk')
@@ -266,7 +266,6 @@ class TestFetchFromKeg:
         )
         preferences.set_version.assert_not_called()
         source_info_generator.write_source_info.assert_called_once()
-        mock_update_revisions.called_once_with([temp_dir.name, temp_dir.name])
         mock_remove.assert_called_once_with('obs_out/config.kiwi')
 
     @patch('os.path.exists')
