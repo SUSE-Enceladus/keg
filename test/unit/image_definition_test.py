@@ -72,3 +72,10 @@ class TestKegImageDefinition:
         with self._caplog.at_level(logging.INFO):
             keg_definition.populate()
             assert 'Include "platform/notblue" does not exist' in self._caplog.text
+
+    def test_check_archive_refs(self):
+        with self._caplog.at_level(logging.INFO):
+            self.keg_definition.populate()
+            del self.keg_definition._data['archives']
+            self.keg_definition._check_archive_refs()
+            assert 'Referenced archive "blue.tar.gz" not defined' in self._caplog.text

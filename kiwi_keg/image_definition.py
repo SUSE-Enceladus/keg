@@ -133,6 +133,7 @@ class KegImageDefinition:
             ImageSchema().validate(self._data)
             self._generate_config_scripts()
             self._generate_overlay_info()
+            self._check_archive_refs()
         except SchemaError as err:
             raise KegDataError('Image definition malformed: {}'.format(err))
         except Exception as issue:
@@ -161,6 +162,16 @@ class KegImageDefinition:
                     image=self._image_name
                 )
             )
+
+    def _check_archive_refs(self):
+        pkg_sections = self._data['image'].get('packages')
+        for sect in pkg_sections:
+            archives = sect.get('archive')
+            if archives:
+                for arch_ref in archives:
+                    arch_name = dict_utils.get_attribute(arch_ref, 'name')
+                    if arch_name not in self._data.get('archives', []):
+                        log.warning(f'Referenced archive "{arch_name}" not defined')
 
     def _expand_includes(self, data, key=None):
         if not hasattr(data, '__iter__') or isinstance(data, str):
