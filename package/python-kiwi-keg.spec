@@ -53,7 +53,7 @@ License:        GPL-3.0-or-later
 Packager:       Public Cloud Team <public-cloud-dev@susecloud.net>
 %endif
 Group:          %{pygroup}
-Source:         kiwi-keg-%{version}.tar.gz
+Source:         keg-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python%{python3_pkgversion}-%{develsuffix}
 BuildRequires:  python%{python3_pkgversion}-Jinja2
@@ -102,7 +102,7 @@ more given git repositories that contain keg-recipes source tree. It supports
 auto-generation of change log files from commit history.
 
 %prep
-%setup -q -n kiwi-keg-%{version}
+%setup -q -n keg-%{version}
 
 %build
 # Build Python 3 version
