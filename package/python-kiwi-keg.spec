@@ -1,5 +1,5 @@
 #
-# spec file for package python-kiwi_keg
+# spec file for package python-kiwi-keg
 #
 # Copyright (c) 2022 SUSE Software Solutions Germany GmbH, Nuernberg, Germany.
 #
@@ -50,10 +50,10 @@ Summary:        KEG - Image Composition Tool
 License:        GPL-3.0-or-later
 %if "%{_vendor}" == "debbuild"
 # Needed to set Maintainer in output debs
-Packager:       Public Cloud Team <public-cloud-dev@suse.de>
+Packager:       Public Cloud Team <public-cloud-dev@susecloud.net>
 %endif
 Group:          %{pygroup}
-Source:         kiwi_keg-%{version}.tar.gz
+Source:         kiwi-keg-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python%{python3_pkgversion}-%{develsuffix}
 BuildRequires:  python%{python3_pkgversion}-Jinja2
@@ -102,7 +102,7 @@ more given git repositories that contain keg-recipes source tree. It supports
 auto-generation of change log files from commit history.
 
 %prep
-%setup -q -n kiwi_keg-%{version}
+%setup -q -n kiwi-keg-%{version}
 
 %build
 # Build Python 3 version
