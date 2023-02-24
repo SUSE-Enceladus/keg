@@ -10,6 +10,8 @@ keg is a command line tool that creates a
 `kiwi <https://github.com/OSInside/kiwi>`_ image description based on
 description snippets in a given GIT repository.
 
+`User documentation <https://documentation.suse.com/appliance/keg-2/html/keg/index.html>`_.
+
 Contributing
 ------------
 
@@ -37,7 +39,7 @@ The following procedure describes how to create the development environment:
        $ tox -e devel
 
 2. Activate the virtual environment
-    
+
    .. code:: bash
 
        $ source .tox/3/bin/activate
