@@ -1,6 +1,6 @@
 import os
 import sys
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 from pytest import raises
 from tempfile import TemporaryDirectory
 from kiwi_keg.changelog_generator.generate_recipes_changelog import (

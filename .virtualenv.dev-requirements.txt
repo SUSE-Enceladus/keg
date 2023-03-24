@@ -12,8 +12,7 @@ pytest
 pytest-cov
 pytest-xdist
 
-# Rolling backport of unittest.mock for all Pythons
-mock
+# used in a unit test
 xmldiff
 
 # Version-bump your software with a single command!
