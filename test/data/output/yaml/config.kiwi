@@ -4,7 +4,7 @@
     <description type="system">
         <author>Public Cloud Team</author>
         <contact>pubcloud-dev@suse.com</contact>
-        <specification>KEG written image</specification>
+        <specification>KEG generated image</specification>
     </description>
     <preferences>
         <version>1.2.3</version>
