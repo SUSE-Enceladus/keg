@@ -11,12 +11,12 @@ from kiwi_keg.keg import main
 from kiwi_keg.exceptions import KegError
 
 expected_list_output = """\
-Source                         Name                           Version  Description
-leap-jeos-single-platform/15.1 Leap15.1-JeOS                  1.0.0    Leap 15.1 guest image
-leap-jeos-single-platform/15.2 Leap15.2-JeOS                  1.0.0    Leap 15.2 guest image
-leap-jeos/15.1                 Leap15.1-JeOS                  1.0.0    Leap 15.1 guest image
-leap-jeos/15.2                 Leap15.2-JeOS                  1.0.0    Leap 15.2 guest image
-missing-include/15.2           Leap15.2-JeOS                  1.0.0    Leap 15.2 guest image
+Source                         Name          Version Description
+leap-jeos-single-platform/15.1 Leap15.1-JeOS n/a     Leap 15.1 guest image
+leap-jeos-single-platform/15.2 Leap15.2-JeOS n/a     Leap 15.2 guest image
+leap-jeos/15.1                 Leap15.1-JeOS n/a     Leap 15.1 guest image
+leap-jeos/15.2                 Leap15.2-JeOS n/a     Leap 15.2 guest image
+missing-include/15.2           Leap15.2-JeOS n/a     Leap 15.2 guest image
 """
 
 
@@ -174,7 +174,7 @@ class TestKeg:
         ]
         with self._caplog.at_level(logging.ERROR):
             main()
-            assert 'is not a valid image' in self._caplog.text
+            assert 'is not a valid image definition' in self._caplog.text
 
     @patch('kiwi_keg.keg.AnnotatedPrettyPrinter')
     @patch('kiwi_keg.keg.KegImageDefinition')

@@ -122,7 +122,7 @@ def main():
                     image_name=image_src,
                     recipes_roots=roots
                 )
-                image_definition.populate()
+                image_definition.populate_header()
                 image_spec = image_definition.data['image']
                 images[image_src] = {
                     'name': image_spec['_attributes']['name'],
@@ -130,10 +130,24 @@ def main():
                     'ver': image_spec['preferences'][0].get('version', 'n/a')
                 }
             except KegError as e:
-                log.error('{} is not a valid image: {}'.format(image_src, e))
-        print('{:30s} {:30s} {:8s} {}'.format('Source', 'Name', 'Version', 'Description'))
+                log.error('{} is not a valid image definition: {}'.format(image_src, e))
+            except KeyError as e:
+                log.error('{} is not a valid image definition, missing key "{}"'.format(image_src, e))
+
+        header = ['Source', 'Name', 'Version', 'Description']
+        max_src = len(header[0])
+        max_name = len(header[1])
+        max_ver = len(header[2])
+        max_desc = len(header[3])
         for image, spec in images.items():
-            print('{:30s} {:30s} {:8s} {}'.format(image, spec['name'], spec['ver'], spec['desc']))
+            max_src = len(image) if len(image) > max_src else max_src
+            max_name = len(spec['name']) if len(spec['name']) > max_name else max_name
+            max_ver = len(spec['ver']) if len(spec['ver']) > max_ver else max_ver
+            max_desc = len(spec['desc']) if len(spec['desc']) > max_desc else max_desc
+
+        print(f'{header[0]:{max_src}s} {header[1]:{max_name}s} {header[2]:{max_ver}s} {header[3]}')
+        for image, spec in images.items():
+            print(f'{image:{max_src}s} {spec["name"]:{max_name}s} {spec["ver"]:{max_ver}s} {spec["desc"]}')
         return
 
     try:
