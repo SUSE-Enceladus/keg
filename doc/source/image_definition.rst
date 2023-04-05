@@ -388,6 +388,32 @@ for details.
   via the `-a` command line option, the apprpriate `OBS-ExclusiveArch`
   comment is added.
 
+
+xmlfiles
+^^^^^^^^
+
+This optional section allows generating additional custom XML files. The format
+is as follows:
+
+.. code:: yaml
+
+  xmlfiles:
+    - name: <filename>
+      content:
+        <content_dictionary>
+    ...
+
+For each list item in this section, an XML file named :file:`<filename>` will
+be created, with the content being generated from the `<content_dictionary>`.
+For this dictionary the same rules about formatting, including, namespacing,
+etc., apply as for the image dictionary.
+
+Custom XML files can be useful when generating image descriptions for use in
+the Open Build Service, which accepts build configuration directives via XML
+source files, like the :file:`_constraints` file. See
+`<https://openbuildservice.org/help/manuals/obs-user-guide/cha.obs.build_job_constraints.html>`__
+for details.
+
 schema
 ^^^^^^
 
