@@ -5,7 +5,7 @@ image:
     '@type': system
     author: Public Cloud Team
     contact: pubcloud-dev@suse.com
-    specification: KEG written image
+    specification: KEG generated image
   packages:
   - '@type': image
     package:

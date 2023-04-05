@@ -2,7 +2,7 @@ import tempfile
 import yaml
 from xmldiff import main
 from pytest import raises, fail
-from mock import patch
+from unittest.mock import patch
 
 from kiwi_keg.kiwi_description import KiwiDescription
 

@@ -2,7 +2,7 @@ import glob
 import tarfile
 import tempfile
 import os
-from mock import (
+from unittest.mock import (
     patch, Mock
 )
 from pathlib import Path

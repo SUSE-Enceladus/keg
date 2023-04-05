@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 import tempfile
-from mock import (
+from unittest.mock import (
     Mock, patch, call
 )
 from pytest import fixture, raises

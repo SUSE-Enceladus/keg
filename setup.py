@@ -45,13 +45,14 @@ config = {
     'zip_safe': False,
     'classifiers': [
        # classifier: http://pypi.python.org/pypi?%3Aaction=list_classifiers
-       'Development Status :: 2 - Pre-Alpha',
+       'Development Status :: 5 - Production/Stable',
        'Intended Audience :: Developers',
        'License :: OSI Approved :: '
        'GNU General Public License v3 or later (GPLv3+)',
        'Operating System :: POSIX :: Linux',
        'Programming Language :: Python :: 3.6',
        'Programming Language :: Python :: 3.8',
+       'Programming Language :: Python :: 3.10',
        'Topic :: System :: Operating System',
     ]
 }

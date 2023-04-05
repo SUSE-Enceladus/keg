@@ -3,7 +3,7 @@ import sys
 from pytest import (
     fixture, raises
 )
-from mock import (
+from unittest.mock import (
     patch, Mock
 )
 from kiwi_keg.keg import main

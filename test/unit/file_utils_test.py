@@ -1,4 +1,4 @@
-from mock import patch
+from unittest.mock import patch
 from pytest import raises
 from kiwi_keg import file_utils
 import yaml

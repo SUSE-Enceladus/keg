@@ -27,7 +27,7 @@ Currently, there are 5 targets for tox:
 - **check**: for code quality and integrity
 - **devel**: for development
 - **doc**: for building man pages
-- **unit_py3_8**: to run unit tests with Python version set to *3.8*
+- **unit_py3_10**: to run unit tests with Python version set to *3.10*
 - **unit_py3_6**: to run unit tests with Python version set to *3.6*
 
 The following procedure describes how to create the development environment:
