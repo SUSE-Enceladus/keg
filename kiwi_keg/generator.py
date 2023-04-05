@@ -420,8 +420,8 @@ class KegGenerator:
                     target=outpath
                 )
             )
-        with open(outpath, 'w') as outh:
-            content_handler = ContentGenerator(out=outh, encoding='utf-8', short_empty_elements=True)
+        with open(outpath, 'w') as outf:
+            content_handler = ContentGenerator(out=outf, encoding='utf-8', short_empty_elements=True)
             for node_name, node_data in data['content'].items():
                 self._create_xml_node(node_name, node_data, content_handler, filter_attributes=self.filter_def)
             content_handler.endDocument()
