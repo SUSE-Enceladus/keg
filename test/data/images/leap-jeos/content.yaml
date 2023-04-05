@@ -61,3 +61,13 @@ archive:
   - name: blue.tar.gz
     _include:
       - platform/blue
+xmlfiles:
+  - name: _constraints
+    content:
+      constraints:
+        hardware:
+          disk:
+            size:
+              _attributes:
+                unit: G
+              _text: 12

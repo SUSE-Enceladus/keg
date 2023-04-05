@@ -105,6 +105,16 @@ range:54:54:../data/images/leap-jeos/content.yaml
 range:22:22:../data/data/base/common/config.yaml
 range:23:24:../data/data/base/common/config.yaml
 range:55:56:../data/images/leap-jeos/content.yaml
+range:64:64:../data/images/leap-jeos/content.yaml
+range:65:65:../data/images/leap-jeos/content.yaml
+range:66:66:../data/images/leap-jeos/content.yaml
+range:67:67:../data/images/leap-jeos/content.yaml
+range:68:68:../data/images/leap-jeos/content.yaml
+range:69:69:../data/images/leap-jeos/content.yaml
+range:70:70:../data/images/leap-jeos/content.yaml
+range:71:71:../data/images/leap-jeos/content.yaml
+range:72:72:../data/images/leap-jeos/content.yaml
+range:73:73:../data/images/leap-jeos/content.yaml
 range:1:3:../data/images/leap-jeos/15.2/image.yaml
 range:10:10:../data/images/leap-jeos/15.2/image.yaml
 range:11:11:../data/images/leap-jeos/15.2/image.yaml

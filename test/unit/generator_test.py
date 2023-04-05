@@ -209,3 +209,18 @@ class TestKegGenerator:
         attribs = {'str': 'strval', 'dict': {'item': 'value', 'flagitem': []}, 'list': ['item1', 'item2']}
         na = NodeAttributes(attribs)
         assert str(na) == "{'str': 'strval', 'dict': 'item=value flagitem', 'list': 'item1,item2'}"
+
+    def test_create_custom_files(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            generator = KegGenerator(self.image_definition, tmpdirname, archs=['x86_64'])
+            generator.create_custom_files(overwrite=True)
+            assert_files_equal('../data/output/leap-jeos/_constraints', tmpdirname + '/_constraints')
+
+    def test_create_custom_files_file_exists(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            open(os.path.join(tmpdirname, '_constraints'), 'w')
+            generator = KegGenerator(self.image_definition, tmpdirname, archs=['x86_64'])
+            with raises(KegError) as exception_info:
+                generator.create_custom_files(overwrite=False)
+            assert "{} exists".format(os.path.join(tmpdirname, '_constraints')) in \
+                str(exception_info.value)

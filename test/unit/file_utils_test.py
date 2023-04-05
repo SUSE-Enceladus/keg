@@ -13,6 +13,8 @@ class TestUtils:
                        {'_include': ['platform/blue'], 'profiles': ['Blue']},
                        {'_include': ['platform/orange'], 'profiles': ['Orange']},
                        {'_include': ['platform/common'], 'profiles': ['Blue', 'Orange']}],
+            'xmlfiles': [{'name': '_constraints', 'content': {'constraints': {'hardware': {'disk': {'size': {'_attributes': {'unit': 'G'},
+                                                                                           '_text': 12}}}}}}],
             'image': {'_attributes': {'schemaversion': '6.2'},
                       'description': {'_attributes': {'type': 'system'},
                                       'author': 'The Team',

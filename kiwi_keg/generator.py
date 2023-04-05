@@ -1,4 +1,4 @@
-# Copyright (c) 2022 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2023 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -74,6 +74,9 @@ class KegGenerator:
         self.env = Environment(
             loader=ChoiceLoader(loaders)
         )
+        self.filter_def = {}
+        if self.archs:
+            self.filter_def = {'arch': self.archs}
 
         self.image_definition.populate()
 
@@ -137,10 +140,7 @@ class KegGenerator:
                 content_handler.comment(arch_comment)
                 content_handler.ignorableWhitespace('\n')
             content_handler.ignorableWhitespace('\n')
-            filter_arg = {}
-            if self.archs:
-                filter_arg = {'arch': self.archs}
-            self._create_xml_node('image', self.image_definition.data['image'], content_handler, filter_attributes=filter_arg)
+            self._create_xml_node('image', self.image_definition.data['image'], content_handler, filter_attributes=self.filter_def)
             content_handler.endDocument()
 
     def validate_kiwi_description(self) -> None:
@@ -248,6 +248,11 @@ class KegGenerator:
                     if profile_name:
                         mbuild_obj.write('    <flavor>{}</flavor>\n'.format(profile_name))
                 mbuild_obj.write('</multibuild>\n')
+
+    def create_custom_files(self, overwrite: bool = False):
+        if self.image_definition.data.get('xmlfiles'):
+            for custom_file in self.image_definition.data['xmlfiles']:
+                self._write_xml_file(custom_file, overwrite)
 
     @staticmethod
     def _tarinfo_set_root(tarinfo):
@@ -406,6 +411,20 @@ class KegGenerator:
         else:
             content_handler.endElement(key)
         content_handler.ignorableWhitespace('\n')
+
+    def _write_xml_file(self, data, overwrite: bool = False):
+        outpath = os.path.join(self.dest_dir, data['name'])
+        if os.path.exists(outpath) and not overwrite:
+            raise KegError(
+                '{target} exists, use force to overwrite.'.format(
+                    target=outpath
+                )
+            )
+        with open(outpath, 'w') as outh:
+            content_handler = ContentGenerator(out=outh, encoding='utf-8', short_empty_elements=True)
+            for node_name, node_data in data['content'].items():
+                self._create_xml_node(node_name, node_data, content_handler, filter_attributes=self.filter_def)
+            content_handler.endDocument()
 
 
 class ContentGenerator(XMLGenerator):

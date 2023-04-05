@@ -173,6 +173,12 @@ class ImageSchema:
                             '_include_overlays': [str]
                         }
                     }
+                ],
+                Optional('xmlfiles'): [
+                    {
+                        'name': And(str),
+                        'content': And(dict)
+                    }
                 ]
             },
             ignore_extra_keys=True
