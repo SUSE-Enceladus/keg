@@ -173,6 +173,9 @@ def main():
             disable_root_tar=args['--disable-root-tar'],
             overwrite=args['--force']
         )
+        image_generator.create_custom_files(
+            overwrite=args['--force']
+        )
         if not args['--disable-multibuild']:
             image_generator.create_multibuild_file(
                 overwrite=args['--force']
