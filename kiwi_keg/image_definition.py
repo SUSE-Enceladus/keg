@@ -141,6 +141,22 @@ class KegImageDefinition:
                 'Error generating profile data: {error}'.format(error=issue)
             )
 
+    def populate_header(self) -> None:
+        """
+        Parse recipes data but only expand 'image: description'.
+        Used by list command for faster operation.
+        """
+        try:
+            img_dict = file_utils.get_recipes(
+                self.image_roots, [self.image_name], track_sources=self._track_sources
+            )
+            self._data.update(img_dict)
+            self._expand_includes(self._data['image']['description'])
+        except Exception as issue:
+            raise KegDataError(
+                'Error parsing image data: {error}'.format(error=issue)
+            )
+
     def _check_recipes_paths_exist(self):
         for recipes_root in self._recipes_roots:
             if not os.path.isdir(recipes_root):
