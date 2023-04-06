@@ -23,7 +23,7 @@ config = {
     'url': 'https://github.com/SUSE-Enceladus/keg',
     'download_url':
         'https://download.opensuse.org',
-    'author_email': 'public-cloud-dev@suse.de',
+    'author_email': 'public-cloud-dev@susecloud.net',
     'version': __version__,
     'license' : 'GPLv3+',
     'install_requires': [
