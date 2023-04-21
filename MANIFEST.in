@@ -1,8 +1,8 @@
 # Manifest describing source package contents
 
-graft kiwi_keg/changelog_generator
-graft kiwi_keg/obs_service
+graft kiwi_keg/tools
 graft doc
+graft obs
 graft package
 
 include Makefile

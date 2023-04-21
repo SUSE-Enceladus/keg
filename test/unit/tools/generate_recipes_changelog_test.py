@@ -3,7 +3,7 @@ import sys
 from unittest.mock import Mock, patch
 from pytest import raises
 from tempfile import TemporaryDirectory
-from kiwi_keg.changelog_generator.generate_recipes_changelog import (
+from kiwi_keg.tools.generate_recipes_changelog import (
     main,
     get_commits,
     get_commit_message
@@ -51,7 +51,7 @@ class TestGenerateRecipesChangelog:
             '../data/output/source_info/log_sources_fake'
         ]
 
-    @patch('kiwi_keg.changelog_generator.generate_recipes_changelog.subprocess.run')
+    @patch('kiwi_keg.tools.generate_recipes_changelog.subprocess.run')
     def test_generate_recipes_changelog(self, mock_run, capsys):
         mock_stdout = Mock()
         mock_stdout.stdout.decode.side_effect = side_effects_text
@@ -61,7 +61,7 @@ class TestGenerateRecipesChangelog:
         cap = capsys.readouterr()
         assert cap.out == expected_output
 
-    @patch('kiwi_keg.changelog_generator.generate_recipes_changelog.subprocess.run')
+    @patch('kiwi_keg.tools.generate_recipes_changelog.subprocess.run')
     def test_generate_recipes_changelog_yaml(self, mock_run):
         mock_stdout = Mock()
         mock_stdout.stdout.decode.side_effect = side_effects_yaml
@@ -75,7 +75,7 @@ class TestGenerateRecipesChangelog:
             main()
             assert open(tmpfile, 'r').read() == expected_output_yaml
 
-    @patch('kiwi_keg.changelog_generator.generate_recipes_changelog.subprocess.run')
+    @patch('kiwi_keg.tools.generate_recipes_changelog.subprocess.run')
     def test_generate_recipes_changelog_yaml_empty_log(self, mock_run):
         mock_stdout = Mock()
         mock_stdout.stdout.decode.side_effect = ['', '']
@@ -91,7 +91,7 @@ class TestGenerateRecipesChangelog:
                 assert sysex.value.code == 2
             assert open(tmpfile, 'r').read() == '[]\n'
 
-    @patch('kiwi_keg.changelog_generator.generate_recipes_changelog.subprocess.run')
+    @patch('kiwi_keg.tools.generate_recipes_changelog.subprocess.run')
     def test_generate_recipes_changelog_yaml_title(self, mock_run, capsys):
         mock_stdout = Mock()
         mock_stdout.stdout.decode.side_effect = side_effects_yaml

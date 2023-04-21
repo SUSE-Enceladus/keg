@@ -17,22 +17,19 @@ install_package_docs:
 	install -m 644 LICENSE \
 		${buildroot}${docdir}/$(PKG)/LICENSE
 	install -m 644 README.rst \
-		${buildroot}${docdir}/$(PKG)/README
+		${buildroot}${docdir}/$(PKG)/README.rst
 
 install:
 	# manual pages
 	install -d -m 755 ${buildroot}usr/share/man/man1
-	for man in doc/build/man/*.1; do \
-		test -e $$man && gzip -f $$man || true ;\
-	done
-	for man in doc/build/man/*.1.gz; do \
+	for man in doc/build/man/*.1 ; do \
 		install -m 644 $$man ${buildroot}usr/share/man/man1 ;\
 	done
 	# keg obs service
 	install -d -m 755 ${buildroot}usr/lib/obs/service
 	mv ${buildroot}usr/bin/compose_kiwi_description \
 		${buildroot}usr/lib/obs/service
-	install -m 644 kiwi_keg/obs_service/compose_kiwi_description.service \
+	install -m 644 obs/compose_kiwi_description.service \
 		${buildroot}usr/lib/obs/service
 
 tox:
