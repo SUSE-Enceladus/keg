@@ -6,7 +6,7 @@ from unittest.mock import (
     Mock, patch, call
 )
 from pytest import fixture, raises
-from kiwi_keg.obs_service.compose_kiwi_description import (
+from kiwi_keg.tools.compose_kiwi_description import (
     main,
     generate_changelog,
     get_image_version,
@@ -38,17 +38,17 @@ class TestFetchFromKeg:
             'obs_out'
         ]
 
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.update_revisions')
+    @patch('kiwi_keg.tools.compose_kiwi_description.update_revisions')
     @patch('os.remove')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.get_revision_args')
+    @patch('kiwi_keg.tools.compose_kiwi_description.get_revision_args')
     @patch('glob.glob')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.SourceInfoGenerator')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.XMLDescription')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.Temporary.new_dir')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.KegImageDefinition')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.KegGenerator')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.Command.run')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.Path.create')
+    @patch('kiwi_keg.tools.compose_kiwi_description.SourceInfoGenerator')
+    @patch('kiwi_keg.tools.compose_kiwi_description.XMLDescription')
+    @patch('kiwi_keg.tools.compose_kiwi_description.Temporary.new_dir')
+    @patch('kiwi_keg.tools.compose_kiwi_description.KegImageDefinition')
+    @patch('kiwi_keg.tools.compose_kiwi_description.KegGenerator')
+    @patch('kiwi_keg.tools.compose_kiwi_description.Command.run')
+    @patch('kiwi_keg.tools.compose_kiwi_description.Path.create')
     @patch('os.path.exists')
     def test_compose_kiwi_description(
         self, mock_path_exists, mock_Path_create, mock_Command_run,
@@ -158,18 +158,18 @@ class TestFetchFromKeg:
         source_info_generator.write_source_info.assert_called_once()
         mock_update_revisions.assert_called_once()
 
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.update_revisions')
+    @patch('kiwi_keg.tools.compose_kiwi_description.update_revisions')
     @patch('os.walk')
     @patch('os.remove')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.get_revision_args')
+    @patch('kiwi_keg.tools.compose_kiwi_description.get_revision_args')
     @patch('glob.glob')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.SourceInfoGenerator')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.XMLDescription')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.Temporary.new_dir')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.KegImageDefinition')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.KegGenerator')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.Command.run')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.Path.create')
+    @patch('kiwi_keg.tools.compose_kiwi_description.SourceInfoGenerator')
+    @patch('kiwi_keg.tools.compose_kiwi_description.XMLDescription')
+    @patch('kiwi_keg.tools.compose_kiwi_description.Temporary.new_dir')
+    @patch('kiwi_keg.tools.compose_kiwi_description.KegImageDefinition')
+    @patch('kiwi_keg.tools.compose_kiwi_description.KegGenerator')
+    @patch('kiwi_keg.tools.compose_kiwi_description.Command.run')
+    @patch('kiwi_keg.tools.compose_kiwi_description.Path.create')
     @patch('os.path.exists')
     def test_compose_kiwi_description_no_version_bump(
         self, mock_path_exists, mock_Path_create, mock_Command_run,
@@ -286,7 +286,7 @@ class TestFetchFromKeg:
             update_revisions(repos, tmpdirname)
             assert open(os.path.join(tmpdirname, '_keg_revisions'), 'r').read() == 'fake_repo 1234\n'
 
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.XMLDescription')
+    @patch('kiwi_keg.tools.compose_kiwi_description.XMLDescription')
     def test_image_version_error(self, mock_XMLDescription):
         xml_data = Mock()
         preferences = Mock()
@@ -299,7 +299,7 @@ class TestFetchFromKeg:
             get_image_version(mock_XMLDescription)
         assert sysex.value.code == 'Cannot determine image version.'
 
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.get_head_commit_hash')
+    @patch('kiwi_keg.tools.compose_kiwi_description.get_head_commit_hash')
     def test_parse_revisions(self, mock_get_head_commit_hash):
         mock_dir = Mock()
         mock_dir.name = 'dir1'
@@ -331,7 +331,7 @@ class TestFetchFromKeg:
 
             os.chdir(old_wd)
 
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.get_head_commit_hash')
+    @patch('kiwi_keg.tools.compose_kiwi_description.get_head_commit_hash')
     def test_get_revision_args(self, mock_get_head_commit_hash):
         mock_dir = Mock()
         mock_dir.name = 'dir1'
@@ -342,7 +342,7 @@ class TestFetchFromKeg:
         assert repo.head_commit == '5678'
         assert get_revision_args(repos) == ['-r', 'dir1:1234..']
 
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.Command.run')
+    @patch('kiwi_keg.tools.compose_kiwi_description.Command.run')
     def test_changelog_prepend(self, mock_run):
         with tempfile.TemporaryDirectory() as tmpdirname:
             old_wd = os.getcwd()
@@ -353,9 +353,9 @@ class TestFetchFromKeg:
             assert open('changes.yaml.new', 'r').read() == 'new entry\nold entry\n'
             os.chdir(old_wd)
 
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.parse_revisions')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.RepoInfo')
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.Command.run')
+    @patch('kiwi_keg.tools.compose_kiwi_description.parse_revisions')
+    @patch('kiwi_keg.tools.compose_kiwi_description.RepoInfo')
+    @patch('kiwi_keg.tools.compose_kiwi_description.Command.run')
     @patch('os.path.exists')
     def test_no_new_commits(self, mock_path_exists, mock_run, mock_repo_info, mock_parse_revisions):
         mock_path_exists.return_value = True
@@ -366,7 +366,7 @@ class TestFetchFromKeg:
             assert 'No repository has new commits.' in self._caplog.text
             assert 'Aborting.' in self._caplog.text
 
-    @patch('kiwi_keg.obs_service.compose_kiwi_description.Command.run')
+    @patch('kiwi_keg.tools.compose_kiwi_description.Command.run')
     def test_generate_changelog_error(self, mock_Command_run):
         mock_result = Mock()
         mock_result.returncode = 1

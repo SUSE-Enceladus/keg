@@ -33,12 +33,12 @@ config = {
         'PyYAML',
         'schema'
     ],
-    'packages': ['kiwi_keg','kiwi_keg.changelog_generator','kiwi_keg.obs_service'],
+    'packages': ['kiwi_keg','kiwi_keg.tools'],
     'entry_points': {
         'console_scripts': [
             'keg=kiwi_keg.keg:main',
-            'compose_kiwi_description=kiwi_keg.obs_service.compose_kiwi_description:main',
-            'generate_recipes_changelog=kiwi_keg.changelog_generator.generate_recipes_changelog:main'
+            'compose_kiwi_description=kiwi_keg.tools.compose_kiwi_description:main',
+            'generate_recipes_changelog=kiwi_keg.tools.generate_recipes_changelog:main'
         ]
     },
     'include_package_data': True,
