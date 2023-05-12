@@ -393,7 +393,8 @@ class KegGenerator:
         child_indent = 0
         content_handler.ignorableWhitespace(depth * indent)
         if key.startswith('_namespace'):
-            content_handler.comment(f'begin namespace {key[11:]}')
+            if key != '_namespace':
+                content_handler.comment(f'begin namespace {key[11:]}')
         else:
             content_handler.startElement(key, attr)
             child_indent = 1
@@ -407,7 +408,8 @@ class KegGenerator:
         if children:
             content_handler.ignorableWhitespace(depth * indent)
         if key.startswith('_namespace'):
-            content_handler.comment(f'end namespace {key[11:]}')
+            if key != '_namespace':
+                content_handler.comment(f'end namespace {key[11:]}')
         else:
             content_handler.endElement(key)
         content_handler.ignorableWhitespace('\n')
