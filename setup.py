@@ -31,7 +31,8 @@ config = {
         'Jinja2',
         'kiwi>=9.21.21',
         'PyYAML',
-        'schema'
+        'schema',
+        'iso8601; python_version < "3.7.0"'
     ],
     'packages': ['kiwi_keg','kiwi_keg.tools'],
     'entry_points': {

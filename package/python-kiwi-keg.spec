@@ -43,6 +43,9 @@ Requires:       python-PyYAML
 Requires:       python-docopt
 Requires:       python-schema
 Requires:       python3-kiwi >= 9.21.21
+%if %python_version_nodots < 37
+Requires:       python-iso8601
+%endif
 %if %{with libalternatives}
 Requires:       alts
 BuildRequires:  alts
