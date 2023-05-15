@@ -39,7 +39,7 @@ def rmerge(src: keg_dict, dest: keg_dict) -> keg_dict:
     """
     if not isinstance(dest, dict) and not isinstance(dest, AnnotatedMapping):
         raise KegDataError(
-            'Cannot rmerge, destination is not a mapping: {} {}'.format(dest, type(dest))
+            'Cannot rmerge, destination is not a mapping: {} {} {}'.format(dest, type(dest), src)
         )
     if isinstance(src, dict):
         items = src.items()
@@ -47,7 +47,7 @@ def rmerge(src: keg_dict, dest: keg_dict) -> keg_dict:
         items = src.all_items()
     else:
         raise KegDataError(
-            'Cannot rmerge, source mapping type not supported: {}'.format(type(src))
+            'Cannot rmerge, source mapping type not supported: {} {}'.format(src, type(src))
         )
 
     for key, value in items:
