@@ -16,7 +16,7 @@
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
 from schema import (
-    Schema, And, Or, Optional,
+    Schema, And, Or, Optional
 )
 from kiwi_keg.annotated_mapping import AnnotatedMapping
 
