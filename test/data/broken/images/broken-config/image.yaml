@@ -14,7 +14,7 @@ image:
   packages:
     - _attributes:
         type: image
-      _some_namespace:
+      _namespace:
         package:
           - _attributes:
               name: some_pkg
