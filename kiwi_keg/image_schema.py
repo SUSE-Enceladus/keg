@@ -21,17 +21,43 @@ from schema import (
 from kiwi_keg.annotated_mapping import AnnotatedMapping
 
 
-class ImageSchema:
+class NamespaceSchema(Schema):
+    def __init__(self, schema, **kwargs):
+        # Generally ignore extra keys; this schema is a sub-set of the full
+        # kiwi schema.
+        kwargs['ignore_extra_keys'] = True
+        super().__init__(schema, **kwargs)
+
+    def validate(self, data):
+        if isinstance(data, dict) and '_namespace' in [x[:10] for x in data.keys()]:
+            namespaces = [x for x in data.keys() if x.startswith('_namespace')]
+            # We create a copy of the input data, remove all namespace keys,
+            # then copy each namespace into the copied dict and validate.
+            # This way namespaces seem invisible and don't have to be accounted
+            # for in the schema, but all namespaced data is validated against
+            # the schema.
+            for ns in namespaces:
+                tmp = data.copy()
+                for del_ns in namespaces:
+                    del tmp[del_ns]
+                tmp.update(data[ns])
+                val = super().validate(tmp)
+        else:
+            val = super().validate(data)
+        return val
+
+
+class ImageSchema():
     def __init__(self):
         self._schema = Schema(
             {
                 Optional('schema'): And(str),
                 Optional('include-paths'): [And(str)],
-                'image': {
+                'image': NamespaceSchema({
                     '_attributes': {
                         'schemaversion': And(str),
                         'name': And(str),
-                        'displayname': And(str),
+                        Optional('displayname'): And(str),
                     },
                     'description': {
                         '_attributes': {
@@ -57,14 +83,14 @@ class ImageSchema:
                             {
                                 '_attributes': {
                                     'profiles': [str],
+                                    Optional('arch'): And(str)
                                 },
                                 'type': {
                                     '_attributes': {
                                         'image': And(str)
                                     }
                                 }
-                            },
-                            ignore_extra_keys=True
+                            }, ignore_extra_keys=True
                         )
                     ],
                     'repository': [
@@ -93,8 +119,8 @@ class ImageSchema:
                                     }
                                 }
                             ],
-                            str: {
-                                'package': [Or(
+                            'package': [
+                                Or(
                                     str,
                                     {
                                         '_attributes': {
@@ -103,11 +129,28 @@ class ImageSchema:
                                         }
                                     },
                                     ignore_extra_keys=True
-                                )]
-                            }
+                                )
+                            ]
                         }
-                    ]
-                },
+                    ],
+                    Optional('drivers'): [
+                        {
+                            Optional('_map_attribute'): And(str),
+                            'file': [
+                                Or(
+                                    str,
+                                    {
+                                        '_attributes': {
+                                            'name': And(str),
+                                            Optional('arch'): Or(str, [str])
+                                        }
+                                    },
+                                    ignore_extra_keys=True
+                                )
+                            ]
+                        }
+                    ],
+                }),
                 Optional('config'): [
                     Or(
                         {
