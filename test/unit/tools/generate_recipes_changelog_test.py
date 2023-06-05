@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 from unittest.mock import Mock, patch
@@ -21,6 +22,30 @@ expected_output_yaml = """\
   date: '1970-01-01T00:00:00'
   details: |-
     verbose msg
+"""
+
+expected_output_json = [
+    {'change': 'change1', 'date': '1970-01-01T00:00:01'},
+    {'change': 'change2', 'date': '1970-01-01T00:00:00', 'details': 'verbose msg'}
+]
+
+expected_output_osc = """\
+-------------------------------------------------------------------
+Thu Jan  1 00:00:01 UTC 1970 - Author
+
+- change1
+- change2
+
+"""
+
+expected_output_osc_tag = """\
+-------------------------------------------------------------------
+Thu Jan  1 00:00:01 UTC 1970
+
+- Update to 1.0
+  + change1
+  + change2
+
 """
 
 side_effects_text = [
@@ -48,10 +73,10 @@ class TestGenerateRecipesChangelog:
             sys.argv[0],
             '-r', 'fake_root:fake_commit..',
             '-f', 'text',
-            '../data/output/source_info/log_sources_fake'
+            os.path.join(os.path.dirname(__file__), '../../data/output/source_info/log_sources_fake')
         ]
 
-    @patch('kiwi_keg.tools.generate_recipes_changelog.subprocess.run')
+    @patch('subprocess.run')
     def test_generate_recipes_changelog(self, mock_run, capsys):
         mock_stdout = Mock()
         mock_stdout.stdout.decode.side_effect = side_effects_text
@@ -61,7 +86,7 @@ class TestGenerateRecipesChangelog:
         cap = capsys.readouterr()
         assert cap.out == expected_output
 
-    @patch('kiwi_keg.tools.generate_recipes_changelog.subprocess.run')
+    @patch('subprocess.run')
     def test_generate_recipes_changelog_yaml(self, mock_run):
         mock_stdout = Mock()
         mock_stdout.stdout.decode.side_effect = side_effects_yaml
@@ -75,7 +100,7 @@ class TestGenerateRecipesChangelog:
             main()
             assert open(tmpfile, 'r').read() == expected_output_yaml
 
-    @patch('kiwi_keg.tools.generate_recipes_changelog.subprocess.run')
+    @patch('subprocess.run')
     def test_generate_recipes_changelog_yaml_empty_log(self, mock_run):
         mock_stdout = Mock()
         mock_stdout.stdout.decode.side_effect = ['', '']
@@ -91,7 +116,7 @@ class TestGenerateRecipesChangelog:
                 assert sysex.value.code == 2
             assert open(tmpfile, 'r').read() == '[]\n'
 
-    @patch('kiwi_keg.tools.generate_recipes_changelog.subprocess.run')
+    @patch('subprocess.run')
     def test_generate_recipes_changelog_yaml_title(self, mock_run, capsys):
         mock_stdout = Mock()
         mock_stdout.stdout.decode.side_effect = side_effects_yaml
@@ -104,16 +129,83 @@ class TestGenerateRecipesChangelog:
         cap = capsys.readouterr()
         assert cap.out == 'title:\n' + expected_output_yaml
 
+    @patch('subprocess.run')
+    def test_generate_recipes_changelog_json(self, mock_run):
+        mock_stdout = Mock()
+        mock_stdout.stdout.decode.side_effect = side_effects_yaml
+        mock_stdout.returncode = 0
+        mock_run.return_value = mock_stdout
+        sys.argv[4] = 'json'
+        with TemporaryDirectory() as tmpdir:
+            tmpfile = os.path.join(tmpdir, 'out')
+            sys.argv.append('-o')
+            sys.argv.append(tmpfile)
+            main()
+            assert json.loads(open(tmpfile, 'r').read()) == expected_output_json
+
+    @patch('subprocess.run')
+    def test_generate_recipes_changelog_json_tag(self, mock_run):
+        mock_stdout = Mock()
+        mock_stdout.stdout.decode.side_effect = side_effects_yaml
+        mock_stdout.returncode = 0
+        mock_run.return_value = mock_stdout
+        sys.argv[4] = 'json'
+        sys.argv += ['-t', 'tag']
+        with TemporaryDirectory() as tmpdir:
+            tmpfile = os.path.join(tmpdir, 'out')
+            sys.argv.append('-o')
+            sys.argv.append(tmpfile)
+            main()
+            assert json.loads(open(tmpfile, 'r').read()) == {'tag': expected_output_json}
+
+    @patch('kiwi_keg.tools.generate_recipes_changelog.datetime')
+    @patch('subprocess.run')
+    def test_generate_recipes_changelog_osc(self, mock_run, mock_datetime):
+        mock_stdout = Mock()
+        mock_stdout.stdout.decode.side_effect = side_effects_yaml
+        mock_stdout.returncode = 0
+        mock_run.return_value = mock_stdout
+        mock_now = Mock()
+        mock_now.strftime.return_value = 'Thu Jan  1 00:00:01 UTC 1970'
+        mock_datetime.now.return_value = mock_now
+        sys.argv[4] = 'osc'
+        sys.argv += ['-a', 'Author']
+        with TemporaryDirectory() as tmpdir:
+            tmpfile = os.path.join(tmpdir, 'out')
+            sys.argv.append('-o')
+            sys.argv.append(tmpfile)
+            main()
+            assert open(tmpfile, 'r').read() == expected_output_osc
+
+    @patch('kiwi_keg.tools.generate_recipes_changelog.datetime')
+    @patch('subprocess.run')
+    def test_generate_recipes_changelog_osc_tag(self, mock_run, mock_datetime):
+        mock_stdout = Mock()
+        mock_stdout.stdout.decode.side_effect = side_effects_yaml
+        mock_stdout.returncode = 0
+        mock_run.return_value = mock_stdout
+        mock_now = Mock()
+        mock_now.strftime.return_value = 'Thu Jan  1 00:00:01 UTC 1970'
+        mock_datetime.now.return_value = mock_now
+        sys.argv[4] = 'osc'
+        sys.argv += ['-t', '1.0']
+        with TemporaryDirectory() as tmpdir:
+            tmpfile = os.path.join(tmpdir, 'out')
+            sys.argv.append('-o')
+            sys.argv.append(tmpfile)
+            main()
+            assert open(tmpfile, 'r').read() == expected_output_osc_tag
+
     def test_get_commits_error(self):
-        gitcmd = ['git', 'log', 'no_such_path']
         with raises(Exception) as err:
+            gitcmd = ['git', 'log', 'no_such_path']
             get_commits(gitcmd, 'fake_root')
-        assert 'unknown revision or path not in the working tree' in str(err.value)
+        assert 'git exited with error' in str(err.value)
 
     def test_get_commit_message_error(self):
         with raises(Exception) as err:
             get_commit_message('no_such_hash', '.', '%s')
-        assert 'unknown revision or path not in the working tree' in str(err.value)
+        assert 'git exited with error' in str(err.value)
 
     def test_unsupported_format_error(self):
         sys.argv[4] = 'foo'
@@ -124,7 +216,7 @@ class TestGenerateRecipesChangelog:
     def test_broken_log(self):
         sys.argv = [
             sys.argv[0],
-            '../data/output/source_info/log_sources_broken'
+            os.path.join(os.path.dirname(__file__), '../../data/output/source_info/log_sources_broken')
         ]
         with raises(SystemExit) as err:
             main()
@@ -134,7 +226,7 @@ class TestGenerateRecipesChangelog:
         sys.argv = [
             sys.argv[0],
             '-r', 'INVALID',
-            '../data/output/source_info/log_sources_broken'
+            os.path.join(os.path.dirname(__file__), '../../data/output/source_info/log_sources_broken')
         ]
         with raises(SystemExit) as err:
             main()

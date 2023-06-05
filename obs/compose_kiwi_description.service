@@ -23,7 +23,7 @@
     </description>
   </parameter>
   <parameter name="update-changelogs">
-    <description> Whether 'changes.yaml' files should be updated. [default: true]</description>
+    <description>Whether 'changes.yaml' files should be updated. [default: true]</description>
   </parameter>
   <parameter name="update-revisions">
     <description>Whether '_keg_revisions' should be updated. [default: true]</description>
@@ -33,5 +33,11 @@
   </parameter>
   <parameter name="generate-multibuild">
     <description>If 'true', generate a _multibuild file if the image definition has profiles defined. [default: true]</description>
+  </parameter>
+  <parameter name="new-image-changelog">
+    <description>If set, when generating a net new image descriptions, use changelog_entry as the sole entry in the generated change log instead of using the full commit history. [default: None]</description>
+  </parameter>
+  <parameter name="changelog-format">
+    <description>Set output format for generated change log. Supported values are 'yaml', 'json', and 'osc'. Existing change logs will be converted if necessary. Conversion from 'osc' is not supported.  [default: json]</description>
   </parameter>
 </service>

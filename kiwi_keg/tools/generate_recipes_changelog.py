@@ -18,7 +18,7 @@
 
 """
 Usage: generate_recipes_changelog [-o OUTPUT_FILE] [-r REV]... [-f FORMAT]
-                                  [-m MSG_FORMAT] [-t ROOT_TAG] LOGFILE
+                                  [-m MSG_FORMAT] [-t ROOT_TAG] [-a AUTHOR_STRING] LOGFILE
        generate_recipes_changelog -h | --help
 
 Arguments:
@@ -32,21 +32,25 @@ Options:
         Set git revision range to REV for repo at PATH
 
     -f FORMAT
-        Output format, 'text' or 'yaml' [default: yaml]
+        Output format, 'text','yaml', 'json', or 'osc' [default: json]
 
     -m MSG_FORMAT
         Format spec for commit messages (see 'format:<string>' in 'man git-log')
         [default: - %s] (only used with text format)
 
     -t ROOT_TAG
-        Use ROOT_TAG for yaml output (e.g. image version)
+        Use ROOT_TAG for yaml or json output (e.g. image version)
+
+    -a AUTHOR_STRING
+        Use AUTHOR_STRING (typically name + email) for OSC change log entries
 """
 
 import docopt
+import json
 import subprocess
 import sys
 import yaml
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class MultiStr(str):
@@ -115,7 +119,7 @@ def get_date_from_epoch(epoch):
 def main():
     args = docopt.docopt(__doc__, version='0.1')
 
-    if args['-f'] not in ['text', 'yaml']:
+    if args['-f'] not in ['text', 'yaml', 'json', 'osc']:
         sys.exit('Unsupported output format "{}".'.format(args['-f']))
 
     with open(args['LOGFILE'], 'r') as inf:
@@ -168,12 +172,34 @@ def main():
             else:
                 msgs.append({'change': sub,
                              'date': get_date_from_epoch(commit[0])})
-        yaml.add_representer(MultiStr, repr_mstr, Dumper=yaml.SafeDumper)
-        if args['-t']:
-            log = {args['-t']: msgs}
-        else:
-            log = msgs
-        yaml.safe_dump(log, outp)
+        if args['-f'] == 'yaml':
+            yaml.add_representer(MultiStr, repr_mstr, Dumper=yaml.SafeDumper)
+            if args['-t']:
+                log = {args['-t']: msgs}
+            else:
+                log = msgs
+            yaml.safe_dump(log, outp)
+        elif args['-f'] == 'json':
+            if args['-t']:
+                log = {args['-t']: msgs}
+            else:
+                log = msgs
+            json.dump(log, outp, indent=2)
+        elif args['-f'] == 'osc':
+            print('-------------------------------------------------------------------', file=outp)
+            outp.write((datetime.now(timezone.utc).strftime('%c %Z')))
+            if args['-a']:
+                outp.write(' - ')
+                outp.write(args['-a'])
+            outp.write('\n\n')
+            indent = '- '
+            if args['-t']:
+                print('- Update to {}'.format(args['-t']), file=outp)
+                indent = '  + '
+            for msg in msgs:
+                outp.write(indent)
+                print(msg['change'], file=outp)
+            outp.write('\n')
 
     if args['-o']:
         outp.close()
