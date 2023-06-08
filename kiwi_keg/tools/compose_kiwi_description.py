@@ -76,7 +76,7 @@ Options:
         profiles defined. [default: true]
 
     --new-image-change=<changelog_entry>
-        If set, when generating a net new image descriptions, use
+        If set, when generating a net new image description, use
         changelog_entry as the sole entry in the generated change log instead
         of using the full commit history. [default: None]
 
