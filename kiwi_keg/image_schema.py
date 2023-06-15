@@ -75,24 +75,30 @@ class ImageSchema():
                             }
                         }],
                     },
-                    'preferences': [
+                    'preferences': Or(
+                        [
+                            {
+                                'version': And(str),
+                            },
+                            Optional(
+                                {
+                                    '_attributes': {
+                                        'profiles': [str],
+                                        Optional('arch'): And(str)
+                                    },
+                                    'type': {
+                                        '_attributes': {
+                                            'image': And(str)
+                                        }
+                                    }
+                                }, ignore_extra_keys=True
+                            )
+                        ],
                         {
                             'version': And(str),
                         },
-                        Optional(
-                            {
-                                '_attributes': {
-                                    'profiles': [str],
-                                    Optional('arch'): And(str)
-                                },
-                                'type': {
-                                    '_attributes': {
-                                        'image': And(str)
-                                    }
-                                }
-                            }, ignore_extra_keys=True
-                        )
-                    ],
+                        ignore_extra_keys=True
+                    ),
                     'repository': [
                         {
                             '_attributes': {
