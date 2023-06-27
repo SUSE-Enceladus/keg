@@ -1,8 +1,8 @@
 image:
   profiles: Null
   preferences:
-    - _include:
-        - base/common
+    _include:
+      - base/common
   packages:
     - _attributes:
         type: bootstrap
