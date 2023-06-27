@@ -129,7 +129,10 @@ class KegImageDefinition:
         try:
             self._expand_includes(self._data)
             if self._image_version:
-                self._data['image']['preferences'][0]['version'] = self._image_version
+                if isinstance(self._data['image']['preferences'], list):
+                    self._data['image']['preferences'][0]['version'] = self._image_version
+                else:
+                    self._data['image']['preferences']['version'] = self._image_version
             ImageSchema().validate(self._data)
             self._generate_config_scripts()
             self._generate_overlay_info()
