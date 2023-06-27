@@ -124,10 +124,14 @@ def main():
                 )
                 image_definition.populate_header()
                 image_spec = image_definition.data['image']
+                if isinstance(image_spec['preferences'], list):
+                    ver = image_spec['preferences'][0].get('version', 'n/a')
+                else:
+                    ver = image_spec['preferences'].get('version', 'n/a')
                 images[image_src] = {
                     'name': image_spec['_attributes']['name'],
                     'desc': image_spec['description']['specification'],
-                    'ver': image_spec['preferences'][0].get('version', 'n/a')
+                    'ver': ver
                 }
             except KegError as e:
                 log.error('{} is not a valid image definition: {}'.format(image_src, e))
