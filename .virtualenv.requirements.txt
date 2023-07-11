@@ -12,7 +12,8 @@ kiwi
 PyYAML
 
 # markup support
-anymarkup
+anymarkup_core
+xmltodict
 
 # xml parsing
 lxml
