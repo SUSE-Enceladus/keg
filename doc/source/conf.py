@@ -4,8 +4,7 @@
 # Keg documentation build configuration file
 #
 import sys
-from os.path import abspath, dirname, join, normpath
-import shlex
+from os.path import dirname, join, normpath
 import sphinx_rtd_theme
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -37,7 +36,7 @@ source_encoding = 'utf-8-sig'
 # The master toctree document.
 master_doc = 'index'
 
-default_role="py:obj"
+default_role = "py:obj"
 
 # General information about the project.
 project = 'Keg - Image Composition Tool'
@@ -82,10 +81,10 @@ autosummary_generate = True
 # -- Options for HTML output ----------------------------------------------
 
 html_sidebars = {
-   '**': [
-          'localtoc.html', 'relations.html',
-          'about.html', 'searchbox.html',
-         ]
+    '**': [
+        'localtoc.html', 'relations.html',
+        'about.html', 'searchbox.html',
+    ]
 }
 
 html_theme = "sphinx_rtd_theme"

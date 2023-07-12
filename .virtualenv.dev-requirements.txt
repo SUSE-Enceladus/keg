@@ -16,7 +16,7 @@ pytest-xdist
 xmldiff
 
 # Version-bump your software with a single command!
-bumpversion
+bump2version
 
 # Python style guide checker
 flake8
@@ -29,3 +29,4 @@ git+https://github.com/openSUSE/rstxml2docbook.git@feature/kiwi
 # Python static type checker
 mypy
 types-PyYAML
+types-docopt

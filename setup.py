@@ -3,10 +3,6 @@
 
 from os import path
 from setuptools import setup
-from setuptools.command import sdist as setuptools_sdist
-
-import distutils
-import subprocess
 
 from kiwi_keg.version import __version__
 
@@ -25,7 +21,7 @@ config = {
         'https://download.opensuse.org',
     'author_email': 'public-cloud-dev@susecloud.net',
     'version': __version__,
-    'license' : 'GPLv3+',
+    'license': 'GPLv3+',
     'install_requires': [
         'docopt',
         'Jinja2',
@@ -34,7 +30,7 @@ config = {
         'schema',
         'iso8601; python_version < "3.7.0"'
     ],
-    'packages': ['kiwi_keg','kiwi_keg.tools'],
+    'packages': ['kiwi_keg', 'kiwi_keg.tools'],
     'entry_points': {
         'console_scripts': [
             'keg=kiwi_keg.keg:main',
@@ -45,16 +41,16 @@ config = {
     'include_package_data': True,
     'zip_safe': False,
     'classifiers': [
-       # classifier: http://pypi.python.org/pypi?%3Aaction=list_classifiers
-       'Development Status :: 5 - Production/Stable',
-       'Intended Audience :: Developers',
-       'License :: OSI Approved :: '
-       'GNU General Public License v3 or later (GPLv3+)',
-       'Operating System :: POSIX :: Linux',
-       'Programming Language :: Python :: 3.6',
-       'Programming Language :: Python :: 3.8',
-       'Programming Language :: Python :: 3.10',
-       'Topic :: System :: Operating System',
+        # classifier: http://pypi.python.org/pypi?%3Aaction=list_classifiers
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: '
+        'GNU General Public License v3 or later (GPLv3+)',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.10',
+        'Topic :: System :: Operating System',
     ]
 }
 
