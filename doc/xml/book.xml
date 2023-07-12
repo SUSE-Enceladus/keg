@@ -804,6 +804,25 @@ images/opensuse/leap/15.3/image.yaml</screen>
                         comment is added.</para>
         </note>
       </section>
+      <section xml:id="xmlfiles">
+        <title>xmlfiles</title>
+        <para>This optional section allows generating additional custom XML files. The format
+                    is as follows:</para>
+        <screen language="yaml">xmlfiles:
+  - name: &lt;filename&gt;
+    content:
+      &lt;content_dictionary&gt;
+  ...</screen>
+        <para>For each list item in this section, an XML file named <literal>&lt;filename&gt;</literal> will
+                    be created, with the content being generated from the <literal>&lt;content_dictionary&gt;</literal>.
+                    For this dictionary the same rules about formatting, including, namespacing,
+                    etc., apply as for the image dictionary.</para>
+        <para>Custom XML files can be useful when generating image descriptions for use in
+                    the Open Build Service, which accepts build configuration directives via XML
+                    source files, like the <literal>_constraints</literal> file. See
+                    <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://openbuildservice.org/help/manuals/obs-user-guide/cha.obs.build_job_constraints.html"/>
+                    for details.</para>
+      </section>
       <section xml:id="schema">
         <title>schema</title>
         <para><literal>Keg</literal> starting with version 2.0.0 has an internal XML generator to produce
