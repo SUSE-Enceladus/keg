@@ -33,7 +33,7 @@ install:
 		${buildroot}usr/lib/obs/service
 
 tox:
-	tox "-n 5"
+	tox "-p 4"
 
 git_attributes:
 	# the following is required to update the $Format:%H$ git attribute
@@ -52,7 +52,7 @@ build: clean tox
 	# managed in the spec file
 	sed -ie "s@>=[0-9.]*'@'@g" setup.py
 	# build the sdist source tarball
-	$(python) setup.py sdist
+	$(python) -m build
 	# restore original setup.py backed up from sed
 	mv setup.pye setup.py
 	# update rpm changelog using reference file
