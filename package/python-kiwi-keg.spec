@@ -53,8 +53,10 @@ BuildRequires:  alts
 Requires(post): update-alternatives
 Requires(postun):update-alternatives
 %endif
+%if "%{python_flavor}" == "python3" || "%{python_provides}" == "python3"
 Provides:       python3-kiwi-keg = %version
 Obsoletes:      python3-kiwi-keg < %version
+%endif
 
 %python_subpackages
 
