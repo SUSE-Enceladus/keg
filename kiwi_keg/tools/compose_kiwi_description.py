@@ -314,7 +314,7 @@ def write_changelog(log_file, log_format, changes, append=False):
             yaml.add_representer(str, repr_mstr, Dumper=yaml.SafeDumper)
             yaml.safe_dump(changes, outf, sort_keys=False)
         elif log_format == 'json':
-            json.dump(changes, outf, indent=2)
+            json.dump(changes, outf, indent=2, default=str)
 
 
 def main() -> None:
