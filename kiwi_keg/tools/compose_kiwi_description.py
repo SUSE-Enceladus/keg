@@ -387,6 +387,9 @@ def main() -> None:
     image_generator.create_overlays(
         disable_root_tar=False, overwrite=True
     )
+    image_generator.create_custom_files(
+        overwrite=True
+    )
     if args['--generate-multibuild']:
         image_generator.create_multibuild_file(overwrite=True)
 
