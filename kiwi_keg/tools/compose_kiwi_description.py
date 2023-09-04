@@ -148,7 +148,7 @@ def repr_mstr(dumper, data):
 def get_head_commit_hash(repo_path):
     result = subprocess.run(
         ['git', '-C', repo_path, 'show', '--no-patch', '--format=%H', 'HEAD'],
-        capture_output=True,
+        stdout=subprocess.PIPE,
         encoding='UTF-8'
     )
     return result.stdout.strip('\n')

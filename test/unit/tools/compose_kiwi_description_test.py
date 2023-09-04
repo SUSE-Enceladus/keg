@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import subprocess
 import sys
 import tempfile
 import yaml
@@ -122,7 +123,7 @@ class TestFetchFromKeg:
                     'git', '-C', temp_dir.name,
                     'show', '--no-patch', '--format=%H', 'HEAD'
                 ],
-                capture_output=True, encoding='UTF-8'
+                stdout=subprocess.PIPE, encoding='UTF-8'
             ),
             call(
                 [
@@ -136,7 +137,7 @@ class TestFetchFromKeg:
                     'git', '-C', temp_dir.name,
                     'show', '--no-patch', '--format=%H', 'HEAD'
                 ],
-                capture_output=True, encoding='UTF-8'
+                stdout=subprocess.PIPE, encoding='UTF-8'
             ),
             call(
                 [
@@ -267,7 +268,7 @@ class TestFetchFromKeg:
                     'git', '-C', temp_dir.name,
                     'show', '--no-patch', '--format=%H', 'HEAD'
                 ],
-                capture_output=True, encoding='UTF-8'
+                stdout=subprocess.PIPE, encoding='UTF-8'
             ),
             call(
                 [
@@ -383,7 +384,7 @@ class TestFetchFromKeg:
                     'git', '-C', temp_dir.name,
                     'show', '--no-patch', '--format=%H', 'HEAD'
                 ],
-                capture_output=True, encoding='UTF-8'
+                stdout=subprocess.PIPE, encoding='UTF-8'
             )
         ]
         mock_KegImageDefinition.assert_called_once_with(
@@ -488,7 +489,7 @@ class TestFetchFromKeg:
                 [
                     'git', '-C', temp_dir.name,
                     'show', '--no-patch', '--format=%H', 'HEAD'
-                ], capture_output=True, encoding='UTF-8'
+                ], stdout=subprocess.PIPE, encoding='UTF-8'
             ),
             call(
                 [
