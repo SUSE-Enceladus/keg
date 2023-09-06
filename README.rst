@@ -1,4 +1,4 @@
-KEG - Image Compositon Tool
+KEG - Image Composition Tool
 ===========================
 
 .. |GitHub CI Action| image:: https://github.com/SUSE-Enceladus/keg/workflows/CILint/badge.svg?branch=main
