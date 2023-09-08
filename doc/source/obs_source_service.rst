@@ -67,8 +67,22 @@ updated. Default is `true`.
 If true, refresh image description even if there are no new commits. Default
 is `false`.
 
-The system the source service is run on needs to have `keg` and
-`obs-service-keg` installed. Refer to the `Using Source Services
+The system the source service is run on needs to have the
+`compose_kiwi_description` service installed. Use the following command to
+install the service in openSUSE:
+
+.. code:: shell
+
+    zypper in obs-service-compose_kiwi_description
+
+Once installed you can run the service with osc from the checked out
+package directory:
+
+.. code:: shell
+
+   osc service mr
+
+Refer to the `Using Source Services
 <https://openbuildservice.org/help/manuals/obs-user-guide/cha.obs.source_service.html>`_
 section of the OBS manual about details on how to run the source service and
 which operating modes are available.
