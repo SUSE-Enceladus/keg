@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+some comment
+-->
+
+<!-- some other comment -->
+
+<!--
+Some long text
+and more text-->
+
+<image schemaversion="7.3" name="KEG">
+    <description type="system">
+        <author>Public Cloud Team</author>
+        <contact>pubcloud-dev@suse.com</contact>
+        <specification>KEG generated image2</specification>
+    </description>
+    <preferences>
+        <version>1.2.3</version>
+        <packagemanager>zypper</packagemanager>
+        <locale>en_US</locale>
+        <keytable>us.map.gz</keytable>
+        <timezone>UTC</timezone>
+        <type image="oem" filesystem="btrfs" firmware="efi">
+            <oemconfig>
+                <oem-multipath-scan>false</oem-multipath-scan>
+                <oem-swap>true</oem-swap>
+            </oemconfig>
+        </type>
+    </preferences>
+    <repository>
+        <source path="obs://path/to/project"/>
+    </repository>
+    <packages type="image">
+        <!-- some inline comment -->
+        <package name="joe"/>
+    </packages>
+    <packages type="bootstrap">
+        <package name="udev"/>
+        <package name="filesystem"/>
+        <package name="glibc-locale"/>
+    </packages>
+</image>

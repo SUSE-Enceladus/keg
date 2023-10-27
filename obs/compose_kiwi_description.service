@@ -40,4 +40,10 @@
   <parameter name="changelog-format">
     <description>Set output format for generated change log. Supported values are 'yaml', 'json', and 'osc'. Existing change logs will be converted if necessary. Conversion from 'osc' is not supported.  [default: json]</description>
   </parameter>
+  <parameter name="purge-stale-files">
+    <description>Purge files from existing image description if the generated image description does not contain them. [default: true]</description>
+  </parameter>
+  <parameter name="purge-ignore">
+    <description>Regular expression. When checking for old files to purge, ignore matching files. (optional)</description>
+  </parameter>
 </service>

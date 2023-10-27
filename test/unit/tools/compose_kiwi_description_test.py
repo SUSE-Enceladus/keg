@@ -17,9 +17,11 @@ from kiwi_keg.tools.compose_kiwi_description import (
     parse_revisions,
     update_revisions,
     update_changelog,
-    RepoInfo
+    RepoInfo,
+    files_equivalent
 )
 
+test_data = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../data')
 
 fake_changes_txt_new = '''-------------------------------------------------------------------
 Fri May 12 16:37:47 2023 UTC
@@ -42,6 +44,15 @@ Thu May 11 09:41:50 2023 UTC
 '''
 
 
+class MockDirEntry:
+    def __init__(self, name, path):
+        self.name = name
+        self.path = path
+
+    def is_file(self):
+        return True
+
+
 class TestFetchFromKeg:
     @fixture(autouse=True)
     def inject_fixtures(self, caplog):
@@ -62,9 +73,11 @@ class TestFetchFromKeg:
             'obs_out'
         ]
 
+    @patch('kiwi_keg.tools.compose_kiwi_description.files_equivalent')
+    @patch('kiwi_keg.tools.compose_kiwi_description.os.scandir')
     @patch('kiwi_keg.tools.compose_kiwi_description.update_changelog')
     @patch('kiwi_keg.tools.compose_kiwi_description.update_revisions')
-    @patch('os.remove')
+    @patch('kiwi_keg.tools.compose_kiwi_description.os.remove')
     @patch('kiwi_keg.tools.compose_kiwi_description.get_revision_args')
     @patch('glob.glob')
     @patch('kiwi_keg.tools.compose_kiwi_description.SourceInfoGenerator')
@@ -80,7 +93,7 @@ class TestFetchFromKeg:
         mock_KegGenerator, mock_KegImageDefinition, mock_TemporaryDirectory,
         mock_ET, mock_SourceInfoGenerator, mock_glob,
         mock_get_revision_args, mock_remove, mock_update_revisions,
-        mock_update_changelog
+        mock_update_changelog, mock_scandir, mock_files_equivalent
     ):
         mock_tree = Mock()
         mock_root = Mock()
@@ -91,7 +104,7 @@ class TestFetchFromKeg:
         mock_root.findall.return_value = [mock_prefs]
         mock_prefs.find.return_value = mock_ver
         mock_ver.text = '1.1.1'
-        mock_path_exists.side_effect = [False, False, True, True, True, False]
+        mock_path_exists.side_effect = [False, False, True, False]
         image_definition = Mock()
         mock_KegImageDefinition.return_value = image_definition
         image_generator = Mock()
@@ -105,6 +118,8 @@ class TestFetchFromKeg:
         mock_result = Mock()
         mock_result.returncode = 0
         mock_subprocess_run.return_value = mock_result
+        mock_scandir.return_value = [MockDirEntry('stale_file', './stale_file')]
+        mock_files_equivalent.return_value = False
 
         with patch('builtins.open', create=True):
             main()
@@ -183,7 +198,8 @@ class TestFetchFromKeg:
         )
         assert mock_remove.call_args_list == [
             call('obs_out/log_sources_flavor1'),
-            call('obs_out/log_sources_flavor2')
+            call('obs_out/log_sources_flavor2'),
+            call('stale_file'),
         ]
         source_info_generator.write_source_info.assert_called_once()
         mock_update_revisions.assert_called_once()
@@ -192,6 +208,8 @@ class TestFetchFromKeg:
             call('obs_out/flavor2.changes.json', 'json')
         ]
 
+    @patch('kiwi_keg.tools.compose_kiwi_description.files_equivalent')
+    @patch('kiwi_keg.tools.compose_kiwi_description.os.scandir')
     @patch('kiwi_keg.tools.compose_kiwi_description.update_revisions')
     @patch('os.walk')
     @patch('os.remove')
@@ -205,11 +223,12 @@ class TestFetchFromKeg:
     @patch('kiwi_keg.tools.compose_kiwi_description.subprocess.run')
     @patch('os.mkdir')
     @patch('os.path.exists')
-    def test_compose_kiwi_description_no_version_bump(
+    def test_compose_kiwi_description_no_changes(
         self, mock_path_exists, mock_mkdir, mock_subprocess_run,
         mock_KegGenerator, mock_KegImageDefinition, mock_TemporaryDirectory,
         mock_ET, mock_SourceInfoGenerator, mock_glob,
-        mock_get_revision_args, mock_remove, mock_walk, mock_update_revisions
+        mock_get_revision_args, mock_remove, mock_walk, mock_update_revisions,
+        mock_scandir, mock_files_equivalent
     ):
         sys.argv = [
             sys.argv[0],
@@ -222,6 +241,8 @@ class TestFetchFromKeg:
             '--outdir',
             'obs_out',
             '--version-bump=false',
+            '--purge-stale-files',
+            'false',
             '--changelog-format=yaml'
         ]
         mock_tree = Mock()
@@ -233,7 +254,7 @@ class TestFetchFromKeg:
         mock_root.findall.return_value = [mock_prefs]
         mock_prefs.find.return_value = mock_ver
         mock_ver.text = '1.1.1'
-        mock_path_exists.side_effect = [False, True, True, True]
+        mock_path_exists.side_effect = [False, False, True]
         image_definition = Mock()
         mock_KegImageDefinition.return_value = image_definition
         image_generator = Mock()
@@ -248,11 +269,234 @@ class TestFetchFromKeg:
         mock_result.returncode = 2
         mock_subprocess_run.return_value = mock_result
         mock_walk.return_value = iter([('obs_out', [], ['config.kiwi'])])
+        mock_scandir.return_value = [MockDirEntry('unchanged_file', 'obs_out/unchanged_file')]
+        mock_files_equivalent.return_value = True
 
         with patch('builtins.open', create=True), raises(SystemExit), self._caplog.at_level(logging.WARNING):
             main()
 
-        assert 'Image has no changes.' in self._caplog.text
+        assert 'Generated image description is identical to existing one' in self._caplog.text
+
+        mock_mkdir.assert_called_once_with('obs_out')
+        assert mock_subprocess_run.call_args_list == [
+            call(
+                [
+                    'git', 'clone', '-b', 'develop',
+                    'https://github.com/SUSE-Enceladus/keg-recipes.git',
+                    temp_dir.name
+                ]
+            ),
+            call(
+                [
+                    'git', '-C', temp_dir.name,
+                    'show', '--no-patch', '--format=%H', 'HEAD'
+                ],
+                stdout=subprocess.PIPE, encoding='UTF-8'
+            )
+        ]
+        mock_KegImageDefinition.assert_called_once_with(
+            image_name='leap/jeos/15.2',
+            recipes_roots=[temp_dir.name],
+            track_sources=True,
+            image_version=None
+        )
+        mock_KegGenerator.assert_called_once_with(
+            image_definition=image_definition, dest_dir='obs_out', archs=[]
+        )
+        image_generator.create_kiwi_description.assert_called_once_with(
+            overwrite=True
+        )
+        image_generator.create_custom_scripts.assert_called_once_with(
+            overwrite=True
+        )
+        image_generator.create_overlays.assert_called_once_with(
+            disable_root_tar=False, overwrite=True
+        )
+        mock_remove.assert_called_with('obs_out/unchanged_file')
+
+    @patch('kiwi_keg.tools.compose_kiwi_description.files_equivalent')
+    @patch('kiwi_keg.tools.compose_kiwi_description.os.scandir')
+    @patch('kiwi_keg.tools.compose_kiwi_description.update_revisions')
+    @patch('os.walk')
+    @patch('os.remove')
+    @patch('kiwi_keg.tools.compose_kiwi_description.get_revision_args')
+    @patch('glob.glob')
+    @patch('kiwi_keg.tools.compose_kiwi_description.SourceInfoGenerator')
+    @patch('kiwi_keg.tools.compose_kiwi_description.ET')
+    @patch('tempfile.TemporaryDirectory')
+    @patch('kiwi_keg.tools.compose_kiwi_description.KegImageDefinition')
+    @patch('kiwi_keg.tools.compose_kiwi_description.KegGenerator')
+    @patch('kiwi_keg.tools.compose_kiwi_description.subprocess.run')
+    @patch('os.mkdir')
+    @patch('os.path.exists')
+    def test_compose_kiwi_description_no_changes_stale_files(
+        self, mock_path_exists, mock_mkdir, mock_subprocess_run,
+        mock_KegGenerator, mock_KegImageDefinition, mock_TemporaryDirectory,
+        mock_ET, mock_SourceInfoGenerator, mock_glob,
+        mock_get_revision_args, mock_remove, mock_walk, mock_update_revisions,
+        mock_scandir, mock_files_equivalent
+    ):
+        sys.argv = [
+            sys.argv[0],
+            '--git-recipes',
+            'https://github.com/SUSE-Enceladus/keg-recipes.git',
+            '--image-source',
+            'leap/jeos/15.2',
+            '--git-branch',
+            'develop',
+            '--outdir',
+            'obs_out',
+            '--version-bump=false',
+            '--purge-stale-files',
+            'true',
+            '--changelog-format=yaml'
+        ]
+        mock_tree = Mock()
+        mock_root = Mock()
+        mock_prefs = Mock()
+        mock_ver = Mock()
+        mock_ET.parse.return_value = mock_tree
+        mock_tree.getroot.return_value = mock_root
+        mock_root.findall.return_value = [mock_prefs]
+        mock_prefs.find.return_value = mock_ver
+        mock_ver.text = '1.1.1'
+        mock_path_exists.side_effect = [False, False, True, False]
+        image_definition = Mock()
+        mock_KegImageDefinition.return_value = image_definition
+        image_generator = Mock()
+        mock_KegGenerator.return_value = image_generator
+        temp_dir = Mock()
+        mock_TemporaryDirectory.return_value = temp_dir
+        source_info_generator = Mock()
+        mock_SourceInfoGenerator.return_value = source_info_generator
+        mock_glob.return_value = ['obs_out/log_sources']
+        mock_get_revision_args.return_value = ['-r', 'fake_repo:fake_rev..']
+        mock_result = Mock()
+        mock_result.returncode = 2
+        mock_subprocess_run.return_value = mock_result
+        mock_walk.return_value = iter([('obs_out', [], ['config.kiwi'])])
+        mock_scandir.return_value = [MockDirEntry('stale_file', 'stale_file')]
+        mock_files_equivalent.return_value = True
+
+        with patch('builtins.open', create=True), self._caplog.at_level(logging.INFO):
+            main()
+
+        assert 'Generated files are identical to existing ones, but old image description has stale files' in self._caplog.text
+
+        mock_mkdir.assert_called_once_with('obs_out')
+        assert mock_subprocess_run.call_args_list == [
+            call(
+                [
+                    'git', 'clone', '-b', 'develop',
+                    'https://github.com/SUSE-Enceladus/keg-recipes.git',
+                    temp_dir.name
+                ]
+            ),
+            call(
+                [
+                    'git', '-C', temp_dir.name,
+                    'show', '--no-patch', '--format=%H', 'HEAD'
+                ],
+                stdout=subprocess.PIPE, encoding='UTF-8'
+            ),
+            call(
+                [
+                    'generate_recipes_changelog',
+                    '-o', 'obs_out/changes.yaml',
+                    '-f', 'yaml',
+                    '-t', '1.1.1',
+                    '-r', 'fake_repo:fake_rev..',
+                    'obs_out/log_sources'
+                ]
+            )
+        ]
+        mock_KegImageDefinition.assert_called_once_with(
+            image_name='leap/jeos/15.2',
+            recipes_roots=[temp_dir.name],
+            track_sources=True,
+            image_version=None
+        )
+        mock_KegGenerator.assert_called_once_with(
+            image_definition=image_definition, dest_dir='obs_out', archs=[]
+        )
+        image_generator.create_kiwi_description.assert_called_once_with(
+            overwrite=True
+        )
+        image_generator.create_custom_scripts.assert_called_once_with(
+            overwrite=True
+        )
+        image_generator.create_overlays.assert_called_once_with(
+            disable_root_tar=False, overwrite=True
+        )
+        mock_remove.assert_called_with('stale_file')
+
+    @patch('kiwi_keg.tools.compose_kiwi_description.delete_unchanged_files')
+    @patch('kiwi_keg.tools.compose_kiwi_description.os.scandir')
+    @patch('kiwi_keg.tools.compose_kiwi_description.update_revisions')
+    @patch('os.walk')
+    @patch('os.remove')
+    @patch('kiwi_keg.tools.compose_kiwi_description.get_revision_args')
+    @patch('glob.glob')
+    @patch('kiwi_keg.tools.compose_kiwi_description.SourceInfoGenerator')
+    @patch('kiwi_keg.tools.compose_kiwi_description.ET')
+    @patch('tempfile.TemporaryDirectory')
+    @patch('kiwi_keg.tools.compose_kiwi_description.KegImageDefinition')
+    @patch('kiwi_keg.tools.compose_kiwi_description.KegGenerator')
+    @patch('kiwi_keg.tools.compose_kiwi_description.subprocess.run')
+    @patch('os.mkdir')
+    @patch('os.path.exists')
+    def test_compose_kiwi_description_no_change_entries(
+        self, mock_path_exists, mock_mkdir, mock_subprocess_run,
+        mock_KegGenerator, mock_KegImageDefinition, mock_TemporaryDirectory,
+        mock_ET, mock_SourceInfoGenerator, mock_glob,
+        mock_get_revision_args, mock_remove, mock_walk, mock_update_revisions,
+        mock_scandir, mock_delete_unchanged_files
+    ):
+        sys.argv = [
+            sys.argv[0],
+            '--git-recipes',
+            'https://github.com/SUSE-Enceladus/keg-recipes.git',
+            '--image-source',
+            'leap/jeos/15.2',
+            '--git-branch',
+            'develop',
+            '--outdir',
+            'obs_out',
+            '--version-bump=false',
+            '--purge-stale-files',
+            'false',
+            '--changelog-format=yaml'
+        ]
+        mock_tree = Mock()
+        mock_root = Mock()
+        mock_prefs = Mock()
+        mock_ver = Mock()
+        mock_ET.parse.return_value = mock_tree
+        mock_tree.getroot.return_value = mock_root
+        mock_root.findall.return_value = [mock_prefs]
+        mock_prefs.find.return_value = mock_ver
+        mock_ver.text = '1.1.1'
+        mock_path_exists.side_effect = [False, False, True, True, True, True]
+        image_definition = Mock()
+        mock_KegImageDefinition.return_value = image_definition
+        image_generator = Mock()
+        mock_KegGenerator.return_value = image_generator
+        temp_dir = Mock()
+        mock_TemporaryDirectory.return_value = temp_dir
+        source_info_generator = Mock()
+        mock_SourceInfoGenerator.return_value = source_info_generator
+        mock_glob.return_value = ['obs_out/log_sources']
+        mock_get_revision_args.return_value = ['-r', 'fake_repo:fake_rev..']
+        mock_result = Mock()
+        mock_result.returncode = 2
+        mock_subprocess_run.return_value = mock_result
+        mock_walk.return_value = iter([('obs_out', [], ['config.kiwi'])])
+        mock_delete_unchanged_files.return_value = True
+
+        with patch('builtins.open', create=True), self._caplog.at_level(logging.WARNING):
+            main()
+
+        assert 'Image description has changed but no new change log entries were generated' in self._caplog.text
 
         mock_mkdir.assert_called_once_with('obs_out')
         assert mock_subprocess_run.call_args_list == [
@@ -303,8 +547,9 @@ class TestFetchFromKeg:
             'obs_out/config.kiwi'
         )
         source_info_generator.write_source_info.assert_called_once()
-        mock_remove.assert_called_once_with('obs_out/config.kiwi')
+        mock_remove.assert_called_with('obs_out/log_sources')
 
+    @patch('kiwi_keg.tools.compose_kiwi_description.delete_unchanged_files')
     @patch('kiwi_keg.tools.compose_kiwi_description.datetime')
     @patch('kiwi_keg.tools.compose_kiwi_description.write_changelog')
     @patch('kiwi_keg.tools.compose_kiwi_description.update_revisions')
@@ -324,7 +569,7 @@ class TestFetchFromKeg:
         mock_KegGenerator, mock_KegImageDefinition, mock_TemporaryDirectory,
         mock_ET, mock_SourceInfoGenerator, mock_glob,
         mock_get_revision_args, mock_remove, mock_update_revisions,
-        mock_write_changelog, mock_datetime
+        mock_write_changelog, mock_datetime, mock_delete_unchanged_files
     ):
         sys.argv = [
             sys.argv[0],
@@ -337,6 +582,8 @@ class TestFetchFromKeg:
             '--outdir',
             'obs_out',
             '--version-bump=false',
+            '--purge-stale-files',
+            'false',
             '--changelog-format=json',
             '--new-image-change=new image'
         ]
@@ -366,6 +613,7 @@ class TestFetchFromKeg:
         mock_timestamp = Mock()
         mock_timestamp.isoformat.return_value = 'TIMESTAMP'
         mock_datetime.now.return_value = mock_timestamp
+        mock_delete_unchanged_files.return_value = True
 
         with patch('builtins.open', create=True):
             main()
@@ -417,6 +665,7 @@ class TestFetchFromKeg:
             expected_changelog
         )
 
+    @patch('kiwi_keg.tools.compose_kiwi_description.delete_unchanged_files')
     @patch('kiwi_keg.tools.compose_kiwi_description.update_changelog')
     @patch('kiwi_keg.tools.compose_kiwi_description.update_revisions')
     @patch('os.remove')
@@ -435,7 +684,7 @@ class TestFetchFromKeg:
         mock_KegGenerator, mock_KegImageDefinition, mock_TemporaryDirectory,
         mock_ET, mock_SourceInfoGenerator, mock_glob,
         mock_get_revision_args, mock_remove, mock_update_revisions,
-        mock_update_changelog
+        mock_update_changelog, mock_delete_unchanged_files
     ):
         sys.argv = [
             sys.argv[0],
@@ -447,6 +696,8 @@ class TestFetchFromKeg:
             'develop',
             '--outdir',
             'obs_out',
+            '--purge-stale-files',
+            'false',
             '--changelog-format=osc'
         ]
         mock_tree = Mock()
@@ -472,6 +723,7 @@ class TestFetchFromKeg:
         mock_result = Mock()
         mock_result.returncode = 0
         mock_subprocess_run.return_value = mock_result
+        mock_delete_unchanged_files.return_value = True
 
         with patch('builtins.open', create=True):
             main()
@@ -731,3 +983,16 @@ class TestFetchFromKeg:
         with raises(SystemExit) as sysex:
             generate_changelog('log_sources', 'changes.yaml', 'yaml', '1.1.1', ['-r', 'fakerev'])
         assert sysex.value.code == 'Error generating change log.'
+
+    def test_files_equivalent(self):
+        old_dir = os.path.join(test_data, 'compose_tests/old')
+        new_dir = os.path.join(test_data, 'compose_tests/new')
+        assert files_equivalent('config.kiwi', old_dir, new_dir, True)
+        assert files_equivalent('config2.kiwi', old_dir, new_dir, True)
+        assert not files_equivalent('config2.kiwi', old_dir, new_dir, False)
+        assert not files_equivalent('config3.kiwi', old_dir, new_dir, True)
+        assert files_equivalent('same.tar.gz', old_dir, new_dir, True)
+        assert not files_equivalent('differs.tar.gz', old_dir, new_dir, True)
+        assert files_equivalent('same.txt', old_dir, new_dir, True)
+        assert not files_equivalent('differs.txt', old_dir, new_dir, True)
+        assert not files_equivalent('no_such_file', old_dir, new_dir, True)
