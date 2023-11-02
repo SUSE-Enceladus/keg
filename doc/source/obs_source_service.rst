@@ -82,6 +82,9 @@ package directory:
 
    osc service mr
 
+For more information about the Open Build Service command line tool see the
+ `osc documentation <https://en.opensuse.org/openSUSE:OSC>`_
+
 Refer to the `Using Source Services
 <https://openbuildservice.org/help/manuals/obs-user-guide/cha.obs.source_service.html>`_
 section of the OBS manual about details on how to run the source service and
