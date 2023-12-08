@@ -113,6 +113,7 @@ range:1:3:../data/images/leap-jeos/15.2/image.yaml
 range:10:10:../data/images/leap-jeos/15.2/image.yaml
 range:11:11:../data/images/leap-jeos/15.2/image.yaml
 ../data/data/scripts/base-stuff.sh
+../data/data/scripts/base-stuff.sh
 ../data/data/scripts/orange-stuff.sh
 ../data/data/scripts/common-stuff.sh
 range:58:58:../data/images/leap-jeos/content.yaml
