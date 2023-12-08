@@ -181,7 +181,9 @@ class SourceInfoGenerator:
             os.path.join(x, 'scripts') for x in self.image_definition.data_roots
             if os.path.exists(os.path.join(x, 'scripts'))
         ]
-        for config_sect in self.image_definition.data.get('config', []):
+        script_sects = self.image_definition.data.get('config', []).copy()
+        script_sects += self.image_definition.data.get('setup', [])
+        for config_sect in script_sects:
             profiles = self._get_profiles_attrib(config_sect)
             if profiles and profile not in profiles:
                 continue
