@@ -200,7 +200,7 @@ def parse_revisions(repos):
                     repo.set_start_commit(rev_spec[1])
     else:
         log.info(
-            'No _keg_revision file.'
+            'No _keg_revisions file.'
         )
 
 
