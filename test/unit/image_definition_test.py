@@ -10,7 +10,7 @@ class TestKegImageDefinition:
     def inject_fixtures(self, caplog):
         self._caplog = caplog
 
-    def setup(self):
+    def setup_method(self):
         self.keg_definition = KegImageDefinition(
             image_name='leap-jeos/15.2', recipes_roots=['../data'], image_version='1.0.0'
         )

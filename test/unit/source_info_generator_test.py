@@ -14,7 +14,7 @@ class TestSourceInfoGenerator:
     def inject_fixtures(self, caplog):
         self._caplog = caplog
 
-    def setup(self):
+    def setup_method(self):
         self.image_definition = KegImageDefinition(
             image_name='leap-jeos/15.2', recipes_roots=['../data'], track_sources=True
         )

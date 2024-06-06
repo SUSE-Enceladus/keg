@@ -7,7 +7,7 @@ from kiwi_keg.exceptions import KegLogFileSetupFailed
 
 
 class TestLogger:
-    def setup(self):
+    def setup_method(self):
         self.log = Logger('keg')
 
     @patch('logging.FileHandler')

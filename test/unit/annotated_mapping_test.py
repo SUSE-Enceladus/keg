@@ -2,7 +2,7 @@ from kiwi_keg.annotated_mapping import AnnotatedMapping, AnnotatedPrettyPrinter
 
 
 class TestAnnotatedMapping:
-    def setup(self):
+    def setup_method(self):
         self.mapping = AnnotatedMapping(
             {
                 'some_key': 'foo',
