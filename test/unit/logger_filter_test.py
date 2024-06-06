@@ -11,7 +11,7 @@ from kiwi_keg.logger_filter import (
 
 
 class TestLoggerSchedulerFilter:
-    def setup(self):
+    def setup_method(self):
         self.scheduler_filter = LoggerSchedulerFilter()
 
     def test_filter(self):
@@ -29,7 +29,7 @@ class TestLoggerSchedulerFilter:
 
 
 class TestInfoFilter:
-    def setup(self):
+    def setup_method(self):
         self.info_filter = InfoFilter()
 
     def test_filter(self):
@@ -42,7 +42,7 @@ class TestInfoFilter:
 
 
 class TestDebugFilter:
-    def setup(self):
+    def setup_method(self):
         self.debug_filter = DebugFilter()
 
     def test_filter(self):
@@ -55,7 +55,7 @@ class TestDebugFilter:
 
 
 class TestErrorFilter:
-    def setup(self):
+    def setup_method(self):
         self.error_filter = ErrorFilter()
 
     def test_filter(self):
@@ -68,7 +68,7 @@ class TestErrorFilter:
 
 
 class TestWarningFilter:
-    def setup(self):
+    def setup_method(self):
         self.error_filter = WarningFilter()
 
     def test_filter(self):

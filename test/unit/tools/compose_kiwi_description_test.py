@@ -58,7 +58,7 @@ class TestFetchFromKeg:
     def inject_fixtures(self, caplog):
         self._caplog = caplog
 
-    def setup(self):
+    def setup_method(self):
         sys.argv = [
             sys.argv[0],
             '--git-recipes',
@@ -856,7 +856,7 @@ class TestFetchFromKeg:
 
             with self._caplog.at_level(logging.INFO):
                 parse_revisions(repos)
-                assert 'No _keg_revision file.' in self._caplog.text
+                assert 'No _keg_revisions file.' in self._caplog.text
 
             with open(os.path.join(tmpdirname, '_keg_revisions'), 'w') as outf:
                 outf.write('repo1 hash1\nrepo2 hash2\n')

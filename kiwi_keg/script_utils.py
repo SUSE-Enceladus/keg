@@ -151,7 +151,7 @@ def get_services_section(service_items: Dict, ns: str) -> str:
                 service_name = item['name']
                 enable = item['enable']
             if service_name.endswith('timer') or service_name.endswith('target'):
-                content += 'systemctl enable {}\n'.format(service_name)
+                content += 'systemctl {} {}\n'.format('enable' if enable else 'disable', service_name)
             else:
                 if enable:
                     content += 'baseInsertService {}\n'.format(service_name)

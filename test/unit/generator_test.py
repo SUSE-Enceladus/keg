@@ -18,7 +18,7 @@ def assert_files_equal(file1, file2):
 
 
 class TestKegGenerator:
-    def setup(self):
+    def setup_method(self):
         self.image_definition = KegImageDefinition(
             image_name='leap-jeos/15.2', recipes_roots=['../data'], image_version='1.0.0'
         )

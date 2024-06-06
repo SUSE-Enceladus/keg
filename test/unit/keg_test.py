@@ -25,7 +25,7 @@ class TestKeg:
     def inject_fixtures(self, caplog):
         self._caplog = caplog
 
-    def setup(self):
+    def setup_method(self):
         sys.argv = [
             sys.argv[0], '--verbose',
             '--recipes-root', '../data',

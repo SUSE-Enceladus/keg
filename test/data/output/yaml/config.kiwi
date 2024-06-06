@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<image schemaversion="7.3" name="KEG">
+<image schemaversion="7.4" name="KEG">
     <description type="system">
         <author>Public Cloud Team</author>
         <contact>pubcloud-dev@suse.com</contact>

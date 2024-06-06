@@ -10,7 +10,7 @@ some comment
 Some long text
 and more text-->
 
-<image schemaversion="7.3" name="KEG">
+<image schemaversion="7.4" name="KEG">
     <description type="system">
         <author>Public Cloud Team</author>
         <contact>pubcloud-dev@suse.com</contact>
