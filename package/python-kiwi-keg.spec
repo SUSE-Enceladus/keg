@@ -22,8 +22,10 @@
 %else
 %bcond_with libalternatives
 %endif
+%define python python
+%{?sle15_python_module_pythons}
 
-%define         skip_python2 1
+
 Name:           python-kiwi-keg
 Version:        2.1.1
 Release:        0
@@ -34,7 +36,6 @@ Source:         keg-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  %{python_module Jinja2}
 BuildRequires:  %{python_module Sphinx}
-BuildRequires:  %{python_module base >= 3.6}
 BuildRequires:  %{python_module setuptools}
 BuildRequires:  fdupes
 BuildArch:      noarch
@@ -42,10 +43,7 @@ Requires:       python-Jinja2
 Requires:       python-PyYAML
 Requires:       python-docopt
 Requires:       python-schema
-Requires:       python3-kiwi >= 9.21.21
-%if %python_version_nodots < 37
-Requires:       python-iso8601
-%endif
+Requires:       python311-kiwi >= 9.21.21
 %if %{with libalternatives}
 Requires:       alts
 BuildRequires:  alts
@@ -53,10 +51,7 @@ BuildRequires:  alts
 Requires(post): update-alternatives
 Requires(postun):update-alternatives
 %endif
-%if "%{python_flavor}" == "python3" || "%{python_provides}" == "python3"
-Provides:       python3-kiwi-keg = %version
-Obsoletes:      python3-kiwi-keg < %version
-%endif
+Obsoletes:      python3-kiwi-keg <= %version
 
 %python_subpackages
 
@@ -67,7 +62,7 @@ KEG is an image composition tool for KIWI image descriptions
 Summary:        An OBS service: generate KIWI description using KEG
 Group:          Development/Tools/Building
 Requires:       git
-Requires:       python3-kiwi-keg = %version
+Requires:       python311-kiwi-keg = %version
 
 %description -n obs-service-compose_kiwi_description
 This is a source service for openSUSE Build Service.
@@ -80,7 +75,6 @@ auto-generation of change log files from commit history.
 %setup -q -n keg-%{version}
 
 %build
-# Build Python 3 version
 %python_build
 
 # Build man pages
