@@ -16,14 +16,13 @@
 # Please submit bugfixes or comments via https://bugs.opensuse.org/
 #
 
-
 %if 0%{?suse_version} > 1500
 %bcond_without libalternatives
 %else
 %bcond_with libalternatives
 %endif
 
-%define         skip_python2 1
+%{?sle15_python_module_pythons}
 Name:           python-kiwi-keg
 Version:        2.1.1
 Release:        0
@@ -32,32 +31,41 @@ Summary:        KEG - Image Composition Tool
 License:        GPL-3.0-or-later
 Source:         keg-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
-BuildRequires:  %{python_module Jinja2}
-BuildRequires:  %{python_module Sphinx}
-BuildRequires:  %{python_module base >= 3.6}
 BuildRequires:  %{python_module setuptools}
-BuildRequires:  fdupes
-BuildArch:      noarch
-Requires:       python-Jinja2
-Requires:       python-PyYAML
-Requires:       python-docopt
-Requires:       python-schema
-Requires:       python3-kiwi >= 9.21.21
-%if %python_version_nodots < 37
-Requires:       python-iso8601
+BuildRequires:  %{python_module Sphinx}
+BuildRequires:  %{python_module Jinja2}
+BuildRequires:  %{python_module schema}
+BuildRequires:  %{python_module pytest}
+BuildRequires:  %{python_module docopt}
+BuildRequires:  %{python_module PyYAML}
+# On TW the kiwi package is always the latest python default: python3-kiwi
+# On Leap <15.5 and SLES15 <SP5 only one python exists: python3-kiwi
+%if 0%{?suse_version} > 1600 || 0%{?sle_version} < 150500
+BuildRequires:  python3-kiwi
+%else
+BuildRequires:  %{python_module kiwi}
 %endif
+BuildRequires:  fdupes
 %if %{with libalternatives}
-Requires:       alts
 BuildRequires:  alts
+Requires:       alts
 %else
 Requires(post): update-alternatives
 Requires(postun):update-alternatives
 %endif
-%if "%{python_flavor}" == "python3" || "%{python_provides}" == "python3"
+Requires:       python-Sphinx
+Requires:       python-Jinja2
+Requires:       python-schema
+Requires:       python-docopt
+Requires:       python-PyYAML
+%if 0%{?suse_version} > 1600 || 0%{?sle_version} < 150500
+Requires:       python3-kiwi
+%else
+Requires:       python-kiwi
+%endif
 Provides:       python3-kiwi-keg = %version
 Obsoletes:      python3-kiwi-keg < %version
-%endif
-
+BuildArch:      noarch
 %python_subpackages
 
 %description
@@ -77,7 +85,7 @@ more given git repositories that contain keg-recipes source tree. It supports
 auto-generation of change log files from commit history.
 
 %prep
-%setup -q -n keg-%{version}
+%setup -q -n kiwi_keg-%{version}
 
 %build
 # Build Python 3 version
