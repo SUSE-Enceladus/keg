@@ -16,14 +16,21 @@
 # Please submit bugfixes or comments via https://bugs.opensuse.org/
 #
 
+# If they aren't provided by a system installed macro, define them
+%{!?_defaultdocdir: %global _defaultdocdir %{_datadir}/doc}
 
-%if 0%{?suse_version} > 1500
-%bcond_without libalternatives
+%if 0%{?suse_version} && 0%{?suse_version} < 1600
+%global __python3 /usr/bin/python3.11
+%global python3_pkgversion 311
 %else
-%bcond_with libalternatives
+%{!?__python3: %global __python3 /usr/bin/python3}
+%{!?python3_pkgversion:%global python3_pkgversion 3}
 %endif
 
-%define         skip_python2 1
+%if %{undefined python3_sitelib}
+%global python3_sitelib %(%{__python3} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
+%endif
+
 Name:           python-kiwi-keg
 Version:        2.1.1
 Release:        0
@@ -32,35 +39,28 @@ Summary:        KEG - Image Composition Tool
 License:        GPL-3.0-or-later
 Source:         keg-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
-BuildRequires:  %{python_module Jinja2}
-BuildRequires:  %{python_module Sphinx}
-BuildRequires:  %{python_module base >= 3.6}
-BuildRequires:  %{python_module setuptools}
+BuildRequires:  python%{python3_pkgversion}-%{develsuffix} >= 3.9
+BuildRequires:  python%{python3_pkgversion}-setuptools
+BuildRequires:  python%{python3_pkgversion}-Sphinx
+BuildRequires:  python%{python3_pkgversion}-Jinja2
 BuildRequires:  fdupes
 BuildArch:      noarch
-Requires:       python-Jinja2
-Requires:       python-PyYAML
-Requires:       python-docopt
-Requires:       python-schema
-Requires:       python3-kiwi >= 9.21.21
-%if %python_version_nodots < 37
-Requires:       python-iso8601
-%endif
-%if %{with libalternatives}
-Requires:       alts
-BuildRequires:  alts
-%else
-Requires(post): update-alternatives
-Requires(postun):update-alternatives
-%endif
-%if "%{python_flavor}" == "python3" || "%{python_provides}" == "python3"
-Provides:       python3-kiwi-keg = %version
-Obsoletes:      python3-kiwi-keg < %version
-%endif
-
-%python_subpackages
 
 %description
+KEG is an image composition tool for KIWI image descriptions
+
+# python3-kiwi-keg
+%package -n python%{python3_pkgversion}-kiwi-keg
+Summary:        KEG - Image Composition Tool
+Requires:       python%{python3_pkgversion}-Jinja2
+Requires:       python%{python3_pkgversion}-docopt
+Requires:       python%{python3_pkgversion}-PyYAML
+Requires:       python%{python3_pkgversion}-schema
+Requires:       python%{python3_pkgversion}-kiwi >= 9.21.21
+Provides:       python3-kiwi-keg = %version
+Obsoletes:      python3-kiwi-keg < %version
+
+%description -n python%{python3_pkgversion}-kiwi-keg
 KEG is an image composition tool for KIWI image descriptions
 
 %package -n obs-service-compose_kiwi_description
@@ -100,7 +100,7 @@ make buildroot=%{buildroot}/ docdir=%{_defaultdocdir}/ install
 %python_install_alternative keg keg.1 generate_recipes_changelog
 %python_install_alternative generate_recipes_changelog.1
 
-%files %{python_files}
+%files -n python%{python3_pkgversion}-kiwi-keg
 %python_alternative %{_bindir}/generate_recipes_changelog
 %python_alternative %{_bindir}/keg
 %{python_sitelib}/kiwi_keg
