@@ -25,7 +25,7 @@ config = {
     'install_requires': [
         'docopt',
         'Jinja2',
-        'kiwi>=9.21.21',
+        'kiwi',
         'PyYAML',
         'schema',
         'iso8601; python_version < "3.7.0"'

@@ -1,6 +1,6 @@
 buildroot = /
 docdir = /usr/share/doc/packages
-python_version = 3
+python_version = 3.11
 python_lookup_name = python$(python_version)
 python = $(shell which $(python_lookup_name))
 
