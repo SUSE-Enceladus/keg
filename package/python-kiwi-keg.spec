@@ -81,7 +81,7 @@ more given git repositories that contain keg-recipes source tree. It supports
 auto-generation of change log files from commit history.
 
 %prep
-%setup -q -n keg-%{version}
+%setup -q -n kiwi_keg-%{version}
 
 %build
 # Build Python 3 version
