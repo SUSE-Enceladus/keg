@@ -53,6 +53,8 @@ build: clean tox
 	sed -ie "s@>=[0-9.]*'@'@g" setup.py
 	# build the sdist source tarball
 	$(python) -m build
+	mv dist/kiwi_keg-${version}.tar.gz dist/keg-${version}.tar.gz
+	rm -f dist/*.whl
 	# restore original setup.py backed up from sed
 	mv setup.pye setup.py
 	# update rpm changelog using reference file
@@ -63,10 +65,8 @@ build: clean tox
 	# copy spec file
 	cp package/$(PKG).spec dist/
 
-pypi: clean tox
-	$(python) setup.py sdist upload
-
 clean: clean_git_attributes
 	$(python) setup.py clean
 	rm -rf doc/build
 	rm -rf doc/dist
+	rm -rf dist

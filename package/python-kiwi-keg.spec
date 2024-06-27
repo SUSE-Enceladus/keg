@@ -31,6 +31,10 @@
 %global python3_sitelib %(%{__python3} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
 %endif
 
+%global pygroup Development/Languages/Python
+%global sysgroup System/Management
+%global develsuffix devel
+
 Name:           python-kiwi-keg
 Version:        2.1.1
 Release:        0
