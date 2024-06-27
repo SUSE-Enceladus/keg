@@ -59,7 +59,7 @@ Summary:        KEG - Image Composition Tool
 Requires:       python%{python3_pkgversion}-Jinja2
 Requires:       python%{python3_pkgversion}-docopt
 Requires:       python%{python3_pkgversion}-PyYAML
-Requires:       python3-schema
+Requires:       python%{python3_pkgversion}-schema
 Requires:       python%{python3_pkgversion}-kiwi
 Provides:       python3-kiwi-keg = %version
 Obsoletes:      python3-kiwi-keg < %version
