@@ -31,7 +31,7 @@
 %global python3_sitelib %(%{__python3} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
 %endif
 
-%if 0%{?suse_version} < 1600
+%if 0%{?suse_version} > 1500
 %bcond_without libalternatives
 %else
 %bcond_with libalternatives
@@ -113,7 +113,7 @@ make buildroot=%{buildroot}/ docdir=%{_defaultdocdir}/ install
 %python_clone -a %{buildroot}%{_mandir}/man1/generate_recipes_changelog.1
 %python_expand %fdupes %{buildroot}%{$python_sitelib}
 
-%post
+%post -n python%{python3_pkgversion}-kiwi-keg
 %python_install_alternative keg keg.1 generate_recipes_changelog
 %python_install_alternative generate_recipes_changelog.1
 
