@@ -31,6 +31,12 @@
 %global python3_sitelib %(%{__python3} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
 %endif
 
+%if 0%{?suse_version} < 1600
+%bcond_without libalternatives
+%else
+%bcond_with libalternatives
+%endif
+
 %global pygroup Development/Languages/Python
 %global sysgroup System/Management
 %global develsuffix devel
@@ -48,6 +54,13 @@ BuildRequires:  python%{python3_pkgversion}-setuptools
 BuildRequires:  python%{python3_pkgversion}-Sphinx
 BuildRequires:  python%{python3_pkgversion}-Jinja2
 BuildRequires:  fdupes
+%if %{with libalternatives}
+BuildRequires:  alts
+Requires:       alts
+%else
+Requires(post): update-alternatives
+Requires(postun):update-alternatives
+%endif
 BuildArch:      noarch
 
 %description
