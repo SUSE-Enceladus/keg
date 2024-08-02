@@ -2,8 +2,25 @@
       href="file:/usr/share/xml/docbook/schema/rng/5.1/docbookxi.rnc"
       type="application/relax-ng-compact-syntax"
      ?>
-<book xmlns="http://docbook.org/ns/docbook" xml:lang="en" version="5.1" xml:id="keg-reference-guide">
+<book xmlns="http://docbook.org/ns/docbook" xml:lang="en" version="5.1" xmlns:its="http://www.w3.org/2005/11/its" xml:id="keg-reference-guide">
   <title>Keg Reference Guide</title>
+  <meta name="title" its:translate="yes">Keg Reference Guide</meta>
+  <meta name="series" its:translate="no">Products &amp; Solutions</meta>
+  <meta name="description" its:translate="yes">How to create and manage image descriptions for the KIWI appliance builder</meta>
+  <meta name="social-descr" its:translate="yes">Create and manage image descriptions for KIWI</meta>
+  <meta name="task" its:translate="yes">
+    <phrase>Image Building</phrase>
+  </meta>
+  <revhistory xml:id="rh-keg-reference-guide">
+    <revision>
+      <date>2020-07-21</date>
+      <revdescription>
+        <para>
+          Initial release of this document.
+        </para>
+      </revdescription>
+    </revision>
+  </revhistory>
   <info/>
   <preface>
     <title>Preface</title>
