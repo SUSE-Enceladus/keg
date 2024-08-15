@@ -58,11 +58,7 @@ Requires:       python-Jinja2
 Requires:       python-schema
 Requires:       python-docopt
 Requires:       python-PyYAML
-%if 0%{?suse_version} > 1600 || 0%{?sle_version} < 150500
-Requires:       python3-kiwi
-%else
 Requires:       python-kiwi
-%endif
 Provides:       python3-kiwi-keg = %version
 Obsoletes:      python3-kiwi-keg < %version
 BuildArch:      noarch
@@ -85,7 +81,7 @@ more given git repositories that contain keg-recipes source tree. It supports
 auto-generation of change log files from commit history.
 
 %prep
-%setup -q -n kiwi_keg-%{version}
+%setup -q -n keg-%{version}
 
 %build
 # Build Python 3 version
