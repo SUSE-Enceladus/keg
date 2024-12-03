@@ -411,7 +411,7 @@ etc., apply as for the image dictionary.
 Custom XML files can be useful when generating image descriptions for use in
 the Open Build Service, which accepts build configuration directives via XML
 source files, like the :file:`_constraints` file. See
-`<https://openbuildservice.org/help/manuals/obs-user-guide/cha.obs.build_job_constraints.html>`__
+`<https://openbuildservice.org/help/manuals/obs-user-guide/cha-obs-build-constraints>`__
 for details.
 
 schema
