@@ -31,8 +31,6 @@ URL:            https://github.com/SUSE-Enceladus/keg
 Summary:        KEG - Image Composition Tool
 License:        GPL-3.0-or-later
 Source:         keg-%{version}.tar.gz
-# PATCH-FIX-UPSTREAM https://github.com/SUSE-Enceladus/keg/pull/154 Fix link to OBS documentation
-Patch0:         fix-doc-link.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  %{python_module Jinja2}
 BuildRequires:  %{python_module Sphinx}
