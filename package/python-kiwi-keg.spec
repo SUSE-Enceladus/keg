@@ -45,8 +45,6 @@ Summary:       KEG - Image Composition Tool
 Group:         Development/Tools/Building
 License:       GPL-3.0-or-later
 Source0:       %{upstream_name}-%{version}.tar.gz
-# PATCH-FIX-UPSTREAM https://github.com/SUSE-Enceladus/keg/pull/154 Fix link to OBS documentation
-Patch0:        fix-doc-link.patch
 BuildRequires: %{pythons}-pip
 BuildRequires: %{pythons}-setuptools
 BuildRequires: %{pythons}-wheel
