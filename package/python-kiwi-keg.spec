@@ -12,9 +12,9 @@
 # case the license is the MIT License). An "Open Source License" is a
 # license that conforms to the Open Source Definition (Version 1.9)
 # published by the Open Source Initiative.
-
 # Please submit bugfixes or comments via https://bugs.opensuse.org/
 #
+
 
 %if 0%{?suse_version} >= 1600
 %define pythons %{primary_python}
@@ -30,11 +30,9 @@
 #   new_setuptools = 0   … SLE-15-SP3 or older
 # ------------------------------------------------------------------
 %define new_setuptools 1
-%if 0%{?sle_version} <= 150300
+%if 0%{?suse_version} <= 150300
 %define new_setuptools 0
 %endif
-# ------------------------------------------------------------------
-
 
 %define skip_python2 1
 %define skip_fdupes 1
@@ -93,7 +91,7 @@ auto-generation of change log files from commit history.
 %prep
 %autosetup -p1 -n %{upstream_name}-%{version}
 
-%if !%{new_setuptools}
+%if !0%{?new_setuptools}
 # setuptools-40.x needs a minimal PEP-517 stub
 cat > pyproject.toml <<'EOF'
 [build-system]
@@ -103,7 +101,7 @@ EOF
 %endif
 
 %build
-%if !%{new_setuptools}
+%if !0%{?new_setuptools}
 # workaround for old setuptools
 export PYTHONPATH=$PWD
 export PIP_NO_BUILD_ISOLATION=1
