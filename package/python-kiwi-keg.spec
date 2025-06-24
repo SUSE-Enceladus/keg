@@ -22,21 +22,8 @@
 %{?sle15_python_module_pythons}
 %endif
 
-# ------------------------------------------------------------------
-# SLE-15-SP3 ships python-setuptools 40.x – too old for a plain
-# PEP-517 build.  Everywhere else we have >= 42.
-#
-#   new_setuptools = 1   … modern setuptools (default)
-#   new_setuptools = 0   … SLE-15-SP3 or older
-# ------------------------------------------------------------------
-%define new_setuptools 1
-%if 0%{?suse_version} <= 150300
-%define new_setuptools 0
-%endif
-
-%define skip_python2 1
-%define skip_fdupes 1
 %define upstream_name keg
+
 Name:          python-kiwi-keg
 Version:       2.1.1
 Release:       0
@@ -54,11 +41,6 @@ BuildRequires: %{pythons}-sphinx_rtd_theme
 BuildRequires: python-rpm-macros
 BuildRequires: fdupes
 BuildRequires: make
-Provides:      python3-kiwi-keg = %{version}
-Provides:      python310-kiwi-keg = %{version}
-Provides:      python311-kiwi-keg = %{version}
-Provides:      python312-kiwi-keg = %{version}
-Provides:      python313-kiwi-keg = %{version}
 Obsoletes:     python3-kiwi-keg < %{version}
 Obsoletes:     python310-kiwi-keg < %{version}
 Obsoletes:     python311-kiwi-keg < %{version}
@@ -89,31 +71,13 @@ auto-generation of change log files from commit history.
 %prep
 %autosetup -p1 -n %{upstream_name}-%{version}
 
-%if !0%{?new_setuptools}
-# setuptools-40.x needs a minimal PEP-517 stub
-cat > pyproject.toml <<'EOF'
-[build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
-EOF
-%endif
-
-%build
-%if !0%{?new_setuptools}
-# workaround for old setuptools
-export PYTHONPATH=$PWD
-export PIP_NO_BUILD_ISOLATION=1
-%pyproject_wheel .
-%else
 %pyproject_wheel
-%endif
-# Build man pages
 make -C doc man
 
 %install
 %pyproject_install
 make buildroot=%{buildroot}/ docdir=%{_defaultdocdir}/ install
-%python_expand fdupes %{buildroot}%{$python_sitelib}
+%fdupes %{buildroot}%{$python_sitelib}
 
 %check
 
