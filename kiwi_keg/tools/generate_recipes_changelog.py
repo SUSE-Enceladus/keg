@@ -1,4 +1,4 @@
-# Copyright (c) 2022 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2024 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -46,15 +46,46 @@ Options:
 """
 
 import docopt
+import logging
 import json
 import subprocess
 import sys
 import yaml
 from datetime import datetime, timezone
 
+log = logging.getLogger('generate_recipes_changelog')
+log.setLevel(logging.INFO)
+
 
 class MultiStr(str):
     pass
+
+
+class RangeFile:
+    def __init__(self):
+        self.lines = []
+
+    def add_range(self, line_start, line_end):
+        self.lines += range(line_start, line_end + 1)
+
+    def get_ranges(self):
+        ranges = []
+        rstart = None
+        rend = None
+        for i in sorted(set(self.lines)):
+            if not rstart:
+                rstart = i
+                rend = i
+                continue
+            if i == rend + 1:
+                rend += 1
+            else:
+                ranges.append((rstart, rend))
+                rstart = i
+                rend = i
+        if rend:
+            ranges.append((rstart, rend))
+        return ranges
 
 
 def get_commits_from_range(start, end, filespec, gitroot, rev=None):
@@ -76,6 +107,29 @@ def get_commits_from_path(pathspec, gitroot, rev=None):
     cmdargs.append('--')
     cmdargs.append(pathspec)
     return get_commits(cmdargs, gitroot)
+
+
+def get_deletion_commit(line_no, filespec, gitroot, rev):
+    # To find a commit that deleted a line, use git blame to find the last commit
+    # that still had the line in question.
+    cmdargs = ['git', '-C', gitroot, 'blame', '--no-merges', '--reverse', rev, '-L', f'{line_no},{line_no}', '--', filespec]
+    sp = subprocess.run(args=cmdargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if sp.returncode != 0:
+        raise Exception('git exited with error "{}"'.format(sp.stderr))
+    last_commit_with_line = sp.stdout.decode('utf-8').split(' ')[0].lstrip('^')
+
+    # Find the next commit in line, assuming that it is the one that deleted the line.
+    cmdargs = ['git', '-C', gitroot, 'log', '--format=%ct %H', last_commit_with_line + '..', '--', filespec]
+    sp = subprocess.run(args=cmdargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if sp.returncode != 0:
+        raise Exception('git exited with error "{}"'.format(sp.stderr))
+    commits = sp.stdout.decode('utf-8').splitlines()
+    if not commits:
+        # No commit means the line was probably not deleted but just moved
+        log.debug(f'Source log indicates {filespec}:{line_no} was deleted but cannot find commit')
+        return None
+    deletion_commit = commits[-1]
+    return tuple(deletion_commit.split() + [gitroot])
 
 
 def get_commits(gitargs, gitroot):
@@ -128,7 +182,7 @@ def main():
     revisions = {}
     if args['-r']:
         for r in args['-r']:
-            fields = r.split(':')
+            fields = r.rsplit(':', 1)
             if len(fields) != 2:
                 sys.exit('Malformed revision specification "{}"'.format(r))
             revisions[fields[0]] = fields[1]
@@ -137,16 +191,32 @@ def main():
 
     commits = set()
     roots = []
+    range_files = {}
+
     for source in sources:
         if source.startswith('root:'):
-            roots.append(source.split(':')[1])
+            roots.append(source.split(':', 1)[1])
         elif source.startswith('range:'):
-            rspec = source.split(':')
-            gitroot, fpath = split_path(rspec[3], roots)
-            commits |= get_commits_from_range(rspec[1], rspec[2], fpath, gitroot, revisions.get(gitroot))
+            rspec = source.split(':', 3)
+            rf = range_files.get(rspec[3])
+            if not rf:
+                rf = RangeFile()
+                range_files[rspec[3]] = rf
+            rf.add_range(int(rspec[1]), int(rspec[2]))
+        elif source.startswith('deleted:'):
+            rspec = source.split(':', 2)
+            gitroot, fpath = split_path(rspec[2], roots)
+            del_commit = get_deletion_commit(rspec[1], fpath, gitroot, revisions.get(gitroot))
+            if del_commit:
+                commits.add(del_commit)
         else:
             gitroot, fpath = split_path(source, roots)
             commits |= get_commits_from_path(fpath, gitroot, revisions.get(gitroot))
+
+    for f in range_files:
+        gitroot, fpath = split_path(f, roots)
+        for r in range_files[f].get_ranges():
+            commits |= get_commits_from_range(r[0], r[1], fpath, gitroot, revisions.get(gitroot))
 
     if args['-o']:
         outp = open(args['-o'], 'w')

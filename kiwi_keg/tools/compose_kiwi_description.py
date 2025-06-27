@@ -1,4 +1,4 @@
-# Copyright (c) 2023 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2025 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -98,320 +98,27 @@ Options:
 
 """
 import docopt
-import filecmp
-import glob
-import hashlib
 import itertools
-import json
 import logging
 import os
-import pathlib
-import re
-import subprocess
-import sys
 import tempfile
-import yaml
-import xml.etree.ElementTree as ET
+import sys
 
-from difflib import Differ
 from datetime import datetime, timezone
 
 from kiwi_keg.version import __version__
-from kiwi_keg.image_definition import KegImageDefinition
-from kiwi_keg.generator import KegGenerator
-from kiwi_keg.source_info_generator import SourceInfoGenerator
+import kiwi_keg.tools.lib_changelog as lib_changelog
+import kiwi_keg.tools.lib_fileutil as lib_fileutil
+import kiwi_keg.tools.lib_image as lib_image
+import kiwi_keg.tools.lib_repo as lib_repo
+import kiwi_keg.tools.lib_source as lib_source
 
-
-log = logging.getLogger('compose_keg_description')
-log.setLevel(logging.INFO)
-
-
-class RepoInfo:
-    def __init__(self, path):
-        self._path = path
-        self._head_commit = get_head_commit_hash(path.name)
-        self._start_commit = None
-
-    def set_start_commit(self, commit):
-        self._start_commit = commit
-
-    @property
-    def pathname(self):
-        return self._path.name
-
-    @property
-    def head_commit(self):
-        return self._head_commit
-
-    @property
-    def start_commit(self):
-        return self._start_commit
-
-    def has_commits(self):
-        return self._start_commit != self._head_commit
-
-
-def repr_mstr(dumper, data):
-    if '\n' in data:
-        tag = u'tag:yaml.org,2002:str'
-        return dumper.represent_scalar(tag, data, style='|')
-    return dumper.represent_str(data)
-
-
-def get_head_commit_hash(repo_path):
-    result = subprocess.run(
-        ['git', '-C', repo_path, 'show', '--no-patch', '--format=%H', 'HEAD'],
-        stdout=subprocess.PIPE,
-        encoding='UTF-8'
-    )
-    return result.stdout.strip('\n')
-
-
-def get_image_version(kiwi_config):
-    # It is expected that the <version> setting exists only once
-    # in a keg generated image description. KIWI allows for profiled
-    # <preferences> which in theory also allows to distribute the
-    # <version> information between several <preferences> sections
-    # but this would be in general questionable and should not be
-    # be done any case by keg managed recipes. Thus the following
-    # code takes the first version setting it can find and takes
-    # it as the only version information available
-    tree = ET.parse(kiwi_config)
-    root = tree.getroot()
-    for preferences in root.findall('preferences'):
-        image_version = preferences.find('version')
-        if image_version is not None:
-            return image_version.text
-    if not image_version:
-        sys.exit('Cannot determine image version.')
-
-
-def parse_revisions(repos):
-    if os.path.exists('_keg_revisions'):
-        with open('_keg_revisions') as inf:
-            for line in inf.readlines():
-                rev_spec = line.strip('\n').split(' ')
-                if len(rev_spec) != 2:
-                    sys.exit('Malformed revision spec "{}".'.format(line.strip('\n')))
-                repo = repos.get(rev_spec[0])
-                if not repo:
-                    log.warning('Cannot map URL "{}" to repository.'.format(rev_spec[0]))
-                else:
-                    repo.set_start_commit(rev_spec[1])
-    else:
-        log.info(
-            'No _keg_revisions file.'
-        )
-
-
-def get_revision_args(repos):
-    rev_args = []
-    for repo in repos.values():
-        if repo.start_commit:
-            rev_args += ['-r', '{}:{}..'.format(repo.pathname, repo.start_commit)]
-    return rev_args
-
-
-def generate_changelog(source_log, changes_file, log_format, image_version, rev_args):
-    result = subprocess.run(
-        [
-            'generate_recipes_changelog',
-            '-o', changes_file,
-            '-f', log_format,
-            '-t', image_version,
-            *rev_args,
-            source_log
-        ]
-    )
-    if result.returncode == 1:
-        sys.exit('Error generating change log.')
-    # generate_recipes_changelog returns 2 in case there were no changes
-    # return True or False accordingly
-    return result.returncode == 0
-
-
-def read_changelog(log_file):
-    changes = None
-    if log_file.endswith('.txt'):
-        with open(log_file, 'r') as inf:  # pragma: no cover
-            changes = inf.read()          # pragma: no cover
-    elif log_file.endswith('.yaml'):
-        with open(log_file, 'r') as inf:
-            changes = yaml.safe_load(inf)
-    elif log_file.endswith('.json'):
-        with open(log_file, 'r') as inf:
-            changes = json.load(inf)
-    else:
-        log.warning('Unsupported log format {}'.format(log_file))
-    return changes
-
-
-def update_changelog(log_file, log_format):
-    old_logs = glob.glob(pathlib.Path(log_file).stem + '.*')
-    if old_logs:
-        old_log = old_logs[0]
-        if len(old_logs) > 1:
-            log.warning('More than one format for old log, using {}'.format(old_log))
-    else:
-        log.info('No old log')
-        return
-
-    old_log_format = pathlib.Path(old_log).suffix[1:]
-    if old_log_format == 'txt':
-        old_log_format = 'osc'
-
-    if log_format != 'json' and log_format == old_log_format:
-        # simply concatenate old log to new one
-        with open(log_file, 'a') as outf, open(old_log) as inf:
-            log.info('Appending old changes to {}'.format(log_file))
-            outf.write(inf.read())
-    else:
-        if old_log_format == 'osc':
-            log.warning('Converting text log files is not supported, losing history')
-            return
-        else:
-            # different formats, or both json which needs merge
-            log.info('Reading old changes from {}'.format(old_log))
-            old_changes = read_changelog(old_log)
-            if old_changes:
-                if log_format == 'osc':
-                    log.info('Appending old changes to {}'.format(pathlib.Path(log_file).name))
-                    write_changelog(log_file, log_format, old_changes, append=True)
-                else:
-                    new_changes = read_changelog(log_file)
-                    new_changes.update(old_changes)
-                    log.info('Writing merged changes to {}'.format(pathlib.Path(log_file).name))
-                    write_changelog(log_file, log_format, new_changes)
-
-
-def get_osc_log(ver, entries):
-    change = '-------------------------------------------------------------------\n'
-    if hasattr(datetime, 'fromisoformat'):
-        change += datetime.fromisoformat(entries[0]['date']).strftime('%c UTC')  # pragma: nocover_py36
-    else:
-        import iso8601  # pragma: nocover
-        change += iso8601.parse_date(entries[0]['date']).strftime('%c UTC')  # pragma: nocover
-    change += '\n'
-    indent = '- '
-    if ver:
-        change += '\n- Update to {}\n'.format(ver)
-        indent = '  + '
-    for entry in entries:
-        change += indent
-        change += '{}\n'.format(entry['change'])
-    return change
-
-
-def update_revisions(repos, outdir):
-    with open(os.path.join(outdir, '_keg_revisions'), 'w') as outf:
-        for rname, rinfo in repos.items():
-            print('{} {}'.format(rname, rinfo.head_commit), file=outf)
-
-
-def get_log_sources(logdir):
-    for source_log in glob.glob(os.path.join(logdir, 'log_sources*')):
-        flavor = source_log[len(os.path.join(logdir, 'log_sources')) + 1:]
-        yield source_log, flavor
-
-
-def write_changelog(log_file, log_format, changes, append=False):
-    open_mode = 'w'
-    if append:
-        open_mode = 'a'
-    with open(log_file, open_mode) as outf:
-        if log_format == 'osc':
-            for image_version in changes:
-                if changes[image_version]:
-                    print(get_osc_log(image_version, changes[image_version]), file=outf)
-        elif log_format == 'yaml':
-            yaml.add_representer(str, repr_mstr, Dumper=yaml.SafeDumper)
-            yaml.safe_dump(changes, outf, sort_keys=False)
-        elif log_format == 'json':
-            json.dump(changes, outf, indent=2, default=str)
-
-
-def kiwi_files_equivalent(old_kiwi, new_kiwi, ignore_version_change):
-
-    with open(old_kiwi, 'r') as fh:
-        old_kiwi_content = fh.readlines()
-    with open(new_kiwi, 'r') as fh:
-        new_kiwi_content = fh.readlines()
-
-    differ = Differ()
-    diff = differ.compare(old_kiwi_content, new_kiwi_content)
-    ignore_str = 'generated by keg on'
-    if ignore_version_change:
-        ignore_str += r'|<version>[0123456789\.]+</version>'
-    ignore_regex = re.compile(ignore_str)
-
-    for d in diff:
-        if d[0] == '-' and not ignore_regex.search(d):
-            return False
-
-    return True
-
-
-def tar_files_equivalent(file1, file2):
-    result = subprocess.run(
-        ['tar', 'xf', file1, '-O'],
-        stdout=subprocess.PIPE
-    )
-    sum1 = hashlib.sha256(result.stdout).digest()
-    result = subprocess.run(
-        ['tar', 'xf', file2, '-O'],
-        stdout=subprocess.PIPE
-    )
-    sum2 = hashlib.sha256(result.stdout).digest()
-    return sum1 == sum2
-
-
-def files_equivalent(filename, dir1, dir2, ignore_kiwi_version):
-    path1 = os.path.join(dir1, filename)
-    path2 = os.path.join(dir2, filename)
-
-    if not os.path.exists(path1) or not os.path.exists(path2):
-        return False
-
-    if filename.endswith('.kiwi'):
-        return kiwi_files_equivalent(path1, path2, ignore_kiwi_version)
-
-    if 'tar' in filename.split('.'):
-        return tar_files_equivalent(path1, path2)
-
-    return filecmp.cmp(path1, path2, shallow=False)
-
-
-def delete_unchanged_files(old_dir, new_dir, ignore_kiwi_version):
-    new_files = list(os.scandir(new_dir))
-
-    have_changes = False
-    ignore_regex = re.compile('log_sources.*')
-    for f in new_files:
-        if not ignore_regex.match(f.name):
-            if files_equivalent(f.name, old_dir, new_dir, ignore_kiwi_version):
-                if f.name != 'config.kiwi':
-                    log.info('Deleting unchanged file {}'.format(f.name))
-                    os.remove(f.path)
-            else:
-                have_changes = True
-
-    return have_changes
-
-
-def get_stale_files(old_dir, new_dir, ignore_exp):
-    old_files = list(os.scandir(old_dir))
-    stale_files = []
-
-    purge_ignore = '_service|_keg_revisions'
-    if ignore_exp:
-        purge_ignore += '|' + ignore_exp
-    ignore_regex = re.compile(purge_ignore)
-    for f in old_files:
-        if f.is_file() and not ignore_regex.match(f.name):
-            if not os.path.exists(os.path.join(new_dir, f.name)):
-                stale_files.append(f.name)
-
-    return stale_files
+logging.basicConfig(
+    format='%(asctime)s [%(levelname)-8s] %(message)s',
+    datefmt='%H:%M:%S',
+    stream=sys.stderr,
+    level=logging.INFO
+)
 
 
 def main() -> None:
@@ -434,19 +141,15 @@ def main() -> None:
 
     repos = {}
     for repo, branch in itertools.zip_longest(args['--git-recipes'], args['--git-branch']):
-        temp_git_dir = tempfile.TemporaryDirectory(prefix='keg_recipes.', dir='.')
-        if branch:
-            subprocess.run(['git', 'clone', '-b', branch, repo, temp_git_dir.name])
-        else:
-            subprocess.run(['git', 'clone', repo, temp_git_dir.name])
-        repos[repo] = RepoInfo(temp_git_dir)
+        logging.info(f'Checking out {repo}')
+        repos[repo] = lib_repo.GitRepo(repo, branch)
 
-    parse_revisions(repos)
+    lib_repo.parse_revisions(repos)
     repos_with_commits = list(filter(lambda x: x.has_commits() is True, repos.values()))
     if not repos_with_commits:
-        log.warning('No repository has new commits.')
+        logging.warning('No repository has new commits.')
         if args['--force'] != 'true':
-            log.info('Aborting.')
+            logging.info('Aborting.')
             sys.exit()
 
     image_version = args['--image-version']
@@ -454,70 +157,61 @@ def main() -> None:
     if os.path.exists('config.kiwi'):
         old_kiwi_config = 'config.kiwi'
 
-    if not image_version:
-        if args['--version-bump'] == 'true' and old_kiwi_config:
-            # if old config.kiwi exists, increment patch version number
-            version = get_image_version(old_kiwi_config)
-            if version:
-                ver_elements = version.split('.')
-                ver_elements[2] = f'{int(ver_elements[2]) + 1}'
-                image_version = '.'.join(ver_elements)
+    if not image_version and args['--version-bump'] == 'true' and old_kiwi_config:
+        image_version = lib_image.get_bumped_image_version(old_kiwi_config)
 
-    logging.getLogger('keg').setLevel(logging.INFO)
-    image_definition = KegImageDefinition(
-        image_name=args['--image-source'],
-        recipes_roots=[x.pathname for x in repos.values()],
-        track_sources=handle_changelog,
-        image_version=image_version
-    )
-    image_generator = KegGenerator(
-        image_definition=image_definition,
-        dest_dir=args['--outdir'],
+    lib_image.generate_image_description(
+        image_source=args['--image-source'],
+        repos=repos,
+        gen_src_log=handle_changelog,
+        image_version=image_version,
+        gen_mbuild=args['--generate-multibuild'] == 'true',
+        outdir=args['--outdir'],
         archs=args['--arch']
     )
-    image_generator.create_kiwi_description(
-        overwrite=True
-    )
-    image_generator.create_custom_scripts(
-        overwrite=True
-    )
-    image_generator.create_overlays(
-        disable_root_tar=False, overwrite=True
-    )
-    image_generator.create_custom_files(
-        overwrite=True
-    )
-    if args['--generate-multibuild'] == 'true':
-        image_generator.create_multibuild_file(overwrite=True)
 
-    stale_files = []
-    if args['--purge-stale-files'] == 'true':
-        stale_files = get_stale_files('.', args['--outdir'], args['--purge-ignore'])
-
-    files_changed = delete_unchanged_files('.', args['--outdir'], args['--version-bump'] == 'true')
-    if not files_changed:
-        if stale_files:
-            log.info('Generated files are identical to existing ones, '
-                     'but old image description has stale files.')
-        else:
-            log.warning('Generated image description is identical to existing one.')
-            if args['--force'] != 'true':
-                log.info('Aborting.')
-                sys.exit()
+    stale_files = lib_fileutil.purge_files(
+        '.',
+        args['--outdir'],
+        args['--purge-stale-files'] == 'true',
+        args['--purge-ignore'],
+        args['--version-bump'] == 'true',
+        not args['--force'] == 'true'
+    )
 
     if handle_changelog:
-        sig = SourceInfoGenerator(image_definition, dest_dir=args['--outdir'])
-        sig.write_source_info()
-        rev_args = get_revision_args(repos)
+        rev_args = lib_repo.get_revision_args(repos)
         have_changes = False
 
-        if not image_version:
-            image_version = get_image_version(os.path.join(args['--outdir'], 'config.kiwi'))
+        if rev_args:
+            # generate previous source logs to find deleted items
+            with tempfile.TemporaryDirectory(dir=args['--outdir']) as tmpdir:
+                lib_repo.checkout_start_commits(repos)
 
+                logging.info('Generating previous image description')
+                lib_image.generate_image_description(
+                    image_source=args['--image-source'],
+                    repos=repos,
+                    gen_src_log=True,
+                    image_version=image_version,
+                    gen_mbuild=args['--generate-multibuild'] == 'true',
+                    outdir=tmpdir,
+                    archs=args['--arch']
+                )
+
+                logging.info('Trying to detect deletions')
+                lib_source.find_deleted_src_lines(tmpdir, args['--outdir'])
+
+                lib_repo.checkout_head_commits(repos)
+
+        if not image_version:
+            image_version = lib_image.get_image_version(os.path.join(args['--outdir'], 'config.kiwi'))
+
+        change_entries = None
         if not old_kiwi_config and args['--new-image-change']:
             # net new image, use supplied change log entry instead of generating
             # full log from commit history
-            new_changes = {
+            change_entries = {
                 image_version: [
                     {
                         'change': args['--new-image-change'],
@@ -525,33 +219,27 @@ def main() -> None:
                     }
                 ]
             }
-            for source_log, flavor in get_log_sources(args['--outdir']):
-                changes_filename = f'{flavor}{"." if flavor else ""}changes.{log_ext}'
-                changes_path = os.path.join(args['--outdir'], changes_filename)
-                log.info('Writing {}'.format(changes_path))
-                write_changelog(changes_path, args['--changelog-format'], new_changes)
-                # clean up source log
-                os.remove(source_log)
-        else:
-            for source_log, flavor in get_log_sources(args['--outdir']):
-                changes_filename = f'{flavor}{"." if flavor else ""}changes.{log_ext}'
-                changes_path = os.path.join(args['--outdir'], changes_filename)
-                have_changes |= generate_changelog(source_log, changes_path, args['--changelog-format'], image_version, rev_args)
 
-            if not have_changes:
-                log.warning('Image description has changed but no new change log entries were generated.')
+        for source_log, flavor in lib_source.get_log_sources(args['--outdir']):
+            have_changes |= lib_changelog.generate_and_update(
+                outdir=args['--outdir'],
+                prefix=flavor,
+                log_ext=log_ext,
+                changes=change_entries,
+                source_log=source_log,
+                image_version=image_version,
+                rev_args=rev_args
+            )
+            # clean up source log file
+            os.remove(source_log)
 
-            for source_log, flavor in get_log_sources(os.path.join(args['--outdir'])):
-                changes_filename = f'{flavor}{"." if flavor else ""}changes.{log_ext}'
-                changes_path = os.path.join(args['--outdir'], changes_filename)
-                update_changelog(changes_path, args['--changelog-format'])
-                # clean up source log
-                os.remove(source_log)
+        if not have_changes:
+            logging.warning('Image description has changed but no new change log entries were generated.')
 
     if args['--update-revisions'] == 'true':
         # capture current commits
-        update_revisions(repos, args['--outdir'])
+        lib_repo.update_revisions(repos, args['--outdir'])
 
     for f in stale_files:
-        log.info('Deleting stale file {}'.format(f))
+        logging.info('Deleting stale file {}'.format(f))
         os.remove(f)
