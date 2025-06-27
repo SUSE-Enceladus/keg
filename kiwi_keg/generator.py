@@ -232,7 +232,7 @@ class KegGenerator:
                         self._add_dir_to_tar(tar, base_dir)
 
     def create_multibuild_file(self, overwrite: bool = False):
-        profiles = self.image_definition.data['image'].get('profiles', {}).get('profile')
+        profiles = self.image_definition.get_profiles()
         if profiles:
             mbuild_file = os.path.join(self.dest_dir, '_multibuild')
             if os.path.exists(mbuild_file) and not overwrite:

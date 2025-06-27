@@ -23,6 +23,7 @@ from typing import (
 from datetime import (
     datetime, timezone
 )
+from itertools import chain
 from schema import SchemaError
 
 # project
@@ -75,6 +76,10 @@ class KegImageDefinition:
     @property
     def data(self) -> keg_dict:
         return self._data
+
+    @property
+    def dict_type(self) -> keg_dict_type:
+        return self._dict_type
 
     @property
     def recipes_roots(self) -> List[str]:
@@ -159,6 +164,18 @@ class KegImageDefinition:
             raise KegDataError(
                 'Error parsing image data: {error}'.format(error=issue)
             )
+
+    def get_profiles(self) -> List[dict]:
+        profile_root = self._data['image'].get('profiles')
+        if not profile_root:
+            return []
+
+        profiles = profile_root.get('profile')
+        if not profiles:
+            # profiles cloud be namespaced
+            profiles = chain(*[x.get('profile', []) for x in profile_root.values()])
+
+        return profiles
 
     def _check_recipes_paths_exist(self):
         for recipes_root in self._recipes_roots:

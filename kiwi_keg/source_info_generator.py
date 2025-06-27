@@ -54,7 +54,7 @@ class SourceInfoGenerator:
 
         :param bool overwrite: Overwrite any existing files
         """
-        profiles = self.image_definition.data['image'].get('profiles', {}).get('profile')
+        profiles = self.image_definition.get_profiles()
         if not profiles:
             src_info = self._get_mapping_sources(self.image_definition.data, profile=None, skip_keys=self.internal_toplevel_keys)
             src_info += self._get_script_sources()
@@ -62,7 +62,7 @@ class SourceInfoGenerator:
             with self._open_source_info_file('log_sources', overwrite) as outf:
                 for r in self.image_definition.recipes_roots:
                     outf.write('root:{}\n'.format(r))
-                outf.write('\n'.join(src_info))
+                outf.write('\n'.join(filter(None, src_info)))
                 outf.write('\n')
         else:
             profile_names = [x['_attributes']['name'] for x in profiles]
@@ -75,7 +75,7 @@ class SourceInfoGenerator:
                 ) as outf:
                     for r in self.image_definition.recipes_roots:
                         outf.write('root:{}\n'.format(r))
-                    outf.write('\n'.join(src_info))
+                    outf.write('\n'.join(filter(None, src_info)))
                     outf.write('\n')
 
     def _open_source_info_file(self, fname, overwrite):
@@ -133,7 +133,7 @@ class SourceInfoGenerator:
             return 'range:{}:{}:{}'.format(start, end, src)
         else:
             log.warning('Source information for key {} missing or incomplete'.format(key))
-            return ''
+            return None
 
     def _get_key_def_source(self, key, data):
         src = data.get('__{}_source__'.format(key))
@@ -142,7 +142,7 @@ class SourceInfoGenerator:
             return 'range:{}:{}:{}'.format(start, start, src)
         else:
             log.warning('Source information for key {} missing or incomplete'.format(key))
-            return ''
+            return None
 
     def _get_profiles_attrib(self, data):
         if not isinstance(data, AnnotatedMapping):  # pragma: no cover
