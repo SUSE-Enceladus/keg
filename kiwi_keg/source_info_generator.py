@@ -54,8 +54,8 @@ class SourceInfoGenerator:
 
         :param bool overwrite: Overwrite any existing files
         """
-        profiles = self.image_definition.get_profiles()
-        if not profiles:
+        profile_names = self.image_definition.get_build_profile_names()
+        if not profile_names:
             src_info = self._get_mapping_sources(self.image_definition.data, profile=None, skip_keys=self.internal_toplevel_keys)
             src_info += self._get_script_sources()
             src_info += self._get_archive_sources()
@@ -65,7 +65,6 @@ class SourceInfoGenerator:
                 outf.write('\n'.join(filter(None, src_info)))
                 outf.write('\n')
         else:
-            profile_names = [x['_attributes']['name'] for x in profiles]
             for profile_name in profile_names:
                 src_info = self._get_mapping_sources(self.image_definition.data, profile_name, skip_keys=self.internal_toplevel_keys)
                 src_info += self._get_script_sources(profile_name)

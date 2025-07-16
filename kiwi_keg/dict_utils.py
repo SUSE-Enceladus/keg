@@ -16,7 +16,7 @@
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
 import logging
-from typing import Optional
+from typing import Optional, List
 from kiwi_keg.exceptions import KegDataError
 from kiwi_keg.annotated_mapping import AnnotatedMapping, keg_dict
 
@@ -70,3 +70,16 @@ def get_attribute(data: keg_dict, attr: str, default=None) -> Optional[str]:
     """
     attr = data.get('_attributes', {}).get(attr)
     return attr if attr else default
+
+def get_merged_list(data: keg_dict, node_name: str) -> List:
+    """
+    Get named list, includign from embedded namespaces
+    """
+    result = []
+    node = data.get(node_name)
+    if isinstance(node, list):
+        result += node
+    for key in data.keys():
+        if key.startswith('_namespace'):
+            result += get_merged_list(data[key], node_name)
+    return result

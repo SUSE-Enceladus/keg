@@ -177,6 +177,13 @@ class KegImageDefinition:
 
         return profiles
 
+    def get_build_profile_names(self) -> List[str]:
+        profiles = []
+        prefs = dict_utils.get_merged_list(self._data['image'], 'preferences')
+        for pref in prefs:
+             profiles += dict_utils.get_attribute(pref, 'profiles', [])
+        return list(dict.fromkeys(profiles).keys())
+
     def _check_recipes_paths_exist(self):
         for recipes_root in self._recipes_roots:
             if not os.path.isdir(recipes_root):
