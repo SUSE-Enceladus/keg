@@ -68,7 +68,7 @@ def get_root_and_fname(file_path, roots):
     i = 0
     while i < len(roots):
         if file_path.startswith(roots[i]):
-            src_root = i
+            src_root = roots[i]
             src_file = file_path[len(roots[i]) + 1:]
             break
         i += 1
