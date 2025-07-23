@@ -71,6 +71,7 @@ def get_attribute(data: keg_dict, attr: str, default=None) -> Optional[str]:
     attr = data.get('_attributes', {}).get(attr)
     return attr if attr else default
 
+
 def get_merged_list(data: keg_dict, node_name: str) -> List:
     """
     Get named list, includign from embedded namespaces
