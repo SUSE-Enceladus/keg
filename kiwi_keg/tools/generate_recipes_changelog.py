@@ -206,9 +206,11 @@ def main():
         elif source.startswith('deleted:'):
             rspec = source.split(':', 2)
             gitroot, fpath = split_path(rspec[2], roots)
-            del_commit = get_deletion_commit(rspec[1], fpath, gitroot, revisions.get(gitroot))
-            if del_commit:
-                commits.add(del_commit)
+            rev = revisions.get(gitroot)
+            if rev:
+               del_commit = get_deletion_commit(rspec[1], fpath, gitroot, rev)
+               if del_commit:
+                   commits.add(del_commit)
         else:
             gitroot, fpath = split_path(source, roots)
             commits |= get_commits_from_path(fpath, gitroot, revisions.get(gitroot))
