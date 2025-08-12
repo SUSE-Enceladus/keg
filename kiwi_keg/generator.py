@@ -25,7 +25,6 @@ from collections import OrderedDict
 from xml.sax.saxutils import XMLGenerator
 from xml.sax.xmlreader import AttributesImpl
 
-from kiwi_keg import dict_utils
 from kiwi_keg import file_utils
 from kiwi_keg.image_definition import KegImageDefinition
 from kiwi_keg.kiwi_description import KiwiDescription
