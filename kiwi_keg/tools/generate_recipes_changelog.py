@@ -208,9 +208,9 @@ def main():
             gitroot, fpath = split_path(rspec[2], roots)
             rev = revisions.get(gitroot)
             if rev:
-               del_commit = get_deletion_commit(rspec[1], fpath, gitroot, rev)
-               if del_commit:
-                   commits.add(del_commit)
+                del_commit = get_deletion_commit(rspec[1], fpath, gitroot, rev)
+                if del_commit:
+                    commits.add(del_commit)
         else:
             gitroot, fpath = split_path(source, roots)
             commits |= get_commits_from_path(fpath, gitroot, revisions.get(gitroot))
