@@ -72,7 +72,12 @@ class ImageSchema():
                             '_attributes': {
                                 'name': And(str),
                                 'description': And(str)
-                            }
+                            },
+                            Optional('requires'): [{
+                                '_attributes': {
+                                    'profile': And(str),
+                                }
+                            }]
                         }],
                     },
                     'preferences': Or(

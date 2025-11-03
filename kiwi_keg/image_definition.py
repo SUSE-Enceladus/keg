@@ -170,10 +170,7 @@ class KegImageDefinition:
         if not profile_root:
             return []
 
-        profiles = profile_root.get('profile')
-        if not profiles:
-            # profiles cloud be namespaced
-            profiles = chain(*[x.get('profile', []) for x in profile_root.values()])
+        profiles = dict_utils.get_merged_list(profile_root, 'profile')
 
         return profiles
 
@@ -183,6 +180,18 @@ class KegImageDefinition:
         for pref in prefs:
             profiles += dict_utils.get_attribute(pref, 'profiles', [])
         return list(dict.fromkeys(profiles).keys())
+
+    def get_base_profile_names(self, profile_name: str) -> List[str]:
+        base_profile_names = []
+        profiles = self.get_profiles()
+        for p in profiles:
+            if dict_utils.get_attribute(p, 'name') == profile_name:
+                requires = p.get('requires', [])
+                if not isinstance(requires, list):
+                    requires = [requires]
+                for r in requires:
+                    base_profile_names += [dict_utils.get_attribute(r, 'profile')]
+        return base_profile_names
 
     def _check_recipes_paths_exist(self):
         for recipes_root in self._recipes_roots:
