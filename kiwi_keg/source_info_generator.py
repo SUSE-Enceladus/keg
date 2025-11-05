@@ -67,8 +67,9 @@ class SourceInfoGenerator:
         else:
             for profile_name in profile_names:
                 base_profile_names = self.image_definition.get_base_profile_names(profile_name)
+                src_info = []
                 for p in [profile_name] + base_profile_names:
-                    src_info = self._get_mapping_sources(self.image_definition.data, p, skip_keys=self.internal_toplevel_keys)
+                    src_info += self._get_mapping_sources(self.image_definition.data, p, skip_keys=self.internal_toplevel_keys)
                     src_info += self._get_script_sources(p)
                     src_info += self._get_archive_sources(p)
                 with self._open_source_info_file(
