@@ -121,23 +121,19 @@ logging.basicConfig(
 )
 
 
-def main() -> None:
-    args = docopt.docopt(__doc__, version=__version__)
+def get_changelog_format(changelog_format):
+    if changelog_format == 'osc':
+        log_ext = 'txt'
+    elif changelog_format in ['yaml', 'json']:
+        log_ext = changelog_format
+    else:
+        sys.exit('Unknown changelog format {}'.format(changelog_format))
+    return log_ext
 
+
+def get_repos(args):
     if len(args['--git-branch']) > len(args['--git-recipes']):
         sys.exit('Number of --git-branch arguments must not exceed number of git repos.')
-
-    handle_changelog = args['--update-changelogs'] == 'true'
-
-    if args['--changelog-format'] == 'osc':
-        log_ext = 'txt'
-    elif args['--changelog-format'] in ['yaml', 'json']:
-        log_ext = args['--changelog-format']
-    else:
-        sys.exit('Unknown changelog format {}'.format(args['--changelog-format']))
-
-    if not os.path.exists(args['--outdir']):
-        os.mkdir(args['--outdir'])
 
     repos = {}
     for repo, branch in itertools.zip_longest(args['--git-recipes'], args['--git-branch']):
@@ -152,13 +148,85 @@ def main() -> None:
             logging.info('Aborting.')
             sys.exit()
 
-    image_version = args['--image-version']
-    old_kiwi_config = None
-    if os.path.exists('config.kiwi'):
-        old_kiwi_config = 'config.kiwi'
+    return repos
 
-    if not image_version and args['--version-bump'] == 'true' and old_kiwi_config:
-        image_version = lib_image.get_bumped_image_version(old_kiwi_config)
+
+def get_new_image_version(args):
+    image_version = args['--image-version']
+    have_old_kiwi_config = os.path.exists('config.kiwi')
+
+    if not image_version and args['--version-bump'] == 'true' and have_old_kiwi_config:
+        image_version = lib_image.get_bumped_image_version('config.kiwi')
+
+    return image_version, have_old_kiwi_config
+
+
+def generate_deleted_source_info(args, repos, image_version):
+    # generate previous source logs to find deleted items
+    with tempfile.TemporaryDirectory(dir=args['--outdir']) as tmpdir:
+        lib_repo.checkout_start_commits(repos)
+
+        logging.info('Generating previous image description')
+        lib_image.generate_image_description(
+            image_source=args['--image-source'],
+            repos=repos,
+            gen_src_log=True,
+            image_version=image_version,
+            gen_mbuild=False,
+            outdir=tmpdir,
+            archs=args['--arch']
+        )
+
+        logging.info('Trying to detect deletions')
+        lib_source.find_deleted_src_lines(tmpdir, args['--outdir'])
+
+        lib_repo.checkout_head_commits(repos)
+
+
+def generate_changelogs(args, image_version, rev_args, have_old_kiwi_config, log_ext):
+    if not image_version:
+        image_version = lib_image.get_image_version(os.path.join(args['--outdir'], 'config.kiwi'))
+
+    change_entries = None
+    if not have_old_kiwi_config and args['--new-image-change']:
+        # net new image, use supplied change log entry instead of generating
+        # full log from commit history
+        change_entries = {
+            image_version: [
+                {
+                    'change': args['--new-image-change'],
+                    'date': datetime.now(timezone.utc).isoformat(timespec='minutes')
+                }
+            ]
+        }
+
+    have_changes = False
+    for source_log, flavor in lib_source.get_log_sources(args['--outdir']):
+        have_changes |= lib_changelog.generate_and_update(
+            outdir=args['--outdir'],
+            prefix=flavor,
+            log_ext=log_ext,
+            changes=change_entries,
+            source_log=source_log,
+            image_version=image_version,
+            rev_args=rev_args
+        )
+        # clean up source log file
+        os.remove(source_log)
+
+    return have_changes
+
+
+def main() -> None:
+    args = docopt.docopt(__doc__, version=__version__)
+
+    handle_changelog = args['--update-changelogs'] == 'true'
+    log_ext = get_changelog_format(args['--changelog-format'])
+    repos = get_repos(args)
+    image_version, have_old_kiwi_config = get_new_image_version(args)
+
+    if not os.path.exists(args['--outdir']):
+        os.mkdir(args['--outdir'])
 
     lib_image.generate_image_description(
         image_source=args['--image-source'],
@@ -181,57 +249,10 @@ def main() -> None:
 
     if handle_changelog:
         rev_args = lib_repo.get_revision_args(repos)
-        have_changes = False
-
         if rev_args:
-            # generate previous source logs to find deleted items
-            with tempfile.TemporaryDirectory(dir=args['--outdir']) as tmpdir:
-                lib_repo.checkout_start_commits(repos)
+            generate_deleted_source_info(args, repos, image_version)
 
-                logging.info('Generating previous image description')
-                lib_image.generate_image_description(
-                    image_source=args['--image-source'],
-                    repos=repos,
-                    gen_src_log=True,
-                    image_version=image_version,
-                    gen_mbuild=args['--generate-multibuild'] == 'true',
-                    outdir=tmpdir,
-                    archs=args['--arch']
-                )
-
-                logging.info('Trying to detect deletions')
-                lib_source.find_deleted_src_lines(tmpdir, args['--outdir'])
-
-                lib_repo.checkout_head_commits(repos)
-
-        if not image_version:
-            image_version = lib_image.get_image_version(os.path.join(args['--outdir'], 'config.kiwi'))
-
-        change_entries = None
-        if not old_kiwi_config and args['--new-image-change']:
-            # net new image, use supplied change log entry instead of generating
-            # full log from commit history
-            change_entries = {
-                image_version: [
-                    {
-                        'change': args['--new-image-change'],
-                        'date': datetime.now(timezone.utc).isoformat(timespec='minutes')
-                    }
-                ]
-            }
-
-        for source_log, flavor in lib_source.get_log_sources(args['--outdir']):
-            have_changes |= lib_changelog.generate_and_update(
-                outdir=args['--outdir'],
-                prefix=flavor,
-                log_ext=log_ext,
-                changes=change_entries,
-                source_log=source_log,
-                image_version=image_version,
-                rev_args=rev_args
-            )
-            # clean up source log file
-            os.remove(source_log)
+        have_changes = generate_changelogs(args, image_version, rev_args, have_old_kiwi_config, log_ext)
 
         if not have_changes:
             logging.warning('Image description has changed but no new change log entries were generated.')

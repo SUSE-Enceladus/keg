@@ -63,18 +63,18 @@ class GitRepo:
     def _checkout(self):
         temp_git_dir = tempfile.TemporaryDirectory(prefix='keg_recipes.', dir='.')
         if self._branch:
-            subprocess.run(
+            subprocess.check_output(
                 ['git', 'clone', '-b', self._branch, self._repo_src, temp_git_dir.name],
                 stderr=subprocess.DEVNULL
             )
         else:
-            subprocess.run(['git', 'clone', self._repo_src, temp_git_dir.name], stderr=subprocess.DEVNULL)
+            subprocess.check_output(['git', 'clone', self._repo_src, temp_git_dir.name], stderr=subprocess.DEVNULL)
         return temp_git_dir
 
 
 def parse_revisions(repos):
     if os.path.exists('_keg_revisions'):
-        with open('_keg_revisions') as inf:
+        with open('_keg_revisions', 'r') as inf:
             for line in inf.readlines():
                 rev_spec = line.strip('\n').split(' ')
                 if len(rev_spec) != 2:

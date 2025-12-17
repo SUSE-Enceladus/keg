@@ -72,14 +72,12 @@ def main() -> int:
         desc_dir = sys.argv[2]
         sys.argv = ['update_kiwi_description'] + sys.argv[3:]
 
-    if not os.path.exists(os.path.join(desc_dir, '_service')):
-        sys.exit(f'{desc_dir} is not a keg service directory')
-
-    try:
-        parse_service(os.path.join(desc_dir, '_service'))
-    except Exception:
-        print('Could not parse _service file.', file=sys.stderr)
-        raise
+    if os.path.exists(os.path.join(desc_dir, '_service')):
+        try:
+            parse_service(os.path.join(desc_dir, '_service'))
+        except Exception:
+            print('Could not parse _service file.', file=sys.stderr)
+            raise
 
     with tempfile.TemporaryDirectory(prefix='update_kiwi_description.') as tmpdir:
         os.chdir(desc_dir)
@@ -88,6 +86,8 @@ def main() -> int:
         for f in os.listdir(tmpdir):
             shutil.copy(os.path.join(tmpdir, f), '.')
 
+    return 0
+
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(main())  # pragma: nocover

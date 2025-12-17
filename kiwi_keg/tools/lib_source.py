@@ -41,7 +41,6 @@ class SourcesFile:
     def __init__(self, srcs_file):
         self.roots = []
         self.ranges = []
-        self.whole_files = []
         with open(srcs_file, 'r') as sf:
             for line in sf:
                 line = line.rstrip('\n')
@@ -82,7 +81,7 @@ def find_deleted_src_lines(old_log_dir, new_log_dir):
         new_source_log = os.path.join(new_log_dir, os.path.basename(old_source_log))
         if not os.path.exists(new_source_log):
             logging.warning(
-                '{} does not exit in new image description, skipping deleted lines detection'.format(
+                '{} does not exist in new image description, skipping deleted lines detection'.format(
                     os.path.basename(old_source_log)
                 )
             )

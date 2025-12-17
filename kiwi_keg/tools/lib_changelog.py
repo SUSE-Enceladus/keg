@@ -44,10 +44,10 @@ def get_log_extension(log_format):
 
 def read_changelog(log_file: str) -> dict:
     """Read changes from given file and return change log dict"""
-    changes = {}
+    changes = dict()
     if log_file.endswith('.txt'):
-        with open(log_file, 'r') as inf:  # pragma: no cover
-            changes = inf.read()          # pragma: no cover
+        # parsing text log files is not supported
+        pass
     elif log_file.endswith('.yaml'):
         with open(log_file, 'r') as inf:
             changes = yaml.safe_load(inf)
@@ -74,7 +74,7 @@ def write_changelog(log_file: str, log_format: str, changes: dict, append: bool 
             json.dump(changes, outf, indent=2, default=str)
 
 
-def generate_recipes_changelog(source_log, changes_file, log_format, image_version, rev_args) -> int:
+def generate_recipes_changelog(source_log, changes_file, log_format, image_version, rev_args) -> bool:
     result = subprocess.run(
         [
             'generate_recipes_changelog',
