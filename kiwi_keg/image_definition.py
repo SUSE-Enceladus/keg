@@ -23,7 +23,6 @@ from typing import (
 from datetime import (
     datetime, timezone
 )
-from itertools import chain
 from schema import SchemaError
 
 # project
@@ -175,7 +174,7 @@ class KegImageDefinition:
         return profiles
 
     def get_build_profile_names(self) -> List[str]:
-        profiles = []
+        profiles = list()
         prefs = dict_utils.get_merged_list(self._data['image'], 'preferences')
         for pref in prefs:
             profiles += dict_utils.get_attribute(pref, 'profiles', [])
