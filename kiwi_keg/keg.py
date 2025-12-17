@@ -1,4 +1,4 @@
-# Copyright (c) 2022 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2025 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -18,7 +18,7 @@
 """
 
 Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)... [-v]
-       keg (-r RECIPES_ROOT|-recipes-root=RECIPES_ROOT)...
+       keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)...
            [--format-xml|--format-yaml] [--disable-root-tar]
            [--disable-multibuild] [--dump-dict]
            [-i IMAGE_VERSION|--image-version=IMAGE_VERSION]
