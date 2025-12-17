@@ -1,4 +1,4 @@
-# Copyright (c) 2022 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2025 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -16,7 +16,7 @@
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
 import logging
-from typing import Optional, List
+from typing import List
 from kiwi_keg.exceptions import KegDataError
 from kiwi_keg.annotated_mapping import AnnotatedMapping, keg_dict
 
@@ -64,7 +64,7 @@ def rmerge(src: keg_dict, dest: keg_dict) -> keg_dict:
     return dest
 
 
-def get_attribute(data: keg_dict, attr: str, default=None) -> Optional[str]:
+def get_attribute(data: keg_dict, attr: str, default=None):
     """
     Look up wanted attribute from given dict
     """

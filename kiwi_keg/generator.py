@@ -1,4 +1,4 @@
-# Copyright (c) 2023 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2025 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -226,7 +226,7 @@ class KegGenerator:
                     archive_name
                 )
                 compression = archive_name.split('.')[-1]
-                with tarfile.open(overlay_tarball_path, 'w:{}'.format(compression)) as tar:
+                with tarfile.open(overlay_tarball_path, f'w:{compression}') as tar:  # type: ignore
                     for base_dir in dir_list:
                         self._add_dir_to_tar(tar, base_dir)
 
