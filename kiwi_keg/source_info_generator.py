@@ -1,4 +1,4 @@
-# Copyright (c) 2022 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2025 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -69,7 +69,7 @@ class SourceInfoGenerator:
                 base_profile_names = self.image_definition.get_base_profile_names(profile_name)
                 src_info = []
                 for p in [profile_name] + base_profile_names:
-                    src_info += self._get_mapping_sources(self.image_definition.data, p, skip_keys=self.internal_toplevel_keys)
+                    src_info += self._get_mapping_sources(self.image_definition.data, profile=p, skip_keys=self.internal_toplevel_keys)
                     src_info += self._get_script_sources(p)
                     src_info += self._get_archive_sources(p)
                 with self._open_source_info_file(
