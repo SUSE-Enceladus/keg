@@ -17,7 +17,7 @@ Contributing
 
 keg is written in Python, it uses `tox <https://tox.readthedocs.io/en/latest/>`_
 to setup a development environment for the desired Python version. Make
-sure the Python development headers are installed (e.g. `python36-devel`).
+sure the Python development headers are installed (e.g. `python313-devel`).
 KIWI uses `jing` for detailed error reporting in case schema validation fails.
 This cannot be installed by pip, so you may want also make sure this is
 installed on your system.
@@ -27,8 +27,9 @@ Currently, there are 5 targets for tox:
 - **check**: for code quality and integrity
 - **devel**: for development
 - **doc**: for building man pages
-- **unit_py3_10**: to run unit tests with Python version set to *3.10*
-- **unit_py3_6**: to run unit tests with Python version set to *3.6*
+- **unit**: to run unit tests with default Python version 
+- **functional**: to run functional tests with default Python version
+- **py3_xx**: to run unit tests with Python version set to *3.xx* (with xx being 10 to 13)
 
 The following procedure describes how to create the development environment:
 
