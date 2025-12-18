@@ -132,8 +132,8 @@ def get_changelog_format(changelog_format):
 
 
 def get_repos(args):
-    if len(args['--git-branch']) > len(args['--git-recipes']):
-        sys.exit('Number of --git-branch arguments must not exceed number of git repos.')
+    if len(args['--git-branch']) > 0 and len(args['--git-branch']) != len(args['--git-recipes']):
+        sys.exit('Number of --git-branch arguments (when used) must be equial to number of --git-recipes.')
 
     repos = {}
     for repo, branch in itertools.zip_longest(args['--git-recipes'], args['--git-branch']):
@@ -143,9 +143,9 @@ def get_repos(args):
     lib_repo.parse_revisions(repos)
     repos_with_commits = list(filter(lambda x: x.has_commits() is True, repos.values()))
     if not repos_with_commits:
-        logging.warning('No repository has new commits.')
+        logging.info('No repository has new commits.')
         if args['--force'] != 'true':
-            logging.info('Aborting.')
+            logging.info('Nothing to do. Aborting.')
             sys.exit()
 
     return repos

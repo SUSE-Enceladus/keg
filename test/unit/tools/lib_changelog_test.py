@@ -1,6 +1,7 @@
 from pytest import raises
 from unittest.mock import mock_open, call, patch, Mock
 
+import json
 import logging
 import os
 import yaml
@@ -18,12 +19,6 @@ def test_lib_changelog_repr_mstr_newline():
     assert yaml.safe_dump({'key': 'multi\nline'}, sort_keys=False) == 'key: |-\n  multi\n  line\n'
 
 
-def test_lib_changelog_get_log_extension():
-    assert lib_changelog.get_log_extension('osc') == 'txt'
-    assert lib_changelog.get_log_extension('json') == 'json'
-    assert lib_changelog.get_log_extension('yaml') == 'yaml'
-
-
 def test_lib_changelog_read_changelog_txt():
     mo = mock_open()
     with patch('builtins.open', mo):
@@ -39,6 +34,15 @@ def test_lib_changelog_read_changelog_yaml(mock_yaml_safe_load):
     mock_yaml_safe_load.assert_called_with(mo())
 
 
+@patch('yaml.safe_load')
+def test_lib_changelog_read_changelog_yaml_error(mock_yaml_safe_load):
+    mock_yaml_safe_load.side_effect = yaml.YAMLError('parse error')
+    mo = mock_open()
+    with patch('builtins.open', mo), raises(RuntimeError) as e_info:
+        lib_changelog.read_changelog('changelog.yaml')
+    assert 'Error parsing' in str(e_info.value)
+
+
 @patch('json.load')
 def test_lib_changelog_read_changelog_json(mock_json_load):
     mo = mock_open()
@@ -46,6 +50,15 @@ def test_lib_changelog_read_changelog_json(mock_json_load):
         lib_changelog.read_changelog('changelog.json')
     mo.assert_called_with('changelog.json', 'r')
     mock_json_load.assert_called_with(mo())
+
+
+@patch('json.load')
+def test_lib_changelog_read_changelog_json_error(mock_json_load):
+    mock_json_load.side_effect = json.JSONDecodeError('parse error', 'doc', 1)
+    mo = mock_open()
+    with patch('builtins.open', mo), raises(RuntimeError) as e_info:
+        lib_changelog.read_changelog('changelog.json')
+    assert 'Error parsing' in str(e_info.value)
 
 
 def test_lib_changelog_read_changelog_unsupported():

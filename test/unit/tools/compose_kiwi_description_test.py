@@ -27,7 +27,7 @@ def test_compose_kiwi_description_get_repos_param_error():
     }
     with raises(SystemExit) as e_info:
         compose_kiwi_description.get_repos(args)
-    assert str(e_info.value) == 'Number of --git-branch arguments must not exceed number of git repos.'
+    assert str(e_info.value) == 'Number of --git-branch arguments (when used) must be equial to number of --git-recipes.'
 
 
 @patch('kiwi_keg.tools.lib_repo.GitRepo')

@@ -33,15 +33,6 @@ def repr_mstr(dumper, data):
     return dumper.represent_str(data)
 
 
-def get_log_extension(log_format):
-    log_ext = None
-    if log_format == 'osc':
-        log_ext = 'txt'
-    elif log_format in ['json', 'yaml']:
-        log_ext = log_format
-    return log_ext
-
-
 def read_changelog(log_file: str) -> dict:
     """Read changes from given file and return change log dict"""
     changes = dict()
@@ -49,11 +40,17 @@ def read_changelog(log_file: str) -> dict:
         # parsing text log files is not supported
         pass
     elif log_file.endswith('.yaml'):
-        with open(log_file, 'r') as inf:
-            changes = yaml.safe_load(inf)
+        try:
+            with open(log_file, 'r') as inf:
+                changes = yaml.safe_load(inf)
+        except yaml.YAMLError as err:
+            raise RuntimeError(f'Error parsing {log_file}: {str(err)}')
     elif log_file.endswith('.json'):
-        with open(log_file, 'r') as inf:
-            changes = json.load(inf)
+        try:
+            with open(log_file, 'r') as inf:
+                changes = json.load(inf)
+        except json.JSONDecodeError as err:
+            raise RuntimeError(f'Error parsing {log_file}: {str(err)}')
     else:
         raise RuntimeError('Unsupported log format extensions {}'.format(log_file))
     return changes
