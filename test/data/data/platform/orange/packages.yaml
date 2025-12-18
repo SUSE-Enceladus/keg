@@ -1,5 +1,0 @@
-packages:
-  _namespace_orange:
-    package:
-      - orange_pkg1
-      - orange_pkg2
