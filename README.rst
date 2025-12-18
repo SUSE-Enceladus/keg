@@ -22,14 +22,13 @@ KIWI uses `jing` for detailed error reporting in case schema validation fails.
 This cannot be installed by pip, so you may want also make sure this is
 installed on your system.
 
-Currently, there are 5 targets for tox:
+There are the following targets for tox:
 
 - **check**: for code quality and integrity
 - **devel**: for development
 - **doc**: for building man pages
-- **unit**: to run unit tests with default Python version 
+- **unit_py31x**: to run unit tests with Python 3.1x version (with x being 0-3)
 - **functional**: to run functional tests with default Python version
-- **py3_xx**: to run unit tests with Python version set to *3.xx* (with xx being 10 to 13)
 
 The following procedure describes how to create the development environment:
 
