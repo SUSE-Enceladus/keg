@@ -25,7 +25,7 @@
 %define upstream_name keg
 
 Name:          python-kiwi-keg
-Version:       2.1.1
+Version:       2.2.0
 Release:       0
 URL:           https://github.com/SUSE-Enceladus/keg
 Summary:       KEG - Image Composition Tool
