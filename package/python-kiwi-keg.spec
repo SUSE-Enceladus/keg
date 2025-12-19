@@ -84,6 +84,7 @@ make buildroot=%{buildroot}/ docdir=%{_defaultdocdir}/ install
 %files
 %{_bindir}/%{upstream_name}
 %{_bindir}/generate_recipes_changelog
+%{_bindir}/update_kiwi_description
 %{python_sitelib}/kiwi_keg*
 %license LICENSE
 %doc README.rst
