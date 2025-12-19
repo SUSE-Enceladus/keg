@@ -1,5 +1,0 @@
-packages:
-  _namespace_common:
-    package:
-      - corepkg1
-      - corepkg2

@@ -1,4 +1,4 @@
-# Copyright (c) 2023 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2025 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -25,7 +25,6 @@ from collections import OrderedDict
 from xml.sax.saxutils import XMLGenerator
 from xml.sax.xmlreader import AttributesImpl
 
-from kiwi_keg import dict_utils
 from kiwi_keg import file_utils
 from kiwi_keg.image_definition import KegImageDefinition
 from kiwi_keg.kiwi_description import KiwiDescription
@@ -227,12 +226,12 @@ class KegGenerator:
                     archive_name
                 )
                 compression = archive_name.split('.')[-1]
-                with tarfile.open(overlay_tarball_path, 'w:{}'.format(compression)) as tar:
+                with tarfile.open(overlay_tarball_path, f'w:{compression}') as tar:  # type: ignore
                     for base_dir in dir_list:
                         self._add_dir_to_tar(tar, base_dir)
 
     def create_multibuild_file(self, overwrite: bool = False):
-        profiles = self.image_definition.data['image'].get('profiles', {}).get('profile')
+        profiles = self.image_definition.get_build_profile_names()
         if profiles:
             mbuild_file = os.path.join(self.dest_dir, '_multibuild')
             if os.path.exists(mbuild_file) and not overwrite:
@@ -243,10 +242,8 @@ class KegGenerator:
                 )
             with open(mbuild_file, 'w') as mbuild_obj:
                 mbuild_obj.write('<multibuild>\n')
-                for profile in profiles:
-                    profile_name = dict_utils.get_attribute(profile, 'name')
-                    if profile_name:
-                        mbuild_obj.write('    <flavor>{}</flavor>\n'.format(profile_name))
+                for profile_name in profiles:
+                    mbuild_obj.write('    <flavor>{}</flavor>\n'.format(profile_name))
                 mbuild_obj.write('</multibuild>\n')
 
     def create_custom_files(self, overwrite: bool = False):

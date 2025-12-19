@@ -1,4 +1,4 @@
-# Copyright (c) 2022 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2025 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -16,7 +16,7 @@
 # along with keg. If not, see <http://www.gnu.org/licenses/>
 #
 import logging
-from typing import Optional
+from typing import List
 from kiwi_keg.exceptions import KegDataError
 from kiwi_keg.annotated_mapping import AnnotatedMapping, keg_dict
 
@@ -64,9 +64,23 @@ def rmerge(src: keg_dict, dest: keg_dict) -> keg_dict:
     return dest
 
 
-def get_attribute(data: keg_dict, attr: str, default=None) -> Optional[str]:
+def get_attribute(data: keg_dict, attr: str, default=None):
     """
     Look up wanted attribute from given dict
     """
     attr = data.get('_attributes', {}).get(attr)
     return attr if attr else default
+
+
+def get_merged_list(data: keg_dict, node_name: str) -> List:
+    """
+    Get named list, including from embedded namespaces
+    """
+    result = []
+    node = data.get(node_name)
+    if isinstance(node, list):
+        result += node
+    for key in data.keys():
+        if key.startswith('_namespace'):
+            result += get_merged_list(data[key], node_name)
+    return result

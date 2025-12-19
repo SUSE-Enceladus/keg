@@ -1,4 +1,4 @@
-# Copyright (c) 2022 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2025 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -54,28 +54,30 @@ class SourceInfoGenerator:
 
         :param bool overwrite: Overwrite any existing files
         """
-        profiles = self.image_definition.data['image'].get('profiles', {}).get('profile')
-        if not profiles:
+        profile_names = self.image_definition.get_build_profile_names()
+        if not profile_names:
             src_info = self._get_mapping_sources(self.image_definition.data, profile=None, skip_keys=self.internal_toplevel_keys)
             src_info += self._get_script_sources()
             src_info += self._get_archive_sources()
             with self._open_source_info_file('log_sources', overwrite) as outf:
                 for r in self.image_definition.recipes_roots:
                     outf.write('root:{}\n'.format(r))
-                outf.write('\n'.join(src_info))
+                outf.write('\n'.join(filter(None, src_info)))
                 outf.write('\n')
         else:
-            profile_names = [x['_attributes']['name'] for x in profiles]
             for profile_name in profile_names:
-                src_info = self._get_mapping_sources(self.image_definition.data, profile_name, skip_keys=self.internal_toplevel_keys)
-                src_info += self._get_script_sources(profile_name)
-                src_info += self._get_archive_sources(profile_name)
+                base_profile_names = self.image_definition.get_base_profile_names(profile_name)
+                src_info = []
+                for p in [profile_name] + base_profile_names:
+                    src_info += self._get_mapping_sources(self.image_definition.data, profile=p, skip_keys=self.internal_toplevel_keys)
+                    src_info += self._get_script_sources(p)
+                    src_info += self._get_archive_sources(p)
                 with self._open_source_info_file(
                     'log_sources_{}'.format(profile_name), overwrite
                 ) as outf:
                     for r in self.image_definition.recipes_roots:
                         outf.write('root:{}\n'.format(r))
-                    outf.write('\n'.join(src_info))
+                    outf.write('\n'.join(filter(None, src_info)))
                     outf.write('\n')
 
     def _open_source_info_file(self, fname, overwrite):
@@ -133,7 +135,7 @@ class SourceInfoGenerator:
             return 'range:{}:{}:{}'.format(start, end, src)
         else:
             log.warning('Source information for key {} missing or incomplete'.format(key))
-            return ''
+            return None
 
     def _get_key_def_source(self, key, data):
         src = data.get('__{}_source__'.format(key))
@@ -142,7 +144,7 @@ class SourceInfoGenerator:
             return 'range:{}:{}:{}'.format(start, start, src)
         else:
             log.warning('Source information for key {} missing or incomplete'.format(key))
-            return ''
+            return None
 
     def _get_profiles_attrib(self, data):
         if not isinstance(data, AnnotatedMapping):  # pragma: no cover
@@ -157,7 +159,7 @@ class SourceInfoGenerator:
 
     def _get_archive_profiles(self, archive_name):
         profiles = []
-        for pkg_sect in self.image_definition.data['image']['packages']:
+        for pkg_sect in dict_utils.get_merged_list(self.image_definition.data['image'], 'packages'):
             archives = pkg_sect.get('archive', [])
             for archive_sect in archives:
                 if dict_utils.get_attribute(archive_sect, 'name') == archive_name:
@@ -168,8 +170,9 @@ class SourceInfoGenerator:
         src_info: list = []
         for archive in self.image_definition.data.get('archive', []):
             if profile:
-                profiles = self._get_archive_profiles(archive['name'])
-                if profiles and profile not in profiles:
+                build_profile_names = [profile] + self.image_definition.get_base_profile_names(profile)
+                archive_profile_names = self._get_archive_profiles(archive['name'])
+                if archive_profile_names and not set(build_profile_names) & set(archive_profile_names):
                     continue
             src_info += self._get_mapping_sources(archive)
             src_info += self.image_definition.data['archives'].get(archive['name'], [])

@@ -77,6 +77,10 @@ class KegImageDefinition:
         return self._data
 
     @property
+    def dict_type(self) -> keg_dict_type:
+        return self._dict_type
+
+    @property
     def recipes_roots(self) -> List[str]:
         return self._recipes_roots
 
@@ -159,6 +163,34 @@ class KegImageDefinition:
             raise KegDataError(
                 'Error parsing image data: {error}'.format(error=issue)
             )
+
+    def get_profiles(self) -> List[dict]:
+        profile_root = self._data['image'].get('profiles')
+        if not profile_root:
+            return []
+
+        profiles = dict_utils.get_merged_list(profile_root, 'profile')
+
+        return profiles
+
+    def get_build_profile_names(self) -> List[str]:
+        profiles = list()
+        prefs = dict_utils.get_merged_list(self._data['image'], 'preferences')
+        for pref in prefs:
+            profiles += dict_utils.get_attribute(pref, 'profiles', [])
+        return list(dict.fromkeys(profiles).keys())
+
+    def get_base_profile_names(self, profile_name: str) -> List[str]:
+        base_profile_names = []
+        profiles = self.get_profiles()
+        for p in profiles:
+            if dict_utils.get_attribute(p, 'name') == profile_name:
+                requires = p.get('requires', [])
+                if not isinstance(requires, list):
+                    requires = [requires]
+                for r in requires:
+                    base_profile_names += [dict_utils.get_attribute(r, 'profile')]
+        return base_profile_names
 
     def _check_recipes_paths_exist(self):
         for recipes_root in self._recipes_roots:

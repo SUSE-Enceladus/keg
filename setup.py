@@ -35,7 +35,8 @@ config = {
         'console_scripts': [
             'keg=kiwi_keg.keg:main',
             'compose_kiwi_description=kiwi_keg.tools.compose_kiwi_description:main',
-            'generate_recipes_changelog=kiwi_keg.tools.generate_recipes_changelog:main'
+            'generate_recipes_changelog=kiwi_keg.tools.generate_recipes_changelog:main',
+            'update_kiwi_description=kiwi_keg.tools.update_kiwi_description:main'
         ]
     },
     'include_package_data': True,
@@ -47,9 +48,10 @@ config = {
         'License :: OSI Approved :: '
         'GNU General Public License v3 or later (GPLv3+)',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
         'Topic :: System :: Operating System',
     ]
 }

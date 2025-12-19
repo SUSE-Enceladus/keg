@@ -1,226 +1,554 @@
-import glob
-import tarfile
-import tempfile
 import os
+from io import StringIO
+from jinja2 import TemplateNotFound
+
 from unittest.mock import (
-    patch, Mock
+    patch, Mock, call
 )
-from pathlib import Path
-from pytest import raises
+from pytest import raises, fixture
 
-from kiwi_keg.generator import KegGenerator, NodeAttributes
-from kiwi_keg.image_definition import KegImageDefinition
-from kiwi_keg.exceptions import KegError
+from kiwi_keg.generator import KegGenerator, NodeAttributes, ContentGenerator
+from kiwi_keg.exceptions import KegError, KegDataError
 
 
-def assert_files_equal(file1, file2):
-    assert open(file1, 'r').read() == open(file2, 'r').read()
+@fixture
+def patched_keg_generator():
+    mock_image_definition = Mock()
+    mock_image_definition.recipes_roots = ['fake_root']
+    mock_image_definition.data = {}
+    with patch('os.path.isdir', return_value=True):
+        generator = KegGenerator(mock_image_definition, 'dest_dir', archs=['x86_64'])
+        yield generator
 
 
-class TestKegGenerator:
-    def setup_method(self):
-        self.image_definition = KegImageDefinition(
-            image_name='leap-jeos/15.2', recipes_roots=['../data'], image_version='1.0.0'
+def test_keg_generator_create_object(patched_keg_generator):
+    patched_keg_generator.image_definition.populate.assert_called_once()
+
+
+@patch('os.path.isdir', return_value=False)
+def test_keg_generator_create_object_dest_dir_missing(mock_isdir):
+    with raises(KegError):
+        KegGenerator(None, 'no_such_directory')
+
+
+@patch('kiwi_keg.generator.KegGenerator.create_xml_description')
+@patch('kiwi_keg.file_utils.raise_on_file_exists')
+def test_keg_generator_create_kiwi_description(mock_raise_on_file_exists, mock_create_xml_description, patched_keg_generator):
+    patched_keg_generator.create_kiwi_description()
+    mock_create_xml_description.assert_called_once()
+
+
+@patch('kiwi_keg.generator.KegGenerator.create_template_description')
+@patch('kiwi_keg.file_utils.raise_on_file_exists')
+def test_keg_generator_create_kiwi_description_template(mock_raise_on_file_exists, mock_create_template_description, patched_keg_generator):
+    patched_keg_generator.image_schema = 'fake_schema'
+    patched_keg_generator.create_kiwi_description()
+    mock_create_template_description.assert_called_once()
+
+
+@patch('kiwi_keg.generator.KegGenerator._read_template')
+def test_keg_generator_create_template_description(mock_read_template, patched_keg_generator):
+    patched_keg_generator.image_schema = 'fake_schema'
+    mock_template = Mock()
+    mock_template.render.return_value = 'fake_output'
+    mock_read_template.return_value = mock_template
+    with patch('builtins.open') as mock_file:
+        patched_keg_generator.create_template_description()
+        mock_file.assert_has_calls(
+            [
+                call(os.path.join('dest_dir', 'config.kiwi'), 'w'),
+                call().__enter__(),
+                call().__enter__().write('fake_output'),
+                call().__enter__().write('\n'),
+                call().__exit__(None, None, None)
+            ]
         )
 
-    @patch('os.path.exists')
-    @patch('os.path.isdir')
-    def test_raises_on_dest_dir_data_exists(
-        self, mock_os_path_is_dir, mock_os_path_exists
-    ):
-        mock_os_path_is_dir.return_value = True
-        mock_os_path_exists.return_value = True
-        generator = KegGenerator(self.image_definition, 'dest-dir')
-        with raises(KegError):
-            generator.create_kiwi_description()
 
-    @patch('os.path.isdir')
-    def test_raises_on_dest_dir_does_not_exist(self, mock_os_path_is_dir):
-        mock_os_path_is_dir.return_value = False
-        with raises(KegError) as exception_info:
-            KegGenerator(self.image_definition, 'dest-dir')
-        assert "Given destination directory: 'dest-dir' does not exist" in \
-            str(exception_info.value)
+def test_keg_generator_create_template_description_no_schema(patched_keg_generator):
+    patched_keg_generator.image_schema = None
+    with raises(KegError):
+        patched_keg_generator.create_template_description()
 
-    def test_create_kiwi_description_raises_template_not_found(self):
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            generator = KegGenerator(self.image_definition, tmpdirname)
-            generator.image_schema = 'non-existent-schema'
-            with raises(KegError):
-                generator.create_kiwi_description(
-                    overwrite=True
-                )
 
-    @patch('kiwi_keg.generator.KiwiDescription')
-    def test_validate_kiwi_description(self, mock_KiwiDescription):
-        kiwi = Mock()
-        mock_KiwiDescription.return_value = kiwi
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            generator = KegGenerator(self.image_definition, tmpdirname)
-            generator.validate_kiwi_description()
-            kiwi.validate_description.assert_called_once_with()
-
-    @patch('kiwi_keg.image_definition.datetime')
-    @patch('kiwi_keg.image_definition.version')
-    def test_create_kiwi_description_by_keg(
-        self, mock_keg_version, mock_datetime
-    ):
-        mock_keg_version.__version__ = 'keg_version'
-        utc_now = Mock()
-        utc_now.strftime.return_value = 'time-string'
-        mock_datetime.now.return_value = utc_now
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            generator = KegGenerator(self.image_definition, tmpdirname, archs=['x86_64'])
-            generator.create_kiwi_description(
-                overwrite=True
-            )
-            assert_files_equal('../data/output/leap-jeos/config.kiwi', tmpdirname + '/config.kiwi')
-
-    @patch('kiwi_keg.image_definition.datetime')
-    @patch('kiwi_keg.image_definition.version')
-    def test_create_kiwi_description_single_build(
-        self, mock_keg_version, mock_datetime
-    ):
-        self.image_definition = KegImageDefinition(
-            image_name='leap-jeos-single-platform/15.2', recipes_roots=['../data'], image_version='1.0.0'
+def test_keg_generate_create_xml_description(patched_keg_generator):
+    patched_keg_generator.image_definition.data = {
+        'timestamp': 42,
+        'image-config-comments': {
+            'obs-comment': 'work faster'
+        },
+        'image': {
+            'profiles': {
+                'profile': [{'_attributes': {'name': 'profile_one'}}]
+            },
+            '_comment': 'a comment',
+            'packages': {
+                '_map_attribute': 'name',
+                '_namespace_foo': {
+                    'package': ['package_one', 'package_two']
+                }
+            }
+        }
+    }
+    with patch('builtins.open') as mock_file:
+        patched_keg_generator.create_xml_description()
+        mock_file.assert_has_calls(
+            [
+                call(os.path.join('dest_dir', 'config.kiwi'), 'w'),
+                call().__enter__(),
+                call().__enter__().seekable(),
+                call().__enter__().seekable().__bool__(),
+                call().__enter__().tell(),
+                call().__enter__().tell().__eq__(0),
+                call().__enter__().write(b'<?xml version="1.0" encoding="utf-8"?>\n'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'<!-- Image description generated by keg on 42 -->'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'<!-- work faster -->'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'<!-- OBS-Profiles: @BUILD_FLAVOR@ -->'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'<!-- OBS-ExclusiveArch: x86_64 -->'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'<!-- a comment -->'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'<image'),
+                call().__enter__().write(b'>'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'    '),
+                call().__enter__().write(b'<profiles'),
+                call().__enter__().write(b'>'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'        '),
+                call().__enter__().write(b'<profile'),
+                call().__enter__().write(b' name="profile_one"'),
+                call().__enter__().write(b'/>'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'    '),
+                call().__enter__().write(b'</profiles>'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'    '),
+                call().__enter__().write(b'<packages'),
+                call().__enter__().write(b'>'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'        '),
+                call().__enter__().write(b'<!-- begin namespace foo -->'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'        '),
+                call().__enter__().write(b'<package'),
+                call().__enter__().write(b' name="package_one"'),
+                call().__enter__().write(b'/>'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'        '),
+                call().__enter__().write(b'<package'),
+                call().__enter__().write(b' name="package_two"'),
+                call().__enter__().write(b'/>'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'        '),
+                call().__enter__().write(b'<!-- end namespace foo -->'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'    '),
+                call().__enter__().write(b'</packages>'),
+                call().__enter__().write(b'\n'),
+                call().__enter__().write(b'</image>'),
+                call().__enter__().write(b'\n'),
+                call().__exit__(None, None, None)
+            ]
         )
-        mock_keg_version.__version__ = 'keg_version'
-        utc_now = Mock()
-        utc_now.strftime.return_value = 'time-string'
-        mock_datetime.now.return_value = utc_now
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            generator = KegGenerator(self.image_definition, tmpdirname)
-            generator.create_kiwi_description(
-                overwrite=True
-            )
-            assert_files_equal('../data/output/leap-jeos-single-platform/config.kiwi', tmpdirname + '/config.kiwi')
-            assert not os.path.exists(os.path.join(tmpdirname, '_multibuild'))
 
-    def test_create_template_description(self):
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            generator = KegGenerator(self.image_definition, tmpdirname)
-            with raises(KegError) as exception_info:
-                generator.create_template_description()
-            assert 'No template schema defined' in str(exception_info.value)
-            generator.image_schema = 'vm'
-            generator.create_template_description()
 
-    @patch('kiwi_keg.generator.KiwiDescription')
-    def test_format_kiwi_description(self, mock_KiwiDescription):
-        kiwi = Mock()
-        mock_KiwiDescription.return_value = kiwi
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            generator = KegGenerator(self.image_definition, tmpdirname)
-            generator.format_kiwi_description('xml')
-            kiwi.create_XML_description.assert_called_once_with(
-                tmpdirname + '/config.kiwi'
-            )
-            generator.format_kiwi_description('yaml')
-            kiwi.create_YAML_description.assert_called_once_with(
-                tmpdirname + '/config.kiwi'
-            )
-            with raises(KegError):
-                generator.format_kiwi_description('artificial')
+@patch('kiwi_keg.generator.KiwiDescription')
+def test_validate_kiwi_description(mock_kiwi_description, patched_keg_generator):
+    patched_keg_generator.validate_kiwi_description()
+    mock_kiwi_description().validate_description.assert_called_once()
 
-    def test_create_custom_scripts(self):
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            generator = KegGenerator(self.image_definition, tmpdirname)
-            generator.create_custom_scripts(overwrite=True)
-            assert_files_equal(
-                '../data/output/leap-jeos/config.sh', tmpdirname + '/config.sh'
-            )
 
-    @patch('kiwi_keg.generator.KegGenerator._read_template')
-    def test_create_custom_scripts_no_template(self, mock_read_template):
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            mock_read_template.side_effect = KegError('no such teamplate')
-            generator = KegGenerator(self.image_definition, tmpdirname)
-            generator.create_custom_scripts(overwrite=True)
-            assert_files_equal(
-                '../data/output/leap-jeos/config_fallback_header.sh', tmpdirname + '/config.sh'
-            )
+@patch('kiwi_keg.generator.KiwiDescription')
+def test_format_kiwi_description_unkown_markup(mock_kiwi_description, patched_keg_generator):
+    with raises(KegError) as err:
+        patched_keg_generator.format_kiwi_description('no_such_markup')
+        assert 'Unsupported markup' in str(err)
 
-    def test_create_overlays(self):
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            os.mkdir(os.path.join(tmpdirname, 'root'))
-            generator = KegGenerator(self.image_definition, tmpdirname)
-            generator.create_overlays(disable_root_tar=True, overwrite=True)
 
-            tf_gen = tarfile.open(os.path.join(tmpdirname, 'blue.tar.gz'), 'r')
-            tf_ref = tarfile.open('../data/output/leap-jeos/blue.tar.gz', 'r')
-            assert tf_gen.list() == tf_ref.list()
-            assert os.path.exists(os.path.join(tmpdirname, 'root/etc/motd'))
+@patch('kiwi_keg.generator.KiwiDescription')
+def test_format_kiwi_description_xml(mock_kiwi_description, patched_keg_generator):
+    patched_keg_generator.format_kiwi_description('xml')
+    mock_kiwi_description().create_XML_description.assert_called_once()
 
-            with raises(KegError) as exception_info:
-                generator.create_overlays(disable_root_tar=True, overwrite=False)
 
-            expected_err = '{target}/root exists, use force to overwrite.'.format(target=tmpdirname)
-            assert str(exception_info.value) == expected_err
+@patch('kiwi_keg.generator.KiwiDescription')
+def test_format_kiwi_description_yaml(mock_kiwi_description, patched_keg_generator):
+    patched_keg_generator.format_kiwi_description('yaml')
+    mock_kiwi_description().create_YAML_description.assert_called_once()
 
-    def test_create_overlays_no_archive(self):
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            generator = KegGenerator(self.image_definition, tmpdirname)
-            del self.image_definition._data['archives']
-            generator.create_overlays()
-            assert glob.glob(os.path.join(tmpdirname, '*tar.gz')) == []
 
-    def test_add_dir_to_tar(self):
-        image_definition = KegImageDefinition(
-            image_name='leap-jeos/15.2', recipes_roots=['../data']
+@patch('kiwi_keg.generator.KegGenerator._write_custom_script')
+@patch('kiwi_keg.file_utils.raise_on_file_exists')
+def test_create_custom_scripts(mock_raise_on_file_exists, mock_write_custom_script, patched_keg_generator):
+    patched_keg_generator.image_definition.config_script = 'config_script_content'
+    patched_keg_generator.image_definition.images_script = 'images_script_content'
+    patched_keg_generator.create_custom_scripts()
+    mock_write_custom_script.assert_has_calls(
+        [
+            call('dest_dir/config.sh', 'config_script_content', 'config_sh_header.templ'),
+            call('dest_dir/images.sh', 'images_script_content', 'images_sh_header.templ')
+        ]
+    )
+
+
+@patch('kiwi_keg.generator.KegGenerator._add_dir_to_tar')
+@patch('tarfile.open')
+def test_create_overlays(mock_tarfile_open, mock_add_dir_to_tar, patched_keg_generator):
+    patched_keg_generator.image_definition.archives = {'root.tar.gz': ['overlay_dir']}
+    mock_tarfile_open.return_value.__enter__.return_value = 'fake_tar'
+    patched_keg_generator.create_overlays()
+    mock_tarfile_open.assert_called_once_with(os.path.join('dest_dir', 'root.tar.gz'), 'w:gz')
+    mock_add_dir_to_tar.assert_called_once_with('fake_tar', 'overlay_dir')
+
+
+def test_create_overlays_no_overlays(patched_keg_generator):
+    patched_keg_generator.image_definition.archives = None
+    patched_keg_generator.create_overlays()
+
+
+@patch('os.path.exists')
+@patch('shutil.rmtree')
+@patch('os.makedirs')
+@patch('kiwi_keg.generator.KegGenerator._copytree')
+def test_create_overlays_no_root_tar(mock_copytree, mock_makedirs, mock_rmtree, mock_path_exists, patched_keg_generator):
+    patched_keg_generator.image_definition.archives = {'root.tar.gz': ['overlay_dir']}
+    mock_path_exists.return_value = True
+    patched_keg_generator.create_overlays(disable_root_tar=True, overwrite=True)
+    mock_rmtree.assert_called_once_with(os.path.join('dest_dir', 'root'))
+    mock_makedirs.assert_called_once_with(os.path.join('dest_dir', 'root'))
+    mock_copytree.assert_called_once_with('overlay_dir', os.path.join('dest_dir', 'root'))
+
+
+@patch('os.path.exists')
+def test_create_overlays_no_root_tar_dir_exists(mock_path_exists, patched_keg_generator):
+    patched_keg_generator.image_definition.archives = {'root.tar.gz': ['overlay_dir']}
+    mock_path_exists.return_value = True
+    with raises(KegError) as err:
+        patched_keg_generator.create_overlays(disable_root_tar=True, overwrite=False)
+        assert 'overlay_dir exists' in str(err)
+
+
+def test_create_multibuild_file(patched_keg_generator):
+    patched_keg_generator.image_definition.get_build_profile_names.return_value = ['profile_one', 'profile_two']
+    with patch('builtins.open') as mock_file:
+        patched_keg_generator.create_multibuild_file()
+        mock_file.assert_has_calls(
+            [
+                call(os.path.join('dest_dir', '_multibuild'), 'w'),
+                call().__enter__(),
+                call().__enter__().write('<multibuild>\n'),
+                call().__enter__().write('    <flavor>profile_one</flavor>\n'),
+                call().__enter__().write('    <flavor>profile_two</flavor>\n'),
+                call().__enter__().write('</multibuild>\n'),
+                call().__exit__(None, None, None)
+            ]
         )
-        with tempfile.TemporaryDirectory() as tmpdir:
-            dir1_path = os.path.join(tmpdir, 'dir1')
-            dir2_path = os.path.join(tmpdir, 'dir2')
-            os.mkdir(dir1_path)
-            os.mkdir(dir2_path)
-            os.mkdir(os.path.join(dir1_path, 'etc'))
-            os.mkdir(os.path.join(dir2_path, 'etc'))
-            Path(os.path.join(dir1_path, 'etc', 'foo')).touch()
-            Path(os.path.join(dir2_path, 'etc', 'foo')).touch()
-            tar_path = os.path.join(tmpdir, 'tmp.tar')
-            generator = KegGenerator(image_definition, tmpdir)
-            with tarfile.open(tar_path, 'w') as tar:
-                generator._add_dir_to_tar(tar, dir1_path)
-                generator._add_dir_to_tar(tar, dir2_path)
 
-    def test_tarinfo_set_root(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            some_file = os.path.join(tmpdir, 'some_file')
-            Path(some_file).touch()
-            tar_path = os.path.join(tmpdir, 'tmp.tar')
-            with tarfile.open(tar_path, 'w') as tar:
-                tar.add(some_file, filter=KegGenerator._tarinfo_set_root)
-            with tarfile.open(tar_path, 'r') as tar:
-                for tarinfo in tar:
-                    assert tarinfo.uid == tarinfo.gid == 0
-                    assert tarinfo.uname == tarinfo.gname == 'root'
 
-    def test_create_multibuild_file(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            generator = KegGenerator(self.image_definition, tmpdir)
-            generator.create_multibuild_file(overwrite=False)
-            assert_files_equal(
-                '../data/output/leap-jeos/_multibuild', tmpdir + '/_multibuild'
+@patch('os.path.exists', return_value=True)
+def test_create_multibuild_file_file_exists(mock_path_exists, patched_keg_generator):
+    patched_keg_generator.image_definition.get_build_profile_names.return_value = ['profile_one', 'profile_two']
+    with raises(KegError) as err:
+        patched_keg_generator.create_multibuild_file()
+        assert 'exists' in str(err)
+
+
+@patch('kiwi_keg.generator.KegGenerator._write_xml_file')
+def test_create_custom_files(mock_write_xml_file, patched_keg_generator):
+    patched_keg_generator.image_definition.data['xmlfiles'] = {'custom_file': {'foo': 'bar'}}
+    patched_keg_generator.create_custom_files()
+    mock_write_xml_file.assert_called_once_with('custom_file', False)
+
+
+def test_tarinfo_set_root():
+    mock_tarinfo = Mock()
+    KegGenerator._tarinfo_set_root(mock_tarinfo)
+    assert mock_tarinfo.uid == 0
+    assert mock_tarinfo.gid == 0
+    assert mock_tarinfo.uname == 'root'
+
+
+class MockDirEntry:
+    def __init__(self, name, path, is_dir=False):
+        self.name = name
+        self._is_dir = is_dir
+        self.path = os.path.join(path, name)
+
+    def is_dir(self):
+        return self._is_dir
+
+
+@patch('os.scandir')
+def test_add_dir_to_tar(mock_os_scandir, patched_keg_generator):
+    mock_os_scandir.side_effect = [
+        [
+            MockDirEntry('a_file', os.path.join('overlayfiles', 'module')),
+            MockDirEntry('a_dir', os.path.join('overlayfiles', 'module'), True),
+            MockDirEntry('a_dir', os.path.join('overlayfiles', 'module'), True)
+        ],
+        [
+            MockDirEntry('a_subdir', os.path.join('overlayfiles', 'module', 'a_dir'), True)
+        ]
+    ]
+    mock_tar = Mock()
+    mock_tar.name = 'fake.tar'
+    mock_tar.getnames.side_effect = [[], ['a_file'], ['a_file', 'a_dir'], ['a_file', 'a_dir']]
+    patched_keg_generator._add_dir_to_tar(mock_tar, 'module')
+    mock_tar.assert_has_calls(
+        [
+            call.add(
+                name=os.path.join('overlayfiles', 'module', 'a_file'),
+                arcname='a_file',
+                filter=patched_keg_generator._tarinfo_set_root
+            ),
+            call.add(
+                name=os.path.join('overlayfiles', 'module', 'a_dir'),
+                arcname='a_dir',
+                filter=patched_keg_generator._tarinfo_set_root
+            ),
+            call.add(
+                name=os.path.join('overlayfiles', 'module', 'a_dir', 'a_subdir'),
+                arcname=os.path.join('a_dir', 'a_subdir'),
+                filter=patched_keg_generator._tarinfo_set_root
             )
-            with raises(KegError):
-                generator.create_multibuild_file(overwrite=False)
+        ], any_order=True
+    )
 
-    def test_nodeattributes(self):
-        attribs = {'str': 'strval', 'dict': {'item': 'value', 'flagitem': []}, 'list': ['item1', 'item2']}
-        na = NodeAttributes(attribs)
-        assert str(na) == "{'str': 'strval', 'dict': 'item=value flagitem', 'list': 'item1,item2'}"
 
-    def test_create_custom_files(self):
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            generator = KegGenerator(self.image_definition, tmpdirname, archs=['x86_64'])
-            generator.create_custom_files(overwrite=True)
-            assert_files_equal('../data/output/leap-jeos/_constraints', tmpdirname + '/_constraints')
+@patch('os.scandir')
+def test_add_dir_to_tar_warn_dup(mock_os_scandir, patched_keg_generator, caplog):
+    mock_os_scandir.return_value = [
+        MockDirEntry('a_dup', os.path.join('overlayfiles', 'module'))
+    ]
+    mock_tar = Mock()
+    mock_tar.name = 'fake.tar'
+    mock_tar.getnames.return_value = ['a_dup']
+    patched_keg_generator._add_dir_to_tar(mock_tar, 'module')
+    assert 'included twice' in caplog.text
 
-    def test_create_custom_files_file_exists(self):
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            open(os.path.join(tmpdirname, '_constraints'), 'w')
-            generator = KegGenerator(self.image_definition, tmpdirname, archs=['x86_64'])
-            with raises(KegError) as exception_info:
-                generator.create_custom_files(overwrite=False)
-            assert "{} exists".format(os.path.join(tmpdirname, '_constraints')) in \
-                str(exception_info.value)
+
+@patch('shutil.copy')
+@patch('os.makedirs')
+@patch('os.walk')
+def test_copy_tree(mock_walk, mock_makedirs, mock_copy, patched_keg_generator):
+    mock_walk.return_value = [(os.path.join('src', 'subdir'), [], ['some_file'])]
+    patched_keg_generator._copytree('src', 'dest')
+    mock_makedirs.assert_called_once_with(os.path.join('dest', 'subdir'), exist_ok=True)
+    mock_copy.assert_called_once_with(os.path.join('src', 'subdir', 'some_file'), os.path.join('dest', 'subdir'), follow_symlinks=False)
+
+
+@patch('kiwi_keg.generator.KegGenerator._read_template')
+def test_write_custom_script(mock_read_template, patched_keg_generator):
+    mock_template = Mock()
+    mock_template.render.return_value = 'header'
+    mock_read_template.return_value = mock_template
+    patched_keg_generator.image_definition.data = {'fake': 'image'}
+    with patch('builtins.open') as mock_file:
+        patched_keg_generator._write_custom_script('fake_file', 'content', 'fake_template_name')
+        mock_read_template.assert_called_once_with('fake_template_name')
+        mock_template.render.assert_called_once_with(data={'fake': 'image'}, template_target=mock_template)
+        mock_file.assert_has_calls(
+            [
+                call().__enter__(),
+                call().__enter__().write('header'),
+                call().__enter__().write('\n'),
+                call().__enter__().write('content')
+            ]
+        )
+
+
+@patch('kiwi_keg.generator.KegGenerator._read_template')
+def test_write_custom_script_no_template(mock_read_template, patched_keg_generator, caplog):
+    mock_read_template.side_effect = KegError('Template not found')
+    patched_keg_generator.image_definition.data = {'fake': 'image'}
+    with patch('builtins.open') as mock_file:
+        patched_keg_generator._write_custom_script('fake_file', 'content', 'missing_template_name')
+        mock_file.assert_has_calls(
+            [
+                call().__enter__(),
+                call().__enter__().write('#!/bin/bash\n'),
+                call().__enter__().write('\n'),
+                call().__enter__().write('content')
+            ]
+        )
+    assert 'header template missing_template_name missing' in caplog.text
+
+
+def test_read_template(patched_keg_generator):
+    with patch.object(patched_keg_generator, 'env') as mock_env:
+        patched_keg_generator._read_template('fake_template')
+        mock_env.get_template.assert_called_once_with('fake_template')
+
+
+def test_read_template_not_found(patched_keg_generator):
+    with patch.object(patched_keg_generator, 'env') as mock_env:
+        mock_env.get_template.side_effect = TemplateNotFound('fake')
+        with raises(KegDataError) as err:
+            patched_keg_generator._read_template('fake_template')
+            assert 'not found' in str(err)
+
+
+def test_create_xml_node_string(patched_keg_generator):
+    buf = StringIO()
+    content_handler = ContentGenerator(out=buf, encoding='utf-8', short_empty_elements=True)
+    patched_keg_generator._create_xml_node('key', 'string', content_handler)
+    buf.seek(0)
+    assert buf.read() == '<key>string</key>\n'
+
+
+def test_create_xml_node_int(patched_keg_generator):
+    buf = StringIO()
+    content_handler = ContentGenerator(out=buf, encoding='utf-8', short_empty_elements=True)
+    patched_keg_generator._create_xml_node('key', 42, content_handler)
+    buf.seek(0)
+    assert buf.read() == '<key>42</key>\n'
+
+
+def test_create_xml_node_bool(patched_keg_generator):
+    buf = StringIO()
+    content_handler = ContentGenerator(out=buf, encoding='utf-8', short_empty_elements=True)
+    patched_keg_generator._create_xml_node('key', True, content_handler)
+    buf.seek(0)
+    assert buf.read() == '<key>true</key>\n'
+
+
+def test_create_xml_node_string_list(patched_keg_generator):
+    buf = StringIO()
+    content_handler = ContentGenerator(out=buf, encoding='utf-8', short_empty_elements=True)
+    patched_keg_generator._create_xml_node('key', ['foo', 'bar'], content_handler)
+    buf.seek(0)
+    assert buf.read() == '<key>foo</key>\n<key>bar</key>\n'
+
+
+def test_create_xml_node_attributes(patched_keg_generator):
+    buf = StringIO()
+    content_handler = ContentGenerator(out=buf, encoding='utf-8', short_empty_elements=True)
+    patched_keg_generator._create_xml_node('key', {'_attributes': {'foo': 'bar'}, '_text': 'text'}, content_handler)
+    buf.seek(0)
+    assert buf.read() == '<key foo="bar">text</key>\n'
+
+
+def test_create_xml_node_attributes_list(patched_keg_generator):
+    buf = StringIO()
+    content_handler = ContentGenerator(out=buf, encoding='utf-8', short_empty_elements=True)
+    patched_keg_generator._create_xml_node('key', {'_attributes': {'foo': ['bar', 'baz']}, '_text': 'text'}, content_handler)
+    buf.seek(0)
+    assert buf.read() == '<key foo="bar,baz">text</key>\n'
+
+
+def test_create_xml_node_attributes_dict(patched_keg_generator):
+    buf = StringIO()
+    content_handler = ContentGenerator(out=buf, encoding='utf-8', short_empty_elements=True)
+    patched_keg_generator._create_xml_node('key', {'_attributes': {'foo': {'bar': 'baz'}}, '_text': 'text'}, content_handler)
+    buf.seek(0)
+    assert buf.read() == '<key foo="bar=baz">text</key>\n'
+
+
+def test_create_xml_node_attributes_dict_list(patched_keg_generator):
+    buf = StringIO()
+    content_handler = ContentGenerator(out=buf, encoding='utf-8', short_empty_elements=True)
+    patched_keg_generator._create_xml_node('key', {'_attributes': {'foo': {'bar': ['open', 'free']}}, '_text': 'text'}, content_handler)
+    buf.seek(0)
+    assert buf.read() == '<key foo="bar=open bar=free">text</key>\n'
+
+
+def test_create_xml_node_attributes_dict_empty_list(patched_keg_generator):
+    buf = StringIO()
+    content_handler = ContentGenerator(out=buf, encoding='utf-8', short_empty_elements=True)
+    patched_keg_generator._create_xml_node('key', {'_attributes': {'foo': {'bar': []}}, '_text': 'text'}, content_handler)
+    buf.seek(0)
+    assert buf.read() == '<key foo="bar">text</key>\n'
+
+
+def test_create_xml_node_mapped_attributes(patched_keg_generator):
+    buf = StringIO()
+    content_handler = ContentGenerator(out=buf, encoding='utf-8', short_empty_elements=True)
+    patched_keg_generator._create_xml_node('key', ['foo'], content_handler, map_attribute='mapped')
+    buf.seek(0)
+    assert buf.read() == '<key mapped="foo"/>\n'
+
+
+def test_create_xml_node_filter_attributes(patched_keg_generator):
+    buf = StringIO()
+    content_handler = ContentGenerator(out=buf, encoding='utf-8', short_empty_elements=True)
+    patched_keg_generator._create_xml_node(
+        'key',
+        {'_attributes': {'foo': 'bar', 'filter': 'away'}, '_text': 'text'},
+        content_handler,
+        filter_attributes={'filter': 'away'}
+    )
+    buf.seek(0)
+    assert buf.read() == ''
+
+
+def test_create_xml_node_comment(patched_keg_generator):
+    buf = StringIO()
+    content_handler = ContentGenerator(out=buf, encoding='utf-8', short_empty_elements=True)
+    patched_keg_generator._create_xml_node('key', {'_comment': 'a comment'}, content_handler)
+    buf.seek(0)
+    assert buf.read() == '<!-- a comment -->\n'
+
+
+def test_create_xml_node_namespace(patched_keg_generator):
+    buf = StringIO()
+    content_handler = ContentGenerator(out=buf, encoding='utf-8', short_empty_elements=True)
+    patched_keg_generator._create_xml_node('root', {'_namespace_foo': {'key': 'value'}}, content_handler)
+    buf.seek(0)
+    assert buf.read() == '<root>\n    <!-- begin namespace foo -->\n    <key>value</key>\n    <!-- end namespace foo -->\n</root>\n'
+
+
+def test_create_xml_node_unnamed_namespace(patched_keg_generator):
+    buf = StringIO()
+    content_handler = ContentGenerator(out=buf, encoding='utf-8', short_empty_elements=True)
+    patched_keg_generator._create_xml_node('root', {'_namespace': {'key': 'value'}}, content_handler)
+    buf.seek(0)
+    assert buf.read() == '<root>\n    \n    <key>value</key>\n    \n</root>\n'
+
+
+def test_create_xml_node_ignored_element(patched_keg_generator):
+    buf = StringIO()
+    content_handler = ContentGenerator(out=buf, encoding='utf-8', short_empty_elements=True)
+    patched_keg_generator._create_xml_node('root', {'_ignore': {'key': 'value'}}, content_handler)
+    buf.seek(0)
+    assert buf.read() == ''
+
+
+def test_write_xml_file(patched_keg_generator):
+    with patch('builtins.open') as mock_file:
+        patched_keg_generator._write_xml_file({'name': 'xml_file', 'content': {'key': 'value'}})
+        mock_file.assert_has_calls(
+            [
+                call(os.path.join('dest_dir', 'xml_file'), 'w'),
+                call().__enter__(),
+                call().__enter__().seekable(),
+                call().__enter__().seekable().__bool__(),
+                call().__enter__().tell(),
+                call().__enter__().tell().__eq__(0),
+                call().__enter__().write(b'<key'),
+                call().__enter__().write(b'>'),
+                call().__enter__().write(b'value'),
+                call().__enter__().write(b'</key>'),
+                call().__enter__().write(b'\n'),
+                call().__exit__(None, None, None)
+            ]
+        )
+
+
+@patch('os.path.exists', return_value=True)
+def test_write_xml_file_file_exists(mock_path_exists, patched_keg_generator):
+    with raises(KegError) as err:
+        patched_keg_generator._write_xml_file({'name': 'xml_file', 'content': {'key': 'value'}})
+        assert 'exists' in str(err)
+
+
+def test_node_attributes_repr():
+    na = NodeAttributes({'foo': 'bar'})
+    assert str(na) == "{'foo': 'bar'}"

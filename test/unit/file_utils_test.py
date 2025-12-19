@@ -1,85 +1,81 @@
-from unittest.mock import patch
-from pytest import raises
-from kiwi_keg import file_utils
 import yaml
+from io import StringIO
+from unittest.mock import patch, mock_open
+from pytest import raises
+import kiwi_keg.file_utils
+from kiwi_keg.exceptions import KegError
 
 
-class TestUtils:
-    def test_create_yaml_tree(self):
-        expected_output = {
-            'archive': [{'_include': ['base/common'], 'name': 'root.tar.gz'},
-                        {'_include': ['platform/blue'], 'name': 'blue.tar.gz'}],
-            'config': [{'_include': ['base/common']},
-                       {'_include': ['platform/blue'], 'profiles': ['Blue']},
-                       {'_include': ['platform/orange'], 'profiles': ['Orange']},
-                       {'_include': ['platform/common'], 'profiles': ['Blue', 'Orange']}],
-            'xmlfiles': [{'name': '_constraints', 'content': {'constraints': {'hardware': {'disk': {'size': {'_attributes': {'unit': 'G'},
-                                                                                           '_text': 12}}}}}}],
-            'image': {'_attributes': {'schemaversion': '6.2'},
-                      'description': {'_attributes': {'type': 'system'},
-                                      'author': 'The Team',
-                                      'contact': 'bob@example.net'},
-                      'packages': [{'_attributes': {'type': 'bootstrap'},
-                                    '_include': ['base/bootstrap']},
-                                   {'_attributes': {'type': 'image'},
-                                    '_include': ['base/common']},
-                                   {'_attributes': {'profiles': ['Blue'], 'type': 'image'},
-                                    '_include': ['platform/blue'],
-                                    'archive': [{'_attributes': {'name': 'blue.tar.gz'}}]},
-                                   {'_attributes': {'profiles': ['Orange'], 'type': 'image'},
-                                    '_include': ['platform/orange']}],
-                      'preferences': [{'_include': 'base/common'},
-                                      {'_attributes': {'profiles': ['Blue']},
-                                       '_include': ['platform/blue']},
-                                      {'_attributes': {'profiles': ['Orange']},
-                                       '_include': ['platform/orange']}],
-                      'profiles': {'profile': [{'_attributes': {'description': 'Image for '
-                                                                               'Blue '
-                                                                               'Platform',
-                                                                'name': 'Blue'}},
-                                               {'_attributes': {'description': 'Image for '
-                                                                               'Orange '
-                                                                               'Platform',
-                                                                'name': 'Orange'}}]},
-                      'repository': [{'_attributes': {'type': 'rpm-md'},
-                                      'source': {'_attributes': {'path': 'obsrepositories:/'}}}],
-                      'users': {'user': [{'_attributes': {'groups': 'root',
-                                                          'home': '/root',
-                                                          'name': 'root',
-                                                          'password': 'foo'}}]}},
-            'setup': [{'_include': ['base/common']}],
-        }
+@patch('kiwi_keg.file_utils._get_source_files')
+@patch("builtins.open", new_callable=mock_open, read_data='foo: bar')
+def test_get_recipes(mock_open, mock_get_source_files):
+    mock_get_source_files.return_value = ['fake.yaml']
+    data = kiwi_keg.file_utils.get_recipes(['fake_root'], ['fake_dirs'], ['fake_includes'])
+    assert data == {'foo': 'bar'}
 
-        assert file_utils.get_recipes(
-            ['../data/images'], ['leap-jeos'], []
-        ) == expected_output
 
-    def test_load_scripts(self):
-        expected_output = {
-            'orange-stuff': 'Configure some orange parameters\n',
-            'base-stuff': 'Some fundamental config stuff\n',
-            'common-stuff': 'Some common config stuff\n',
-            'blue-stuff': 'Configure some blue parameters\n'
-        }
-        assert file_utils.load_scripts(
-            ['../data/data'], 'scripts', []
-        ) == expected_output
+@patch('kiwi_keg.file_utils._get_source_files')
+@patch("builtins.open", new_callable=mock_open, read_data='foo: bar')
+def test_get_recipes_source_tracking(mock_open, mock_get_source_files):
+    mock_get_source_files.return_value = ['fake.yaml']
+    data = kiwi_keg.file_utils.get_recipes(['fake_root'], ['fake_dirs'], ['fake_includes'], True)
+    assert dict(data.all_items()) == {
+        '__foo_line_end__': 1,
+        '__foo_line_start__': 1,
+        '__foo_source__': mock_open().name,
+        'foo': 'bar'
+    }
 
-    @patch('file_utils.os.walk')
-    def get_all_leaf_dirs(self, mock_os_walk):
-        mock_os_walk.return_value = ['foo', [], []]
-        assert file_utils.get_all_leaf_dirs('foo') == ['foo']
 
-    def test_tracker_loader_constructor_error(self):
-        with open('../data/images/defaults.yaml', 'r') as f:
-            stl = file_utils.SafeTrackerLoader(f)
-            with raises(yaml.constructor.ConstructorError) as err:
-                stl.construct_mapping(yaml.nodes.ScalarNode('no', 'mapping'))
-            assert 'expected a mapping node' in str(err)
-            with raises(yaml.constructor.ConstructorError) as err:
-                broken_node = yaml.nodes.MappingNode(
-                    tag='tag:yaml.org,2002:map',
-                    value=[(yaml.nodes.ScalarNode(tag='tag:yaml.org,2002:str', value=['not', 'hashable']), yaml.nodes.ScalarNode(tag='tag:yaml.org,2002:str', value='foo'))]
-                )
-                stl.construct_mapping(broken_node)
-            assert 'found unhashable key' in str(err)
+@patch('kiwi_keg.file_utils.os.walk')
+def test_get_all_leaf_dirs(mock_os_walk):
+    mock_os_walk.return_value = [('base', ['foo'], []), ('base/foo', [], [])]
+    assert kiwi_keg.file_utils.get_all_leaf_dirs('base') == ['foo']
+
+
+class FakeStream(StringIO):
+    @property
+    def name(self):
+        return 'fake.yaml'
+
+
+def test_tracker_loader_constructor_error():
+    buf = FakeStream()
+    stl = kiwi_keg.file_utils.SafeTrackerLoader(buf)
+    with raises(yaml.constructor.ConstructorError) as err:
+        stl.construct_mapping(yaml.nodes.ScalarNode('no', 'mapping'))
+    assert 'expected a mapping node' in str(err)
+    with raises(yaml.constructor.ConstructorError) as err:
+        broken_node = yaml.nodes.MappingNode(
+            tag='tag:yaml.org,2002:map',
+            value=[(yaml.nodes.ScalarNode(tag='tag:yaml.org,2002:str', value=['not', 'hashable']), yaml.nodes.ScalarNode(tag='tag:yaml.org,2002:str', value='foo'))]
+        )
+        stl.construct_mapping(broken_node)
+    assert 'found unhashable key' in str(err)
+
+
+@patch('kiwi_keg.file_utils._get_source_files')
+@patch("builtins.open", new_callable=mock_open, read_data='script_content')
+def test_load_scripts(mock_open, mock_get_source_files):
+    mock_get_source_files.return_value = ['dir/script_file.sh']
+    scripts = kiwi_keg.file_utils.load_scripts(['fake_root'], ['fake_dirs'], ['fake_includes'])
+    assert scripts == {'script_file': 'script_content'}
+
+
+@patch('os.path.exists')
+def test_raise_on_file_exists(mock_path_exists):
+    mock_path_exists.return_value = True
+    with raises(KegError):
+        kiwi_keg.file_utils.raise_on_file_exists('fake_path', False)
+
+
+@patch('kiwi_keg.file_utils.glob')
+def test_get_source_files(mock_glob):
+    mock_glob.side_effect = [['root/sub/l2.yaml'], ['root/sub/_inc/l3.yaml'], ['root/l1.yaml'], ['root/_inc/l1.5.yaml']]
+    sources = kiwi_keg.file_utils._get_source_files(['root'], 'sub', 'yaml', ['_inc'])
+    assert sources == [
+        'root/l1.yaml',
+        'root/_inc/l1.5.yaml',
+        'root/sub/l2.yaml',
+        'root/sub/_inc/l3.yaml'
+    ]

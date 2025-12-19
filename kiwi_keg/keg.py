@@ -1,4 +1,4 @@
-# Copyright (c) 2022 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2025 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of keg.
 #
@@ -18,7 +18,7 @@
 """
 
 Usage: keg (-l|--list-recipes) (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)... [-v]
-       keg (-r RECIPES_ROOT|-recipes-root=RECIPES_ROOT)...
+       keg (-r RECIPES_ROOT|--recipes-root=RECIPES_ROOT)...
            [--format-xml|--format-yaml] [--disable-root-tar]
            [--disable-multibuild] [--dump-dict]
            [-i IMAGE_VERSION|--image-version=IMAGE_VERSION]
@@ -90,7 +90,7 @@ import sys
 
 # project
 from kiwi_keg.annotated_mapping import AnnotatedPrettyPrinter
-from kiwi_keg.exceptions import KegError
+from kiwi_keg.exceptions import KegError, KegKiwiValidationError
 from kiwi_keg.file_utils import get_all_leaf_dirs
 from kiwi_keg.generator import KegGenerator
 from kiwi_keg.image_definition import KegImageDefinition
@@ -178,12 +178,20 @@ def main():
         image_generator.create_kiwi_description(
             overwrite=args['--force']
         )
+
         if args['--format-yaml']:
             image_generator.format_kiwi_description('yaml')
         elif args['--format-xml']:
             image_generator.format_kiwi_description('xml')
         else:
-            image_generator.validate_kiwi_description()
+            try:
+                image_generator.validate_kiwi_description()
+            except KegKiwiValidationError as issue:
+                if args['--force']:
+                    log.warning('%s: %s', type(issue).__name__, format(issue))
+                    log.warning('Ignoring validation error')
+                else:
+                    raise
         image_generator.create_custom_scripts(
             overwrite=args['--force']
         )

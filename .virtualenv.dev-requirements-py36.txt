@@ -1,8 +1,0 @@
-#
-# Requirement files for Python 3.6 Virtual Development Environments
-#
-
--r .virtualenv.dev-requirements.txt
-
-# Python <3.7 does not have datetime.formisoformat, so we use iso8601 module
-iso8601

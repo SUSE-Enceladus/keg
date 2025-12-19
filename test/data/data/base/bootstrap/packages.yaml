@@ -1,4 +1,0 @@
-packages:
-  _namespace_common_bootstrap:
-    package:
-      - filesystem

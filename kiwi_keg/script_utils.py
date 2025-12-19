@@ -39,9 +39,10 @@ def get_config_script(config_dict: Dict, script_dirs: List[str]) -> str:
             content += '\n'
         profiles = config_section.get('profiles')
         if profiles:
-            content += '\nif [[ $kiwi_profiles = {} '.format(profiles[0])
+            content += '\nprofiles="${kiwi_profiles/,/|}"'
+            content += '\nif [[ {} =~ ^(${{profiles}})$ '.format(profiles[0])
             for profile in profiles[1:]:
-                content += '|| $kiwi_profiles = {} '.format(profile)
+                content += '|| {} =~ ^(${{profiles}})$ '.format(profile)
             content += ']]; then\n'
             content += get_script_section(config_section, script_dirs, '    ')
             content += 'fi\n'
@@ -125,9 +126,10 @@ def get_files_section(files_items: Dict, ns: str, indent: str = '') -> str:
             content += '{}cat >'.format(indent)
             if item.get('append'):
                 content += '>'
-            content += ' "{filename}" <<EOF\n{content}\nEOF\n'.format(
+            content += ' "{filename}" <<EOF\n{content}{space}EOF\n'.format(
                 filename=item['path'],
-                content=item['content']
+                content=item['content'],
+                space='' if item['content'].endswith('\n') else '\n'
             )
         return content
     except KeyError:
