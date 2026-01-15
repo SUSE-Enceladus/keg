@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
-<book xmlns="http://docbook.org/ns/docbook" xml:lang="en" version="5.1" xmlns:its="http://www.w3.org/2005/11/its" xml:id="keg-reference-guide">
+<!DOCTYPE article [
+
+]>
+<article xmlns="http://docbook.org/ns/docbook" xmlns:its="http://www.w3.org/2005/11/its" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.2" xml:id="keg-reference-guide" xml:lang="en">
   <title>Keg Reference Guide</title>
   <info>    
     <meta name="title" its:translate="yes">Keg Reference Guide</meta>
@@ -19,502 +22,709 @@
         </revdescription>
       </revision>
     </revhistory>
-  <info/>
-  <preface>
-    <title>Preface</title>
-    <note>
-      <para>Template-Based KIWI Description Builder</para>
-    </note>
-    <itemizedlist>
-      <listitem>
-        <para>
-          <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://github.com/SUSE-Enceladus/keg">GitHub Sources</link>
-        </para>
-      </listitem>
-    </itemizedlist>
-  </preface>
-  <chapter xml:id="overview" xml:base="overview">
-    <title>Overview</title>
-    <note>
+    <legalnotice>
       <para>
-        <emphasis role="bold">Abstract</emphasis>
+        Copyright © 2022 SUSE LLC and contributors. All rights
+        reserved.
       </para>
-      <para>This document provides a conceptual overview about the steps of creating
-                an image description with <literal>keg</literal> which can be used to build an appliance
-                with the <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/">KIWI</link> appliance builder.</para>
-    </note>
-    <note>
-      <para>Copyright © 2022 SUSE LLC and contributors. All rights reserved.</para>
-      <para>Except where otherwise noted, this document is licensed under Creative
-                Commons Attribution-ShareAlike 4.0 International (CC-BY-SA 4.0):
-                <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://creativecommons.org/licenses/by-sa/4.0/legalcode"/>.</para>
-      <para>For SUSE trademarks, see <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="http://www.suse.com/company/legal/"/>. All third-party
-                trademarks are the property of their respective owners. Trademark symbols (®, ™
-                etc.) denote trademarks of SUSE and its affiliates. Asterisks (*) denote
-                third-party trademarks.</para>
-      <para>All information found in this book has been compiled with utmost attention
-                to detail. However, this does not guarantee complete accuracy. Neither SUSE
-                LLC, its affiliates, the authors nor the translators shall be held liable for
-                possible errors or the consequences thereof.</para>
-    </note>
-    <section xml:id="conceptual-overview">
-      <title>Conceptual overview</title>
-      <para>Keg is a tool which helps to create and manage image descriptions for use with
-                the <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/">KIWI</link> appliance builder. A <literal>KIWI</literal>
-                image description consists of a single XML document that specifies type,
-                configuration, and content of the image to build. Optionally there can be
-                configuration scripts and overlay archives added to an image description,
-                which allow for further configuration and additional content.</para>
-      <para>Since <literal>KIWI</literal> image descriptions are monolithic, maintaining a number of image
-                descriptions that have considerable overlap with respect to content and setup
-                can be cumbersome and error-prone. <literal>Keg</literal> attempts to alleviate that by
-                allowing image descriptions to be broken into modules. Those modules can be
-                composed in different ways in so called image definitions, and modules can
-                inherit from parent modules which allows for fine-tuning for specific image
-                setups. Configuration scripts and overlay archives can also be generated in a
-                modular fashion.</para>
-      <para>The collection of source data required for <literal>keg</literal> to produce image descriptions
-                is called <literal>recipes</literal>. <literal>Keg recipes</literal> are typically kept in a <literal>git</literal> repository,
-                and <literal>keg</literal> has support for producing change logs from <literal>git</literal> commit history, but
-                this is not a requirement. A <literal>recipes</literal> repository provides <literal>keg</literal> with the
-                information how an image description is to be composed as well as the content
-                of the components.</para>
-      <para>The basic principle of operation is that when <literal>keg</literal> is executed, it is pointed
-                to a directory within the <literal>recipes</literal> repository and it reads any YAML files in
-                that directory and any parent directories and merges their contents into a
-                dictionary. How the image definition data is structured and composed is not
-                relevant, as long as the resulting dictionary represents a valid image
-                definition. This allows for a lot of flexibility in the layout of a <literal>recipes</literal>
-                repository. The <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://github.com/SUSE-Enceladus/keg-recipes">SUSE Public Cloud Keg Recipes repository</link> provides an example of a
-                highly modular one with strong use of inheritance.</para>
-      <para>For more details on what constitutes a <literal>recipes</literal> repository, see section
-                <xref linkend="recipes-basics"/> (ff).</para>
-    </section>
-    <section xml:id="working-with-keg">
-      <title>Working with keg</title>
-      <para>To create an image description, <literal>keg</literal> needs to be installed, as well
-                as <literal>KIWI</literal>, as the latter is used by <literal>keg</literal> to validate the final image
-                description. See <xref linkend="installation"/> for information about how to install
-                <literal>keg</literal>, and <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/installation.html">KIWI Installation</link> about how to install
-                <literal>KIWI</literal>.</para>
-      <para>Additionally, a <literal>recipes</literal> repository is required. The following example uses
-                the aforementioned SUSE Public Cloud keg recipes:</para>
-      <screen language="shell-session">$ git clone https://github.com/SUSE-Enceladus/keg-recipes.git
-
-$ mkdir sles15-sp4-byos
-
-$ keg --recipes-root keg-recipes --dest-dir sles15-sp4-byos \
-      cross-cloud/sles/byos/15-sp4</screen>
-      <para>After the <literal>keg</literal> command completes the destination directory specified with
-                <literal>--dest-dir</literal> contains a description for a SUSE Linux Enterprise Server 15 SP4
-                image for use in the Public Clouds. It can be processed with KIWI to build an
-                image. For more details about KIWI image descriptions, see
-                <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/image_description.html"/>.</para>
-      <para><literal>Recipes</literal> used to generate an image description can be spread over multiple
-                repositories. For that purpose, the <literal>--recipes-root</literal> command line argument may
-                be given multiple times, with each one specifying a different <literal>recipes</literal>
-                repository. Repositories will be searched in the order they are specified, and
-                for any dictionary key, config scriptlet, or overlay archive module that
-                exists in multiple repositories, the one that is read last will be used.</para>
-      <para>Using multiple repositories for <literal>recipes</literal> can be useful in some
-                situations. For example, if some parts of <literal>recipes</literal> data are public and some
-                private, they can be kept in different repositories. It could also be used to
-                base <literal>recipes</literal> on an upstream repository and only maintain additional image
-                definitions or modifications in a separate repository.</para>
-      <para><literal>Keg</literal> also provides support for producing image descriptions for use with the
-                <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://openbuildservice.org/help/manuals/obs-user-guide/">Open Build Service</link>. It can generate
-                <literal>_multibuild</literal> files that are required by <literal>OBS</literal> for image descriptions with
-                multiple profiles, and it comes with an <literal>OBS Source Service</literal> plug-in for
-                automating generating image descriptions. See <xref linkend="keg-obs-source-service"/>
-                for details.</para>
-    </section>
-  </chapter>
-  <chapter xml:id="installation" xml:base="installation">
+      <para>
+        Except where otherwise noted, this document is licensed under
+        Creative Commons Attribution-ShareAlike 4.0 International
+        (CC-BY-SA 4.0): <link
+        xlink:href="https://creativecommons.org/licenses/by-sa/4.0/legalcode"/>.
+      </para>
+      <para>
+        For SUSE trademarks, see <link
+        xmlns:xl="http://www.w3.org/1999/xlink"
+        xlink:href="http://www.suse.com/company/legal/"/>. All
+        third-party trademarks are the property of their respective
+        owners. Trademark symbols (®, ™ etc.) denote trademarks of
+        SUSE and its affiliates. Asterisks (*) denote third-party
+        trademarks.
+      </para>
+      <para>
+        All information found in this book has been compiled with
+        utmost attention to detail. However, this does not guarantee
+        complete accuracy. Neither SUSE LLC, its affiliates, the
+        authors nor the translators shall be held liable for possible
+        errors or the consequences thereof.
+      </para>
+    </legalnotice>
+    <abstract>
+      <para>
+        This document provides a conceptual overview about the steps
+        for creating an image description with <literal>Keg</literal>
+        which can be used to build an appliance with the <link
+        xmlns:xl="http://www.w3.org/1999/xlink"
+        xlink:href="https://osinside.github.io/kiwi/">KIWI</link>
+        appliance builder.
+      </para>
+      <para>
+        The Keg sources are available on <link xlink:href="https://github.com/SUSE-Enceladus/keg">GitHub</link>.
+      </para>
+    </abstract>
+  </info>
+  <section xml:id="conceptual-overview">
+    <title>Conceptual overview</title>
+    <para>
+      Keg is a tool which helps to create and manage image
+      descriptions for use with the <link
+      xlink:href="https://osinside.github.io/kiwi/">KIWI</link>
+      appliance builder. A KIWI image description consists of a single
+      XML document that specifies type, configuration, and content of
+      the image to build. Optionally there can be configuration
+      scripts and overlay archives added to an image description,
+      which allow for further configuration and additional content.
+    </para>
+    <para>
+      Since KIWI image descriptions are monolithic, maintaining a
+      number of image descriptions that have considerable overlap with
+      respect to content and setup can be cumbersome and
+      error-prone. Keg attempts to alleviate that by allowing image
+      descriptions to be broken into modules. Those modules can be
+      composed in different ways in so called image definitions, and
+      modules can inherit from parent modules which allows for
+      fine-tuning for specific image setups. Configuration scripts and
+      overlay archives can also be generated in a modular fashion.
+    </para>
+    <para>
+      The collection of source data required for keg to produce image
+      descriptions is called <literal>recipes</literal>. Keg
+      <literal>recipes</literal> are typically kept in a git
+      repository, and Keg has support for producing change logs from
+      the git commit history, but this is not a requirement. A
+      <literal>recipes</literal> repository provides Keg with the
+      information how an image description is to be composed as well
+      as the content of the components.
+    </para>
+    <para>
+      The basic principle of operation is that when
+      <command>keg</command> is executed, it is pointed to a directory
+      within the <literal>recipes</literal> repository and it reads
+      any YAML files in that directory and any parent directories and
+      merges their contents into a dictionary. How the image
+      definition data is structured and composed is not relevant, as
+      long as the resulting dictionary represents a valid image
+      definition. This allows for a lot of flexibility in the layout
+      of a <literal>recipes</literal> repository. The <link
+      xlink:href="https://github.com/SUSE-Enceladus/keg-recipes">SUSE
+      Public Cloud Keg Recipes repository</link> provides an example
+      of a highly modular one with strong use of inheritance.
+    </para>
+    <para>
+      For more details on what constitutes a
+      <literal>recipes</literal> repository, see section <xref
+      linkend="recipes-basics"/> (ff).
+    </para>
+  </section>
+  <section xml:id="working-with-keg">
+    <title>Working with keg</title>
+    <para>
+      To create an image description, Keg needs to be installed, as
+      well as KIWI, as the latter is used by Keg to validate the final
+      image description. See <xref linkend="installation"/> for
+      information about how to install Keg, and <link
+      xlink:href="https://osinside.github.io/kiwi/installation.html">KIWI
+      Installation</link> about how to install KIWI.
+    </para>
+    <para>
+      Additionally, a <literal>recipes</literal> repository is
+      required. The following example uses the aforementioned SUSE
+      Public Cloud keg recipes:
+    </para>
+    <screen>&gt; git clone https://github.com/SUSE-Enceladus/keg-recipes.git
+&gt; mkdir sles15-sp4-byos
+&gt; keg --recipes-root keg-recipes --dest-dir sles15-sp4-byos \
+  cross-cloud/sles/byos/15-sp4</screen>
+    <para>
+      After the <command>keg</command> command completes the
+      destination directory specified with
+      <option>--dest-dir</option> contains a description for a SUSE
+      Linux Enterprise Server 15 SP4 image for use in the Public
+      Clouds. It can be processed with KIWI to build an image. For
+      more details about KIWI image descriptions, see <link
+      xlink:href="https://osinside.github.io/kiwi/image_description.html"/>.
+    </para>
+    <para>
+      <literal>Recipes</literal> used to generate an image description
+      can be spread over multiple repositories. For that purpose, the
+      <option>--recipes-root</option> command line argument may be
+      given multiple times, with each one specifying a different
+      <literal>recipes</literal> repository. Repositories will be
+      searched in the order they are specified, and for any dictionary
+      key, config scriptlet, or overlay archive module that exists in
+      multiple repositories, the one that is read last will be used.
+    </para>
+    <para>
+      Using multiple repositories for <literal>recipes</literal> can
+      be useful in some situations. For example, if some parts of
+      <literal>recipes</literal> data are public and some private,
+      they can be kept in different repositories. It could also be
+      used to base <literal>recipes</literal> on an upstream
+      repository and only maintain additional image definitions or
+      modifications in a separate repository.
+    </para>
+    <para>
+      Keg also provides support for producing image descriptions for
+      use with the <link
+      xlink:href="https://openbuildservice.org/help/manuals/obs-user-guide/">Open
+      Build Service</link> (OBS). It can generate
+      <literal>_multibuild</literal> files that are required by OBS
+      for image descriptions with multiple profiles, and it comes with
+      an <literal>OBS Source Service</literal> plug-in for automating
+      generating image descriptions. See <xref
+      linkend="keg-obs-source-service"/> for details.
+    </para>
+  </section>
+  <section xml:id="installation">
     <title>Installation</title>
-    <note>
-      <para>This document describes how to install Keg. Currently <literal>keg</literal> is
-                available from <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://pypi.org/project/kiwi-keg/">PyPi</link> and from the
-                <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://build.opensuse.org/package/show/Cloud:Toolr/python-kiwi-keg/">openSUSE Build Service</link>
-                for several openSUSE distributions. It is included in openSUSE Tumbleweed.</para>
-    </note>
+    <para>
+      This section describes how to install Keg. Currently Keg is
+      available from <link
+      xlink:href="https://pypi.org/project/kiwi-keg/">PyPi</link> and
+      from the <link
+      xlink:href="https://build.opensuse.org/package/show/Cloud:Toolr/python-kiwi-keg/">openSUSE
+      Build Service</link> for several openSUSE distributions. It is
+      included in openSUSE Tumbleweed.
+    </para>
     <section xml:id="installation-from-opensuse-cloud-tools-repository">
-      <title>Installation from openSUSE Cloud:Tools repository</title>
-      <para><literal>Keg</literal> is available for various openSUSE distributions from the <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://download.opensuse.org/repositories/Cloud:/Tools/">Cloud:Tools
-                    repository</link> in the
-                openSUSE Build Service. Package name is <literal>python[py_version]-kiwi-keg</literal>.</para>
+      <title>Installation from the openSUSE Cloud:Tools repository</title>
+      <para>
+        Keg is available for various openSUSE distributions from the
+        <link
+        xlink:href="https://download.opensuse.org/repositories/Cloud:/Tools/">Cloud:Tools
+        repository</link> in the openSUSE Build Service. Package name
+        is <literal>python<replaceable>py_version</replaceable>-kiwi-keg</literal>.
+      </para>
     </section>
     <section xml:id="installation-from-pypi">
       <title>Installation from PyPI</title>
-      <para><literal>Keg</literal> can be obtained from the Python Package Index (PyPi) via Python’s
-                package manager pip:</para>
-      <screen language="shell-session">$ pip install kiwi_keg</screen>
+      <para>
+        Keg can be obtained from the Python Package Index (PyPi) via Python’s
+        package manager pip:
+      </para>
+      <screen>&gt; pip install kiwi_keg</screen>
     </section>
-  </chapter>
-  <chapter xml:id="command-line" xml:base="commands">
+  </section>
+  <section xml:id="command-line">
     <title>Command Line</title>
-    <section xml:id="keg" xml:base="commands/keg">
+    <section xml:id="keg">
       <title>keg</title>
-      <section xml:id="keg-synopsis">
-        <title>SYNOPSIS</title>
-        <para><emphasis role="bold">keg</emphasis> [<emphasis>options</emphasis>] &lt;<emphasis>source</emphasis>&gt;</para>
-      </section>
-      <section xml:id="keg-description">
-        <title>DESCRIPTION</title>
-        <para><literal>keg</literal> is a tool which helps to create and manage image descriptions
-                suitable for the <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/">KIWI</link> appliance builder.
-                While <literal>keg</literal> can be used to manage a single image definition the tool
-                provides no considerable advantage in such a use case. The primary use case for
-                <literal>keg</literal> are situations where many image descriptions must be managed and
-                the image descriptions have considerable overlap with respect to content and
-                setup.</para>
-        <para><literal>keg</literal> requires source data called <literal>recipes</literal> which provides all information
-                necessary for <literal>keg</literal> to create KIWI image descriptions. See
-                <xref linkend="recipes-basics"/> for more information about <literal>recipes</literal>.</para>
-        <para>The <literal>recipes</literal> used for generating SUSE Public Cloud image descriptions
-                can be found in the
-                <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://github.com/SUSE-Enceladus/keg-recipes">Public Cloud Keg Recipes</link>
-                repository.</para>
-      </section>
-      <section xml:id="keg-args">
-        <title>ARGUMENTS</title>
-        <para>source</para>
-        <para>Path to image source under RECIPES_ROOT/images</para>
-      </section>
-      <section xml:id="keg-options">
-        <title>OPTIONS</title>
-        <variablelist>
-          <varlistentry>
-            <term>
-              <option>-r</option>
-              <option>--recipes-root</option>
-            </term>
-            <listitem>
-              <para>Root directory of keg recipes. Can be used more than once. Elements
-                            from later roots may overwrite earlier one.</para>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term>
-              <option>-d</option>
-              <option>--dest-dir</option>
-            </term>
-            <listitem>
-              <para>Destination directory for generated description [default: .]</para>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term>
-              <option>--disable-multibuild</option>
-            </term>
-            <listitem>
-              <para>Option to disable creation of OBS _multibuild file (for image
-                            definitions with multiple profiles). [default: false]</para>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term>
-              <option>--disable-root-tar</option>
-            </term>
-            <listitem>
-              <para>Option to disable the creation of root.tar.gz in destination directory.
-                            If present, an overlay tree will be created instead.
-                            [default: false]</para>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term>
-              <option>--dump-dict</option>
-            </term>
-            <listitem>
-              <para>Dump generated data dictionary to stdout instead of generating an image
-                            description. Useful for debugging.</para>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term>
-              <option>-l</option>
-              <option>--list-recipes</option>
-            </term>
-            <listitem>
-              <para>List available images that can be created with the current recipes</para>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term>
-              <option>-f</option>
-              <option>--force</option>
-            </term>
-            <listitem>
-              <para>Force mode (ignore errors, overwrite files)</para>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term>
-              <option>--format-yaml</option>
-            </term>
-            <listitem>
-              <para>Format/Update Keg written image description to installed
-                            KIWI schema and write the result description in YAML markup</para>
-              <note>
-                <para>Currently no translation of comment blocks from the Keg
-                                generated KIWI description to the YAML markup will be
-                                performed.</para>
-              </note>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term>
-              <option>--format-xml</option>
-            </term>
-            <listitem>
-              <para>Format/Update Keg written image description to installed
-                            KIWI schema and write the result description in XML markup</para>
-              <note>
-                <para>Currently only top-level header comments from the Keg
-                                written image description will be preserved into the
-                                formatted/updated KIWI XML file. Inline comments will
-                                not be preserved.</para>
-              </note>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term>
-              <option>-i</option>
-              <option>--image-version</option>
-            </term>
-            <listitem>
-              <para>Set image version</para>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term>
-              <option>-a</option>
-            </term>
-            <listitem>
-              <para>Generate image description for architecture ARCH (can be used
-                            multiple times)</para>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term>
-              <option>-s</option>
-              <option>--write-source-info</option>
-            </term>
-            <listitem>
-              <para>Write a file per profile containing a list of all used source
-                            locations. The files can used to generate a change log from the
-                            recipes repository commit log.</para>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term>
-              <option>-v</option>
-              <option>--verbose</option>
-            </term>
-            <listitem>
-              <para>Enable verbose output</para>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term>
-              <option>--version</option>
-            </term>
-            <listitem>
-              <para>Print version</para>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-      </section>
-      <section xml:id="keg-example">
-        <title>EXAMPLE</title>
-        <screen language="bash">git clone https://github.com/SUSE-Enceladus/keg-recipes.git
+      
+      <bridgehead renderas="sect3" xml:id="keg-synopsis">SYNOPSIS</bridgehead>
+      <para><emphasis role="bold">keg</emphasis> [<emphasis>options</emphasis>] &lt;<emphasis>source</emphasis>&gt;</para>
+      
+      <bridgehead renderas="sect3" xml:id="keg-description">DESCRIPTION</bridgehead>
+      <para>
+        Keg is a tool which helps to create and manage image
+        descriptions suitable for the <link
+        xlink:href="https://osinside.github.io/kiwi/">KIWI</link>
+        appliance builder.  While Keg can be used to manage a single
+        image definition the tool provides no considerable advantage
+        in such a use case. The primary use case for Keg are
+        situations where many image descriptions must be managed and
+        the image descriptions have considerable overlap with respect
+        to content and setup.
+      </para>
+      <para>
+        Keg requires source data called <literal>recipes</literal>
+        which provides all information necessary for Keg to create
+        KIWI image descriptions. See <xref linkend="recipes-basics"/>
+        for more information about <literal>recipes</literal>.
+      </para>
+      <para>
+        The <literal>recipes</literal> used for generating SUSE Public
+        Cloud image descriptions can be found in the <link
+        xlink:href="https://github.com/SUSE-Enceladus/keg-recipes">Public
+        Cloud Keg Recipes</link> repository.
+      </para>
 
-keg --recipes-root keg-recipes --dest-dir leap_description leap/jeos/15.2</screen>
-      </section>
+      <bridgehead renderas="sect3" xml:id="keg-args">ARGUMENTS</bridgehead>
+      <variablelist>
+        <varlistentry>
+          <term>source</term>
+          <listitem>
+            <para>
+              Path to image source under <filename
+              class="directory"><replaceable>RECIPES_ROOT</replaceable>/images</filename>.
+            </para>
+          </listitem>
+        </varlistentry>     
+      </variablelist>
+
+      <bridgehead renderas="sect3" xml:id="keg-options">OPTIONS</bridgehead>
+      <variablelist>
+        <varlistentry>
+          <term>
+            <option>-r</option>
+            <option>--recipes-root</option>
+          </term>
+          <listitem>
+            <para>
+              Root directory of keg recipes. Can be used more than
+              once. Elements from later roots may overwrite earlier
+              one.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>-d</option>
+            <option>--dest-dir</option>
+          </term>
+          <listitem>
+            <para>Destination directory for generated description [default: <literal>.</literal>]</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>--disable-multibuild</option>
+          </term>
+          <listitem>
+            <para>
+              Option to disable creation of OBS _multibuild file (for image
+              definitions with multiple profiles). [default: <literal>false</literal>]
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>--disable-root-tar</option>
+          </term>
+          <listitem>
+            <para>
+              Option to disable the creation of root.tar.gz in
+              destination directory.  If present, an overlay tree
+              will be created instead.  [default: <literal>false</literal>]
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>--dump-dict</option>
+          </term>
+          <listitem>
+            <para>
+              Dump generated data dictionary to stdout instead of generating an image
+              description. Useful for debugging.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>-l</option>
+            <option>--list-recipes</option>
+          </term>
+          <listitem>
+            <para>
+              List available images that can be created with the current recipes.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>-f</option>
+            <option>--force</option>
+          </term>
+          <listitem>
+            <para>
+              Force mode (ignore errors, overwrite files).
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>--format-yaml</option>
+          </term>
+          <listitem>
+            <para>
+              Format/Update Keg written image description to installed
+              KIWI schema and write the result description in YAML markup.
+            </para>
+            <note>
+              <para>
+                Currently no translation of comment blocks from the
+                Keg generated KIWI description to the YAML markup
+                will be performed.
+              </para>
+            </note>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>--format-xml</option>
+          </term>
+          <listitem>
+            <para>
+              Format/Update Keg written image description to
+              installed KIWI schema and write the result description
+              in XML markup.
+            </para>
+            <note>
+              <para>
+                Currently only top-level header comments from the
+                Keg written image description will be preserved into
+                the formatted/updated KIWI XML file. Inline comments
+                will not be preserved.
+              </para>
+            </note>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>-i</option>
+            <option>--image-version</option>
+          </term>
+          <listitem>
+            <para>Set image version.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>-a</option>
+          </term>
+          <listitem>
+            <para>
+              Generate image description for architecture
+              <replaceable>ARCH</replaceable> (can be used multiple
+              times).
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>-s</option>
+            <option>--write-source-info</option>
+          </term>
+          <listitem>
+            <para>
+              Write a file per profile containing a list of all used
+              source locations. The files can used to generate a
+              change log from the recipes repository commit log.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>-v</option>
+            <option>--verbose</option>
+          </term>
+          <listitem>
+            <para>Enable verbose output.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>--version</option>
+          </term>
+          <listitem>
+            <para>Print version.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      
+      <bridgehead renderas="sect3" xml:id="keg-example">EXAMPLE</bridgehead>
+      <screen>&gt; git clone https://github.com/SUSE-Enceladus/keg-recipes.git
+&gt; keg --recipes-root keg-recipes --dest-dir leap_description leap/jeos/15.2</screen>
+
     </section>
-    <section xml:id="generate-recipes-changelog" xml:base="commands/generate_recipes_changelog">
+    <section xml:id="generate-recipes-changelog">
       <title>generate_recipes_changelog</title>
-      <section xml:id="generate-recipes-changelog-synopsis">
-        <title>SYNOPSIS</title>
-        <para><emphasis role="bold">generate_recipes_changelog</emphasis> [<emphasis>options</emphasis>] &lt;logfile&gt;</para>
-      </section>
-      <section xml:id="generate-recipes-changelog-description">
-        <title>DESCRIPTION</title>
-        <para><literal>generate_recipes_changelog</literal> generates a change log from the git
-                commit history of one or more <literal>keg-recipes</literal> repositories. The input file is a
-                source info log that is generated by <literal>keg</literal> when run with source
-                tracking enabled (<literal>-s</literal> command line switch).</para>
-        <para>The exit status is 0 in case a change log was generated successfully, 1
-                in case an error occurred, or 2 in case no error occurred but generated
-                change log is empty.</para>
-      </section>
-      <section xml:id="generate-recipes-changelog-args">
-        <title>ARGUMENTS</title>
-        <para>logfile</para>
-        <para>A source info log file produced by <literal>keg</literal>.</para>
-      </section>
-      <section xml:id="generate-recipes-changelog-options">
-        <title>OPTIONS</title>
-        <variablelist>
-          <varlistentry>
-            <term>
-              <option>-o</option>
-            </term>
-            <listitem>
-              <para>Write output to OUTPUT_FILE (stdout if omitted)</para>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-        <para>-r PATH:REV</para>
-        <para>Set git revision range to REV for repo at PATH</para>
-        <note>
-          <para>This limits the applicable set of commits to the given revision spec.
-                        This can be used to select only newer changes from a previous change log
-                        generator run. See EXAMPLE below.</para>
-        </note>
-        <variablelist>
-          <varlistentry>
-            <term>
-              <option>-f</option>
-            </term>
-            <listitem>
-              <para>Output format, ‘text’ or ‘yaml’ [default: yaml]</para>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term>
-              <option>-m</option>
-            </term>
-            <listitem>
-              <para>Format spec for commit messages (see ‘format:&lt;string&gt;’ in ‘man git-log’)
-                            [default: - %s] (only used with text format)</para>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term>
-              <option>-t</option>
-            </term>
-            <listitem>
-              <para>Use ROOT_TAG for yaml output (e.g. image version)</para>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-      </section>
-      <section xml:id="generate-recipes-changelog-example">
-        <title>EXAMPLE</title>
-        <screen language="bash">generate_recipes_changelog -r /path/to/repo:12345678.. -t 1.1.8 log_sources</screen>
-        <para>This will produce a YAML change log, namespaced with <literal>1.1.8</literal>, intended as a
-                version number, only considering commits after hash <literal>12345678</literal>. If <literal>12345678</literal>
-                was the hash of the HEAD commit in the checked out branch at
-                <literal>/path/to/repo</literal> at the previous run of <literal>generate_recipes_changelog</literal> on
-                the same data set, this would limit the change log to only contain newer
-                changes. This method can be used to produce incremental change logs.</para>
-        <para>The change log will have the following format:</para>
-        <screen language="yaml">1.1.8:
-  - change: git message subject
-    date: git commit UTC timestamp
+
+      <bridgehead renderas="sect3" xml:id="generate-recipes-changelog-synopsis">SYNOPSIS</bridgehead>
+      <para><emphasis role="bold">generate_recipes_changelog</emphasis> [<emphasis>options</emphasis>] &lt;logfile&gt;</para>
+
+      <bridgehead renderas="sect3" xml:id="generate-recipes-changelog-description">DESCRIPTION</bridgehead>
+      <para>
+        <command>generate_recipes_changelog</command> generates a
+        change log from the git commit history of one or more
+        <literal>keg-recipes</literal> repositories. The input file
+        is a source info log that is generated by Keg when run with
+        source tracking enabled (<literal>-s</literal> command line
+        switch).
+      </para>
+      <para>
+        The exit status is 0 in case a change log was generated
+        successfully, 1 in case an error occurred, or 2 in case no
+        error occurred but generated change log is empty.
+      </para>
+
+      <bridgehead renderas="sect3" xml:id="generate-recipes-changelog-args">ARGUMENTS</bridgehead>
+      <variablelist>
+        <varlistentry>
+          <term>logfile</term>
+          <listitem>
+            <para>A source info log file produced by Keg.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <bridgehead renderas="sect3" xml:id="generate-recipes-changelog-options">OPTIONS</bridgehead>
+      <variablelist>
+        <varlistentry>
+          <term>
+            <option>-o</option>
+          </term>
+          <listitem>
+            <para>
+              Write output to <replaceable>OUTPUT_FILE</replaceable> (<literal>stdout</literal> if omitted)
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>-r</option> <replaceable>PATH:REV</replaceable>
+          </term>
+          <listitem>
+            <para>
+              Set git revision range to
+              <replaceable>REV</replaceable> for repo at
+              <replaceable>PATH</replaceable>.
+            </para>
+            <note>
+              <para>
+                This limits the applicable set of commits to the
+                given revision spec.  This can be used to select
+                only newer changes from a previous change log
+                generator run. See <xref linkend="generate-recipes-changelog-example"/> below.
+              </para>
+            </note>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>-f</option>
+          </term>
+          <listitem>
+            <para>Output format, <literal>text</literal> or <literal>yaml</literal> [default: <literal>yaml</literal>]</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>-m</option>
+          </term>
+          <listitem>
+            <para>
+              Format spec for commit messages (see ‘format:&lt;string&gt;’ in <command>man git-log</command>)
+              [default: <literal>- %s</literal>] (only used with text format)
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>
+            <option>-t</option>
+          </term>
+          <listitem>
+            <para>
+              Use <replaceable>ROOT_TAG</replaceable> for yaml output (e.g. image version)
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <bridgehead renderas="sect3" xml:id="generate-recipes-changelog-example">EXAMPLE</bridgehead>
+      <screen>&gt; generate_recipes_changelog -r /path/to/repo:12345678.. -t 1.1.8 log_sources</screen>
+      <para>
+        This will produce a YAML change log, namespaced with
+        <literal>1.1.8</literal>, intended as a version number, only
+        considering commits after hash <literal>12345678</literal>. If
+        <literal>12345678</literal> was the hash of the HEAD commit in
+        the checked out branch at <filename
+        class="directory"><replaceable>/PATH/TO/REPO</replaceable></filename>
+        at the previous run of
+        <literal>generate_recipes_changelog</literal> on the same data
+        set, this would limit the change log to only contain newer
+        changes. This method can be used to produce incremental change
+        logs.
+      </para>
+      <para>
+        The change log will have the following format:
+      </para>
+      <screen language="yaml">1.1.8:
+  - change: <replaceable>git message subject</replaceable>
+    date: <replaceable>git commit UTC timestamp</replaceable>
     details: |-
-      git message body
+      <replaceable>git message body</replaceable>
   ...</screen>
-      </section>
     </section>
-  </chapter>
-  <chapter xml:id="recipes-basics" xml:base="recipes_basics">
+  </section>
+  <section xml:id="recipes-basics">
     <title>Recipes basics</title>
-    <para>To produce image descriptions, <literal>keg</literal> must be provided with source data, also
-            called <literal>keg recipes</literal>. Unlike <literal>KIWI</literal> descriptions, <literal>keg recipes</literal> can be
-            composed of an arbitrary number of files, which allows for creating building
-            blocks for image descriptions. <literal>Keg</literal> does not mandate a specific structure of
-            the recipes data, with the exception that it expects certain types of source
-            data in specific directories.</para>
-    <para>This document describes the fundamental <literal>keg recipes</literal> structure and how <literal>keg</literal>
-            processes input data to generate an image definition.</para>
+    <para>
+      To produce image descriptions, Keg must be provided with source
+      data, also called <literal>keg recipes</literal>. Unlike KIWI
+      descriptions, <literal>keg recipes</literal> can be composed of
+      an arbitrary number of files, which allows for creating building
+      blocks for image descriptions. Keg does not mandate a specific
+      structure of the recipes data, with the exception that it
+      expects certain types of source data in specific directories.
+    </para>
+    <para>
+      This document describes the fundamental <literal>keg recipes</literal> structure and how Keg
+      processes input data to generate an image definition.
+    </para>
     <section xml:id="recipes-data-layout">
       <title>Recipes data layout</title>
-      <para>Essentially, a <literal>keg recipes</literal> repository conists of three top-level directories
-                which contain different types of configuration data. Those three are:</para>
-      <procedure>
-        <step>
-          <para>Image Definitions: <literal>images</literal></para>
-          <para>The <literal>images</literal> directory contains all image definitions. An image
-                        defintion specifies the properties and content of the image description to
-                        generate. Include statements in the image definition allow to reference
-                        chunks of content from the data modules. Image definitions are specifed in
-                        YAML format, can be modular and support data inheritence. See
-                        <xref linkend="image-definition"/> for details.</para>
-        </step>
-        <step>
-          <para>Data Modules: <literal>data</literal></para>
-          <para>The <literal>data</literal> directory contains different bits of configuration and
-                        content data that can be used to compose an image description. There are
-                        three different types of data modules:</para>
-          <para>2.1 Image Definition Modules</para>
-          <para>Any directory in <literal>data</literal> that is not file:<literal>scripts</literal> or
-                        file:<literal>overlayfiles</literal> is considered a module, or module tree, for image
-                        definition data. Those modules can be referenced in the image definitions
-                        using <literal>_include</literal> statements. The data is in YAML format and spports
-                        inheritence.</para>
-          <para>2.2 Image Configuration Scriptlets</para>
-          <para>Scriptlets can be used to compose optional configuration shell scripts that
-                        <literal>KIWI</literal> can run during the build process. The scriptlets are located in
-                        <literal>data/scripts</literal>.</para>
-          <para>2.3 Overlay Files</para>
-          <para>Image description may include overlay files that get copied into the target
-                            image. <literal>Keg</literal> can create overlay archives from overlay data directories.
-                            Overlay files trees are located in <literal>data/overlayfiles</literal>.</para>
-        </step>
-      </procedure>
-      <para>See <xref linkend="data-modules"/> for details on data modules.</para>
-      <procedure>
-        <step>
-          <para>Schema Templates: <literal>schemas</literal></para>
-        </step>
-      </procedure>
-      <para><literal>Keg</literal> uses Jinja2 templates to produce the headers for <literal>config.sh</literal>
-                    and <literal>images.sh</literal>. Both are optional and <literal>keg</literal> will write a fallback
-                    header if they are missing. Additionally, a Jinja2 template can be used
-                    to generate <literal>config.kiwi</literal> instead of using the internal XML generator.</para>
+      <para>
+        Essentially, a <literal>keg recipes</literal> repository conists of three top-level directories
+        which contain different types of configuration data. Those three are:
+      </para>
+      <variablelist>
+        <varlistentry>
+          <term>
+            Image Definitions: <filename class="directory">images</filename>
+          </term>
+          <listitem>
+            <para>
+              The <filename class="directory">images</filename>
+              directory contains all image definitions. An image
+              defintion specifies the properties and content of the
+              image description to generate. Include statements in the
+              image definition allow to reference chunks of content
+              from the data modules. Image definitions are specifed in
+              YAML format, can be modular and support data
+              inheritence. See <xref linkend="image-definition"/> for
+              details.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>Data Modules: <filename class="directory">data</filename></term>
+          <listitem>
+            <para>
+              The <filename class="directory">data</filename>
+              directory contains different bits of configuration and
+              content data that can be used to compose an image
+              description. See <xref linkend="data-modules"/> for
+              details on data modules. There are three different types
+              of data modules:
+            </para>
+            <variablelist>
+              <varlistentry>
+                <term>Image Definition Modules</term>
+                <listitem>
+                  <para>
+                    Any directory in <filename class="directory">data</filename> that is
+                    not file:<filename>scripts</filename> or
+                    file:<filename>overlayfiles</filename> is considered
+                    a module, or module tree, for image definition
+                    data. Those modules can be referenced in the image
+                    definitions using <literal>_include</literal>
+                    statements. The data is in YAML format and spports
+                    inheritence.
+                  </para>
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>Image Configuration Scriptlets</term>
+                <listitem>
+                  <para>
+                    Scriptlets can be used to compose optional
+                    configuration shell scripts that KIWI can run
+                    during the build process. The scriptlets are
+                    located in <filename
+                    class="directory">data/scripts</filename>.
+                  </para>
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>Overlay Files</term>
+                <listitem>
+                  <para>
+                    Image description may include overlay files that
+                    get copied into the target image. Keg can create
+                    overlay archives from overlay data directories.
+                    Overlay files trees are located in
+                    <filename class="directory">>data/overlayfiles</filename>.
+                  </para>
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>Schema Templates: <literal>schemas</literal></term>
+          <listitem>
+            <para>
+              Keg uses Jinja2 templates to produce the headers for
+              <filename>config.sh</filename> and
+              <filename>images.sh</filename>. Both are optional and Keg
+              will write a fallback header if they are
+              missing. Additionally, a Jinja2 template can be used to
+              generate <filename>config.kiwi</filename> instead of using
+              the internal XML generator.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
     </section>
     <section xml:id="source-data-format-and-processing">
       <title>Source data format and processing</title>
-      <para>This section contains some general information about how <literal>keg</literal> handles its
-                source data.</para>
-      <para>An image description is internally represented by a data dictionary with a
-                certain structure. This dictionary gets composed by parsing source image
-                definition and data files referenced by the image definition and merging them
-                into a dictionary.</para>
-      <para>Image definitions as well as data modules are used by referencing a directory
-                (under <literal>images</literal> or <literal>data</literal> respectively), which may be several
-                layers of directories under the root directory. When parsing those, <literal>keg</literal> will
-                also read any <literal>.yaml</literal> file that is in a directory above the referenced
-                one, and merge all source data into one dictionary, with the lower (i.e. more
-                specific) layers taking precedence over upper (i.e. more generic) ones. This
-                inheritance mechanism is intended to reduce data duplication.</para>
-      <para><literal>Keg</literal> uses namespaces in the image definition to group certain bits of
-                information (for instance, a list of packages) which can be overwritten in
-                derived modules, allowing for creating specialized versions of data modules
-                for specific use case or different image description versions.</para>
-      <para>Once everything is merged, the resulting dictionary is validated against the
-                image definition schema, to ensure its structure is correct and all required
-                keys are present. If that is the case, <literal>keg</literal> runs the image dictionary through
-                its XML generator to produce a <literal>config.kiwi</literal> file. In case the image
-                definition contains configuration scripts or overlay archives specifications,
-                <literal>keg</literal> will generate those as well.</para>
+      <para>
+        This section contains some general information about how Keg
+        handles its source data.
+      </para>
+      <para>
+        An image description is internally represented by a data
+        dictionary with a certain structure. This dictionary gets
+        composed by parsing source image definition and data files
+        referenced by the image definition and merging them into a
+        dictionary.
+      </para>
+      <para>
+        Image definitions as well as data modules are used by
+        referencing a directory (under <filename
+        class="directory">images</filename> or <filename
+        class="directory">data</filename> respectively), which may be
+        several layers of directories under the root directory. When
+        parsing those, Keg will also read any
+        <filename>.yaml</filename> file that is in a directory above
+        the referenced one, and merge all source data into one
+        dictionary, with the lower (i.e. more specific) layers taking
+        precedence over upper (i.e. more generic) ones. This
+        inheritance mechanism is intended to reduce data duplication.
+      </para>
+      <para>
+        Keg uses namespaces in the image definition to group certain
+        bits of information (for instance, a list of packages) which
+        can be overwritten in derived modules, allowing for creating
+        specialized versions of data modules for specific use case or
+        different image description versions.
+      </para>
+      <para>
+        Once everything is merged, the resulting dictionary is
+        validated against the image definition schema, to ensure its
+        structure is correct and all required keys are present. If
+        that is the case, Keg runs the image dictionary through its
+        XML generator to produce a <filename>config.kiwi</filename>
+        file. In case the image definition contains configuration
+        scripts or overlay archives specifications, Keg will generate
+        those as well.
+      </para>
     </section>
-  </chapter>
-  <chapter xml:id="image-definition" xml:base="image_definition">
+  </section>
+  <section xml:id="image-definition">
     <title>Image definition</title>
-    <para>In <literal>keg</literal> terminology, an image definition is the data set that specifies the
-            KIWI image description that should be generated. <literal>keg</literal> reads image definition
-            from the <literal>images</literal> directory in the <literal>recipes</literal> root directory.</para>
-    <para><literal>Keg</literal> considers all leaf directories in <literal>images</literal> to be image definitions.
-            This means by parsing any YAML file from those directories and all YAML files
-            in any parent directory and merging their data into a dictionary, a complete
-            image definition needs to be available in the resulting dictionary. There is no
-            specific hierarchy required in <literal>images</literal>. Any level of sub directories can
-            be used to create multiple levels of inheritance, or simply just to group image
-            definitions. Example directory layout:</para>
-    <screen language="default">images/
+    <para>
+      In Keg terminology, an image definition is the data set that
+      specifies the KIWI image description that should be
+      generated. Keg reads image definition from the <filename
+      class="directory">images</filename> directory in the <filename
+      class="directory">recipes</filename> root directory.
+    </para>
+    <para>
+      Keg considers all leaf directories in <filename
+      class="directory">images</filename> to be image definitions.
+      This means by parsing any YAML file from those directories and
+      all YAML files in any parent directory and merging their data
+      into a dictionary, a complete image definition needs to be
+      available in the resulting dictionary. There is no specific
+      hierarchy required in <filename
+      class="directory">images</filename>. Any level of sub
+      directories can be used to create multiple levels of
+      inheritance, or simply just to group image definitions. Example
+      directory layout:
+    </para>
+    <screen>images/
        opensuse/
                 defaults.yaml
                 leap/
@@ -523,144 +733,189 @@ keg --recipes-root keg-recipes --dest-dir leap_description leap/jeos/15.2</scree
                           image.yaml
                      15.3/
                           image.yaml</screen>
-    <para>This example layout defines two images, <literal>opensuse/leap/15.2</literal> and
-            <literal>opensuse/leap/15.3</literal>. It uses inheritance to define a common content
-            definition for both image definitions, and to set some <literal>opensuse</literal> specific
-            defaults. Running <command>keg -d output_dir opensuse/leap/15.3</command> would merge
-            data from the following files in the show order:</para>
-    <screen language="default">images/opensuse/defaults.yaml
+    <para>
+      This example layout defines two images, <filename
+      class="directory">opensuse/leap/15.2</filename> and <filename
+      class="directory">opensuse/leap/15.3</filename>. It uses
+      inheritance to define a common content definition for both image
+      definitions, and to set some <filename
+      class="directory">opensuse</filename> specific defaults. Running
+      <command>keg -d output_dir opensuse/leap/15.3</command> would
+      merge data from the files in the following order:
+    </para>
+    <screen>images/opensuse/defaults.yaml
 images/opensuse/leap/content.yaml
 images/opensuse/leap/15.3/image.yaml</screen>
-    <para>All keys from the individual YAML files that are in the given tree will be
-            merged into a dictionary that defines the image to be generated.</para>
+    <para>
+      All keys from the individual YAML files that are in the given
+      tree will be merged into a dictionary that defines the image to
+      be generated.
+    </para>
     <section xml:id="image-definition-structure">
       <title>Image definition structure</title>
-      <para>An image definition dictionary is composed of several parts that define
-                different parts of the image. The actual image description, configuration
-                scripts, overlay archives. All parts are defined under a top-level key
-                in the dictionary. There are additional top-level keys that affect data
-                parsing and generator selection.</para>
+      <para>
+        An image definition dictionary is composed of several parts
+        that define different parts of the image. The actual image
+        description, configuration scripts, overlay archives. All
+        parts are defined under a top-level key in the
+        dictionary. There are additional top-level keys that affect
+        data parsing and generator selection.
+      </para>
       <para>The top-level keys are as follows:</para>
       <section xml:id="image">
         <title>image</title>
-        <para>The image dictionary. This is the only mandatory top-level key. It defines
-                    the content of the <literal>config.kiwi</literal> file <literal>keg</literal> should generate and is
-                    essentially a YAML version of <literal>KIWI's</literal> image description (typically in XML). It
-                    contains all image configuration properties, package lists, and references to
-                    overlay archives. There is a number of special keys that influence how <literal>keg</literal>
-                    constructs the dictionary and generates the XML output. The basic structure is
-                    as follows:</para>
+        <para>
+          The image dictionary. This is the only mandatory top-level
+          key. It defines the content of the
+          <filename>config.kiwi</filename> file Keg should generate
+          and is essentially a YAML version of KIWI's image
+          description (typically in XML). It contains all image
+          configuration properties, package lists, and references to
+          overlay archives. There is a number of special keys that
+          influence how Keg constructs the dictionary and generates
+          the XML output. The basic structure is as follows:
+        </para>
         <screen language="yaml">image:
   _attributes:
-    schemaversion: "&lt;schema_maj&gt;.&lt;schema_min&gt;"
-    name: &lt;image_name&gt;
-    displayname: &lt;image_boot_title&gt;
+    schemaversion: "<replaceable>SCHEMA_MAJ</replaceable>.<replaceable>SCHEMA_MIN</replaceable>"
+    name: <replaceable>IMAGE_NAME</replaceable>
+    displayname: <replaceable>IMAGE_BOOT_TITLE</replaceable>
   description:
     _attributes:
-      type: &lt;system_type&gt;
-    author: &lt;author_name&gt;
-    contact: &lt;author_email&gt;
+      type: <replaceable>SYSTEM_TYPE</replaceable>
+    author: <replaceable>AUTHOR_NAME</replaceable>
+    contact: <replaceable>AUTHOR_EMAIL</replaceable>
   preferences:
-    - version: &lt;version_string&gt;
+    - version: <replaceable>VERSION_STRING</replaceable>
     - _attributes:
         profiles:
-          - &lt;profile_name&gt;
+          - <replaceable>PROFILE_NAME</replaceable>
           ...
       type:
         _attributes:
-          image: &lt;image_type&gt;
+          image: <replaceable>IMAGE_TYPE</replaceable>
             kernelcmdline:
-            &lt;kernel_param&gt;: &lt;kernel_param_value&gt;
+            <replaceable>KERNEL_PARAM</replaceable>: <replaceable>KERNEL_PARAM_VALUE</replaceable>
             ...
           ...
         size:
           _attributes:
-            unit: &lt;size_unit&gt;
-          _text: &lt;disk_size&gt;
+            unit: <replaceable>SIZE_UNIT</replaceable>
+          _text: <replaceable>DISK_SIZE</replaceable>
     ...
   users:
     user:
       - _attributes:
-          name: &lt;user_name&gt;
-          groups: &lt;user_groups&gt;
-          home: &lt;user_home&gt;
-          password: &lt;user_password&gt;
+          name: <replaceable>USER_NAME</replaceable>
+          groups: <replaceable>USER_GROUPS</replaceable>
+          home: <replaceable>USER_HOME</replaceable>
+          password: <replaceable>USER_PASSWORD</replaceable>
       ...
   packages:
     - _attributes:
         type: image|bootstrap
         profiles:
-          - &lt;profile&gt;
+          - <replaceable>PROFILE</replaceable>
           ...
       archive:
         _attributes:
-          name: &lt;archive_filename&gt;
-      &lt;namespace&gt;:
+          name: <replaceable>ARCHIVE_FILENAME</replaceable>
+      <replaceable>NAMESPACE</replaceable>:
         package:
           - _attributes:
-              name: &lt;package_name&gt;
-              arch: &lt;package_arch&gt;
+              name: <replaceable>PACKAGE_NAME</replaceable>
+              arch: <replaceable>PACKAGE_ARCH</replaceable>
           ...
       ...
     ...
   profiles:
     profile:
       - _attributes:
-          name: &lt;profile_name&gt;
-          description: &lt;profile_description&gt;
+          name: <replaceable>PROFILE_NAME</replaceable>
+          description: <replaceable>PROFILE_DESCRIPTION</replaceable>
       ...</screen>
-        <para>This only outlines the structure and includes some of the configuration keys
-                    that <literal>KIWI</literal> supports. See <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://documentation.suse.com/kiwi/9/single-html/kiwi/index.html#image-description">KIWI Image Description</link>
-                    for full details.</para>
-        <para>For the purpose of generating the <literal>KIWI</literal> XML image description, any key in the
-                    <literal>image</literal> dictionary that is not a plain data type is converted to an XML element
-                    in the <literal>KIWI</literal> image description, with the tag name being the key name. Any key
-                    that starts with an <literal>_</literal> has a special meaning. The following are supported:</para>
         <para>
-          <literal>_attributes</literal>
+          This only outlines the structure and includes some of the
+          configuration keys that KIWI supports. See <link
+          xlink:href="https://documentation.suse.com/kiwi/9/single-html/kiwi/index.html#image-description">KIWI
+          Image Description</link> for full details.
         </para>
-        <para>If a key contains a sub key called <literal>_attributes</literal>, it instructs the XML
+        <para>
+          For the purpose of generating the KIWI XML image
+          description, any key in the <filename
+          class="directory">image</filename> dictionary that is not a
+          plain data type is converted to an XML element in the KIWI
+          image description, with the tag name being the key name. Any
+          key that starts with an <literal>_</literal> has a special
+          meaning. The following keys are supported:
+        </para>
+        <variablelist>
+          <varlistentry>
+            <term><literal>_attributes</literal></term>
+            <listitem>
+              <para>
+                If a key contains a sub key called <literal>_attributes</literal>, it instructs the XML
                     generator to produce an attribute for the XML element  with the given key name
                     and value as its name-value pair. If value is not a plain data type, it is
                     converted to a string, which allows for complex attributes being split over
-                    different files and also for redefinition on lower levels. For example:</para>
-        <screen language="yaml">type:
+                    different files and also for redefinition on lower levels. For example:
+              </para>
+              <screen>type:
   _attributes:
     image: vmx
     kernelcmdline:
       console: ttyS0
       debug: []</screen>
-        <para>Would generate the following XML element:</para>
-        <screen language="xml">&lt;type image="vmx" kernelcmdline="console=ttyS0 debug"/&gt;</screen>
-        <para>The empty list used as value for <literal>debug</literal> means the attribute parameter is
-                    valueless (i.e. a flag).</para>
-        <para>
-          <literal>_text</literal>
-        </para>
-        <para>If a key contains a key called <literal>_text</literal>, its value is considered the element’s
-                    content string.</para>
-        <para>
-          <literal>_namespace[_name]</literal>
-        </para>
-        <para>Any key that start with <literal>_namespace</literal> does not produce an XML element in the
-                    output. Namespaces are used to group data and allow for an inheritance and
-                    overwrite mechanism. Namespaces produce comments in the XML output that
-                    states which namespace the enclosed data was part of.</para>
-        <para>
-          <literal>_map_attribute</literal>
-        </para>
-        <para>If a key contains a key <literal>_map_attribute</literal>, which needs to be a string type,
-                    any <literal>_attribute</literal> key under the key that is a simple list instead of the
-                    actually required mapping, is automatically converted to a mapping with the
-                    attribute key equal to <literal>_map_attribute</literal> value. For example:</para>
-        <screen language="yaml">packages:
+              <para>Would generate the following XML element:</para>
+              <screen>&lt;type image="vmx" kernelcmdline="console=ttyS0 debug"/&gt;</screen>
+              <para>
+                The empty list used as value for <literal>debug</literal> means the attribute parameter is
+                valueless (i.e. a flag).
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><literal>_text</literal></term>
+            <listitem>
+              <para>
+                If a key contains a key called <literal>_text</literal>, its value is considered the element’s
+                content string.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><literal>_namespace<replaceable>_name</replaceable></literal></term>
+            <listitem>
+              <para>
+                Any key that start with <literal>_namespace</literal>
+                does not produce an XML element in the
+                output. Namespaces are used to group data and allow
+                for an inheritance and overwrite mechanism. Namespaces
+                produce comments in the XML output that states which
+                namespace the enclosed data was part of.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><literal>_map_attribute</literal></term>
+            <listitem>
+              <para>
+                If a key contains a key
+                <literal>_map_attribute</literal>, which needs to be a
+                string type, any <literal>_attribute</literal> key
+                under the key that is a simple list instead of the
+                actually required mapping, is automatically converted
+                to a mapping with the attribute key equal to
+                <literal>_map_attribute</literal> value. For example:
+              </para>
+              <screen>packages:
   _map_attribute: name
   _namespace_some_pkgs:
     package:
       - pkg1
       - pkg2</screen>
-        <para>Is automatically converted to:</para>
-        <screen language="yaml">packages:
+              <para>Is automatically converted to:</para>
+              <screen>packages:
   _namespace_some_pkgs:
   package:
     - _attribute:
@@ -670,235 +925,391 @@ images/opensuse/leap/15.3/image.yaml</screen>
   archive:
     - _attributes:
         name: archive1.tar.gz</screen>
-        <para>This allows for making lists of elements that all have the same attribute
-                    (which package lists typically have) more compact and readable.</para>
-        <para>
-          <literal>_comment[_name]</literal>
-        </para>
-        <para>Any key that has a key that starts with <literal>_comment</literal> will have a comment above
-                    it in the XML output, reading the value of the <literal>_comment</literal> key (needs to be
-                    a string).</para>
+              <para>
+                This allows for making lists of elements that all have
+                the same attribute (which package lists typically
+                have) more compact and readable.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+           <term><literal>_comment<replaceable>_name</replaceable></literal></term>
+           <listitem>
+             <para>
+               Any key that has a key that starts with
+               <literal>_comment</literal> will have a comment above
+               it in the XML output, reading the value of the
+               <literal>_comment</literal> key (needs to be a string).
+             </para>
+           </listitem>
+          </varlistentry>
+        </variablelist>
       </section>
       <section xml:id="imgdef-config">
         <title>config</title>
-        <para>The config dictionary defines the content of the <literal>config.sh</literal> file <literal>keg</literal>
-                    should generate. <literal>config.sh</literal> is a script that <literal>KIWI</literal> runs during the image
-                    prepare step and can be used to modify the image’s configuration. The
-                    <literal>config</literal> dictionary structure is as follows:</para>
-        <screen language="yaml">config:
+        <para>
+          The config dictionary defines the content of the
+          <filename>config.sh</filename> file Keg should
+          generate. <filename>config.sh</filename> is a script that KIWI
+          runs during the image prepare step and can be used to modify
+          the image’s configuration. The <filename class="directory">config</filename>
+          dictionary structure is as follows:
+        </para>
+        <screen>config:
   - profiles:
-      - &lt;profile_name&gt;
+      - <replaceable>PROFILE_NAME</replaceable>
       ...
     files:
-      &lt;namespace&gt;:
-        - path: &lt;file&gt;
-          append: bool (defaults to False if missing)
+      <replaceable>NAMESPACE</replaceable>:
+        - path: <replaceable>FILE</replaceable>
+          append: bool
           content: string
         ...
       ...
     scripts:
-      &lt;namespace&gt;:
-        - &lt;script&gt;
+      <replaceable>NAMESPACE</replaceable>:
+        - <replaceable>SCRIPT</replaceable>
         ...
       ...
     services:
-      &lt;namespace&gt;:
-        - &lt;service_name&gt;
-        - name: &lt;service_name&gt;
+      <replaceable>NAMESPACE</replaceable>:
+        - <replaceable>SERVICE_name</replaceable>
+        - name: <replaceable>SERVICE_name</replaceable>
           enable: bool
         ...
       ...
     sysconfig:
-      &lt;namespace&gt;:
-        - file: &lt;sysconfig_file&gt;
-          name: &lt;sysconfig_variable&gt;
+      <replaceable>NAMESPACE</replaceable>:
+        - file: <replaceable>SYSCONFIG_FILE</replaceable>
+          name: <replaceable>SYSCONFIG_VARIABLE</replaceable>
           value: string
         ...
       ...
   ...</screen>
-        <para>Each list item in <literal>config</literal> produces a section in <literal>config.sh</literal>, with the
-                    optional <literal>profiles</literal> key defining for which image profile that section should
-                    apply. Each item can have the following keys (all are optional, but there has
-                    to be at least one):</para>
-        <para><literal>files</literal> defines files that should be created (or overwritten if existing) with
-                    the given <literal>content</literal> or have <literal>content</literal> appended to in <literal>config.sh</literal>.</para>
-        <para><literal>scripts</literal> defines which scriptlets should be included. <literal>&lt;script&gt;</literal> refers to
-                    a file <literal>data/scripts/&lt;script&gt;.sh</literal> in the recipes tree.</para>
-        <para><literal>services</literal> defines which systemd services and timers should be enabled or
-                    disabled in the image. The short version (just a string) means the
-                    string is the service name and it should be enabled.</para>
-        <para> defines which existing sysconfig variables should the altered.</para>
+        <para>
+          Each list item in <filename class="directory">config</filename> produces a
+          section in <filename>config.sh</filename>, with the optional
+          <literal>profiles</literal> key defining for which image
+          profile that section should apply. Each item can have the
+          following keys (all are optional, but there has to be at
+          least one):
+        </para>
+        <variablelist>
+          <varlistentry>
+            <term><literal>files</literal></term>
+            <listitem>
+              <para>
+                Defines files that should be created (or overwritten
+                if existing) with the given <literal>content</literal>
+                or have <literal>content</literal> appended to in
+                <filename>config.sh</filename> (default on
+                <literal>append</literal> is
+                <literal>false></literal>).
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><literal>scripts</literal></term>
+            <listitem>
+              <para>
+                Defines which scriptlets should be
+                included. <tag class="element">script</tag> refers to
+                a file
+                <filename>data/scripts/<replaceable>SCRIPT</replaceable>.sh</filename> in
+                the recipes tree.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><literal>services</literal></term>
+            <listitem>
+              <para>
+                 Defines which systemd services and timers should be
+                 enabled or disabled in the image. The short version
+                 (just a string) means the string is the service name
+                 and it should be enabled
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><literal>sysconfig</literal></term>
+            <listitem>
+              <para>
+                Defines which existing sysconfig variables should the
+                altered.
+              </para>
+            </listitem>
+          </varlistentry>
+        </variablelist>   
         <note>
-          <para><literal>&lt;namespace&gt;</literal> defines a namespace with the same purpose as in the <literal>image</literal>
-                        dictionary, but <literal>config</literal> namespaces don’t have to start with <literal>_</literal>, but are
-                        allowed to.</para>
+          <para>
+            <replaceable>NAMESPACE</replaceable> defines a namespace
+            with the same purpose as in the <literal>image</literal>
+            dictionary, but <literal>config</literal> namespaces does
+            not have to start with <literal>_</literal> (although this
+            would be allowed, too).
+          </para>
         </note>
       </section>
       <section xml:id="setup">
         <title>setup</title>
-        <para>The config dictionary defines the content of the <literal>images.sh</literal> file <literal>keg</literal>
-                    should generate. This script is run by <literal>KIWI</literal> during the image create step. Its
-                    structure is identical to <literal>config</literal>.</para>
-        <para>See <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://documentation.suse.com/kiwi/9/single-html/kiwi/index.html#working-with-kiwi-user-defined-scripts">User defined scripts</link>
-                    in the <literal>KIWI</literal> documentation for more details on user scripts.</para>
+        <para>
+          The config dictionary defines the content of the
+          <filename>images.sh</filename> file Keg should
+          generate. This script is run by KIWI during the image create
+          step. Its structure is identical to
+          <literal>config</literal>.
+        </para>
+        <para>
+          See <link
+          xlink:href="https://documentation.suse.com/kiwi/9/single-html/kiwi/index.html#working-with-kiwi-user-defined-scripts">User
+          defined scripts</link> in the KIWI documentation for more
+          details on user scripts.
+        </para>
       </section>
       <section xml:id="imgdef-archive">
         <title>archive</title>
-        <para>The archive dictionary defines the content of overlay tar archives, that can be
-                    included in the image via the <literal>archive</literal> sub-section of the <literal>packages</literal> section
-                    of the <literal>image</literal> dictionary. The structure is as follows:</para>
+        <para>
+          The archive dictionary defines the content of overlay tar
+          archives, that can be included in the image via the
+          <literal>archive</literal> sub-section of the
+          <literal>packages</literal> section of the
+          <literal>image</literal> dictionary. The structure is as
+          follows:
+        </para>
         <screen language="yaml">archive:
-  - name: &lt;archive_filename&gt;
-    &lt;namespace&gt;:
+  - name: <replaceable>archive_filename</replaceable>
+    <replaceable>namespace</replaceable>:
       _include_overlays:
-        - &lt;overlay_module&gt;
+        - <replaceable>overlay_module</replaceable>
         ...
   ...</screen>
-        <para>When generating the image description, <literal>keg</literal> will produce a tar archive for
-                    each entry in <literal>archive</literal> with the given file name, with its contents being
-                    composed of all files that are in the listed overlay modules. Each module
-                    references a directory in <literal>data/overlayfiles</literal>.</para>
-        <para><literal>Keg</literal> automatically compresses the archive based on the file name extension.
-                    Supported are <literal>gz</literal>, , <literal>xz</literal>, or no extension for uncompressed archive.</para>
+        <para>
+          When generating the image description, Keg will produce a
+          tar archive for each entry in <literal>archive</literal>
+          with the given file name, with its contents being composed
+          of all files that are in the listed overlay modules. Each
+          module references a directory in
+          <filename class="directory">data/overlayfiles</filename>.
+        </para>
+        <para>
+          Keg automatically compresses the archive based on the file
+          name extension.  Supported are <literal>gz</literal>, ,
+          <literal>xz</literal>, or no extension for uncompressed
+          archive.
+        </para>
         <note>
-          <para>The archive name <literal>root.tar</literal> (regardless of compression extension) is
-                        automatically included in all profiles (if there are any) by <literal>KIWI</literal>.
-                        It is not necessary to include it explicitly in the image definition.</para>
+          <para>
+            The archive name <literal>root.tar</literal> (regardless
+            of compression extension) is automatically included in all
+            profiles (if there are any) by KIWI.  It is not necessary
+            to include it explicitly in the image definition.</para>
         </note>
       </section>
     </section>
     <section xml:id="the-include-statement">
       <title>The _include statement</title>
-      <para><literal>Keg</literal> supports importing parts of the image definition from other directory
-                trees within the recipes to allow for modularization. For that purpose, a key
-                in the image dictionary may have a sub-key called <literal>_include</literal>. Its value is a
-                list of strings, each of which points to a directory in the <literal>data</literal>
-                sub-directory of the recipes root. To process the instruction, <literal>keg</literal> generates
-                another dictionary from all YAML files in the referenced directory trees (the
-                same mechanism as when parsing the <literal>images</literal> tree applies). It then looks up the
-                key in that dictionary that is equal to the parent key of the <literal>_include</literal> key,
-                and replaces the <literal>_include</literal> key with its contents. That means, if the
-                <literal>_include</literal> statement is below a key called <literal>packages</literal>, only data under
-                <literal>packages</literal> in the include dictionary will be copied into the image definition
-                dictionary. This allows for having different types of configuration data in the
-                same directory and including them in different places in the image definition.
-                See <xref linkend="data-modules"/> for details on data modules.</para>
+      <para>
+        Keg supports importing parts of the image definition from
+        other directory trees within the recipes to allow for
+        modularization. For that purpose, a key in the image
+        dictionary may have a sub-key called
+        <literal>_include</literal>. Its value is a list of strings,
+        each of which points to a directory in the
+        <filename class="directory">data</filename> sub-directory of the recipes root. To
+        process the instruction, Keg generates another dictionary from
+        all YAML files in the referenced directory trees (the same
+        mechanism as when parsing the <literal>images</literal> tree
+        applies). It then looks up the key in that dictionary that is
+        equal to the parent key of the <literal>_include</literal>
+        key, and replaces the <literal>_include</literal> key with its
+        contents. That means, if the <literal>_include</literal>
+        statement is below a key called <literal>packages</literal>,
+        only data under <literal>packages</literal> in the include
+        dictionary will be copied into the image definition
+        dictionary. This allows for having different types of
+        configuration data in the same directory and including them in
+        different places in the image definition.  See <xref
+        linkend="data-modules"/> for details on data modules.
+      </para>
     </section>
     <section xml:id="additional-configuration-directives">
       <title>Additional configuration directives</title>
-      <para>There are three additional optional top-level image definition sections that
-                affect how the image definition dictionary is composed and the image
-                description is generated:</para>
+      <para>
+        There are three additional optional top-level image definition
+        sections that affect how the image definition dictionary is
+        composed and the image description is generated:
+      </para>
       <section xml:id="include-paths">
         <title>include-paths</title>
-        <para>The <literal>include-paths</literal> key defines a list of search paths that get appended
-                    when <literal>_include</literal> statements are processed. This allows for having different
-                    versions of data modules and still share the most of an image definition
-                    between different versions. See <xref linkend="data-modules"/> for details.</para>
+        <para>
+          The <literal>include-paths</literal> key defines a list of
+          search paths that get appended when
+          <literal>_include</literal> statements are processed. This
+          allows for having different versions of data modules and
+          still share the most of an image definition between
+          different versions. See <xref linkend="data-modules"/> for
+          details.</para>
       </section>
       <section xml:id="image-config-comments">
         <title>image-config-comments</title>
-        <para>This section allows to add top-level comments in the produced <literal>KIWI</literal> file.
-                    The format is as follows:</para>
+        <para>
+          This section allows to add top-level comments in the
+          produced KIWI file.  The format is as follows:
+        </para>
         <screen language="yaml">image-config-comments:
-  &lt;comment_name&gt;: &lt;comment&gt;
+  <replaceable>COMMENT_NAME</replaceable>: string
   ...</screen>
-        <para><literal>&lt;comment_name&gt;</literal> is just a name and is not included in the generated output.
-                    Comments can be used to include arbitrary information in the image description.
-                    Some comments have a special meaning for processing image descriptions by the
-                    Open Build Service, for instance the <literal>OBS-Profiles</literal> directive that is required
-                    to process multi-profile image descriptions. See
-                    <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://osinside.github.io/kiwi/working_with_images/build_in_buildservice.html"/>
-                    for details.</para>
+        <para>
+          <replaceable>COMMENT_NAME</replaceable> is just a name and
+          is not included in the generated output.  Comments can be
+          used to include arbitrary information in the image
+          description.  Some comments have a special meaning for
+          processing image descriptions by the Open Build Service, for
+          instance the <literal>OBS-Profiles</literal> directive that
+          is required to process multi-profile image descriptions. See
+          <link xlink:href="https://osinside.github.io/kiwi/working_with_images/build_in_buildservice.html"/>
+          for details.
+        </para>
         <note>
-          <para>Keg generates some comments automatically. In case the image definition has
-                        multiple profiles and the <literal>--disable-multibuild</literal> command line switch is not
-                        set, it will add an <literal>OBS-Profiles: @BUILD_FLAVOR@</literal> comment. In case the
-                        image description is generated for one or more specific architectures
-                        via the <literal>-a</literal> command line option, the apprpriate <literal>OBS-ExclusiveArch</literal>
-                        comment is added.</para>
+          <para>
+            Keg generates some comments automatically. In case the
+            image definition has multiple profiles and the
+            <option>--disable-multibuild</option> command line
+            switch is not set, it will add an <literal>OBS-Profiles:
+            @BUILD_FLAVOR@</literal> comment. In case the image
+            description is generated for one or more specific
+            architectures via the <option>-a</option> command line
+            option, the apprpriate
+            <literal>OBS-ExclusiveArch</literal> comment is
+            added.</para>
         </note>
       </section>
       <section xml:id="xmlfiles">
         <title>xmlfiles</title>
-        <para>This optional section allows generating additional custom XML files. The format
-                    is as follows:</para>
+        <para>
+          This optional section allows generating additional custom XML files. The format
+          is as follows:</para>
         <screen language="yaml">xmlfiles:
-  - name: &lt;filename&gt;
+  - name: <replaceable>FILENAME</replaceable>
     content:
-      &lt;content_dictionary&gt;
+      <replaceable>CONTENT_DICTIONARY</replaceable>
   ...</screen>
-        <para>For each list item in this section, an XML file named <literal>&lt;filename&gt;</literal> will
-                    be created, with the content being generated from the <literal>&lt;content_dictionary&gt;</literal>.
-                    For this dictionary the same rules about formatting, including, namespacing,
-                    etc., apply as for the image dictionary.</para>
-        <para>Custom XML files can be useful when generating image descriptions for use in
-                    the Open Build Service, which accepts build configuration directives via XML
-                    source files, like the <literal>_constraints</literal> file. See
-                    <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://openbuildservice.org/help/manuals/obs-user-guide/cha.obs.build_job_constraints.html"/>
-                    for details.</para>
+        <para>
+          For each list item in this section, an XML file named
+          <replaceable>FILENAME</replaceable> will be created, with
+          the content being generated from the
+          <literal>&lt;content_dictionary&gt;</literal>.  For this
+          dictionary the same rules about formatting, including,
+          namespacing, etc., apply as for the image dictionary.
+        </para>
+        <para>
+          Custom XML files can be useful when generating image
+          descriptions for use in the Open Build Service, which
+          accepts build configuration directives via XML source files,
+          like the <literal>_constraints</literal> file. See
+          <link xlink:href="https://openbuildservice.org/help/manuals/obs-user-guide/cha.obs.build_job_constraints.html"/>
+          for details.
+        </para>
       </section>
       <section xml:id="schema">
         <title>schema</title>
-        <para><literal>Keg</literal> starting with version 2.0.0 has an internal XML generator to produce
-                    <literal>KIWI</literal> image descriptions. Previously, a Jinja2 template was used to convert
-                    the image dictionary that <literal>keg</literal> constructed into a <literal>KIWI</literal> image description.
-                    Using a Jinja2 template is still supported and can be configured as follows
-                    in the image definition:</para>
-        <screen language="yaml">schema: &lt;template&gt;</screen>
-        <para>In this case, instead of running the XML generator, <literal>keg</literal> would read the
-                    file <literal>&lt;template&gt;.kiwi.templ</literal> from the <literal>schemas</literal> directory in the recipes
-                    root directory and run it trough the Jinja2 engine.</para>
+        <para>
+          Keg starting with version 2.0.0 has an internal XML
+          generator to produce KIWI image descriptions. Previously, a
+          Jinja2 template was used to convert the image dictionary
+          that Keg constructed into a KIWI image description.  Using a
+          Jinja2 template is still supported and can be configured as
+          follows in the image definition:
+        </para>
+        <screen>schema: <replaceable>TEMPLATE</replaceable></screen>
+        <para>
+          In this case, instead of running the XML generator, Keg
+          would read the file
+          <filename><replaceable>TEMPLATE</replaceable>.kiwi.templ</filename>
+          from the <filename class="directory">schemas</filename>
+          directory in the recipes root directory and run it trough
+          the Jinja2 engine.</para>
         <note>
-          <para>While using a Jinja2 template would in theory allow to operate on different
-                        input data structures, the internal schema validator requires the image
-                        definition to comply with what <literal>keg</literal> expects.</para>
+          <para>
+            While using a Jinja2 template would in theory allow to
+            operate on different input data structures, the internal
+            schema validator requires the image definition to comply
+            with what Keg expects.
+          </para>
         </note>
       </section>
     </section>
-  </chapter>
-  <chapter xml:id="data-modules" xml:base="data_modules">
+  </section>
+  <section xml:id="data-modules">
     <title>Data modules</title>
-    <para>Data modules are essentially directories in the <literal>data</literal> tree. There are
-            three different kinds of data modules:</para>
-    <procedure>
-      <step>
-        <para>Image Definition Modules</para>
-      </step>
-    </procedure>
-    <para>Any part of the image definition can be in a data module that is
-                included by the <literal>_include</literal> statement from the main image definition.</para>
-    <procedure>
-      <step>
-        <para>Image Configuration Scriptlets</para>
-      </step>
-    </procedure>
-    <para>Configuration scriptlets are stored in <literal>data/scripts</literal>.
-                Those scriptlets can be used to compose an image configuration script or
-                image setup script <literal>config</literal> and <literal>setup</literal> key in the image definition.</para>
-    <procedure>
-      <step>
-        <para>Overlay Files</para>
-      </step>
-    </procedure>
-    <para>Files that can be directly included in the image description and will be
-                copied into the image’s file system by <literal>KIWI</literal> during the build process.
-                Overlay files are stored under <literal>data/overlayfiles</literal>.</para>
+    <para>
+      Data modules are essentially directories in the <literal>data</literal> tree. There are
+      three different kinds of data modules:
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term>Image Definition Modules</term>
+        <listitem>
+          <para>
+            Any part of the image definition can be in a data module
+            that is included by the <literal>_include</literal>
+            statement from the main image definition.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Image Configuration Scriptlets</term>
+        <listitem>
+          <para>
+            Configuration scriptlets are stored in <filename
+            class="directory">data/scripts</filename>.  Those
+            scriptlets can be used to compose an image configuration
+            script or image setup script <literal>config</literal> and
+            <literal>setup</literal> key in the image definition.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Overlay Files</term>
+        <listitem>
+          <para>
+            Files that can be directly included in the image
+            description and will be copied into the image’s file
+            system by KIWI during the build process.  Overlay files
+            are stored under <filename
+            class="directory">data/overlayfiles</filename>.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
     <section xml:id="image-definition-modules">
       <title>Image definition modules</title>
-      <para>Any directory under <literal>data</literal> that is not <literal>scripts</literal> or <literal>overlayfiles</literal>
-                is considered an image definition data module and may be included in the
-                main image definition using the <literal>_include</literal> statement.</para>
-      <para>Inheritance rules apply similarly to the image definition tree, but
-                additionally, <literal>keg</literal> supports sub-versions of data modules. This can be used for
-                instance to create slightly different versions of modules for use with
-                different image versions while still sharing most of the image definition
-                between those versions.</para>
-      <para>For this purpose, <literal>keg</literal> supports the <literal>include-paths</literal> directive in the image
-                definition. Include paths are paths that get appended to any source path and
-                those get scanned for input files as well. See the following image definition
-                as an example:</para>
-      <screen language="yaml">include-paths:
+      <para>
+        Any directory under <filename
+        class="directory">data</filename> that is not <filename
+        class="directory">scripts</filename> or <filename
+        class="directory">overlayfiles</filename> is considered an
+        image definition data module and may be included in the main
+        image definition using the <literal>_include</literal>
+        statement.
+      </para>
+      <para>
+        Inheritance rules apply similarly to the image definition
+        tree, but additionally, Keg supports sub-versions of data
+        modules. This can be used for instance to create slightly
+        different versions of modules for use with different image
+        versions while still sharing most of the image definition
+        between those versions.
+      </para>
+      <para>
+        For this purpose, Keg supports the
+        <literal>include-paths</literal> directive in the image
+        definition. Include paths are paths that get appended to any
+        source path and those get scanned for input files as well. See
+        the following image definition as an example:
+      </para>
+      <screen>include-paths:
   leap15/1
   leap15/2
 image:
@@ -910,26 +1321,39 @@ image:
         - base/common
   config:
     - _include:
-        - base/common</screen>
-      <para>This tells <literal>keg</literal>, when adding data from directory <literal>data/base/common</literal> to
-                the image data dictionary, to also look into sub directories <literal>leap15/2</literal>,
-                <literal>leap15/1</literal>, and <literal>leap15</literal> (through inheritance). This would lead to
-                the following directories being scanned:</para>
-      <screen language="default">data
+      - base/common</screen>
+      <para>
+          This tells Keg, when adding data from directory <filename
+          class="directory">data/base/common</filename> to the image
+          data dictionary, to also look into sub directories <filename
+          class="directory">leap15/2</filename>, <filename
+          class="directory">leap15/1</filename>, and <filename
+          class="directory">leap15</filename> (through
+          inheritance). This would lead to the following directories
+          being scanned:</para>
+      <screen>data
 data/common
 data/common/base
 data/common/base/leap15
 data/common/base/leap15/1
 data/common/base/leap15/2</screen>
-      <para>This allows for example to put generic configuration bits in
-                <literal>data/common/base</literal>, Leap 15 specific configuration in
-                <literal>data/common/base/leap15</literal>, and adjust the configuration for minor
-                versions, if necessary.</para>
-      <para>When merging the included dictionaries into the main dictionary, <literal>keg</literal> only
-                copies the dictionary under the top level key that matches the key under
-                which the <literal>_include</literal> statement is. That means, assuming the YAML files
-                collected from the above trees resulted in the following data structure:</para>
-      <screen language="yaml">preferences:
+      <para>
+        This allows for example to put generic configuration bits in
+        <filename class="directory">data/common/base</filename>, Leap
+        15 specific configuration in <filename
+        class="directory">data/common/base/leap15</filename>, and
+        adjust the configuration for minor versions, if
+        necessary.
+      </para>
+      <para>
+        When merging the included dictionaries into the main
+        dictionary, Keg only copies the dictionary under the top level
+        key that matches the key under which the
+        <literal>_include</literal> statement is. That means, assuming
+        the YAML files collected from the above trees resulted in the
+        following data structure:
+      </para>
+      <screen>preferences:
   locale: en_US
   timezone: UTC
   type:
@@ -947,7 +1371,7 @@ config:
     services:
       - sshd</screen>
       <para>Would result in a data structure like this:</para>
-      <screen language="yaml">include-paths:
+      <screen>include-paths:
   leap15/1
   leap15/2
 image:
@@ -968,158 +1392,234 @@ config:
   _namespace_base_services:
     services:
       - sshd</screen>
-      <para>Merging based on the parent key allows for grouping of different types of
-                configuration data in one data module.</para>
+      <para>
+        Merging based on the parent key allows for grouping of
+        different types of configuration data in one data module.
+      </para>
     </section>
     <section xml:id="image-configuration-scriptlets">
       <title>Image configuration scriptlets</title>
       <para>Configuration scriptlets are individual script snippets that can be used
-                to generate image configuration scripts. <literal>KIWI</literal> runs those scripts at
+                to generate image configuration scripts. KIWI runs those scripts at
                 certain points in the image build process. They can be used to do changes
                 to the system’s configuration.</para>
-      <para>The scriptlets are located in <literal>data/scripts</literal> and are required to have a
+      <para>The scriptlets are located in <filename
+            class="directory">data/scripts</filename> and are required to have a
                 <literal>.sh</literal> suffix. These are referenced in the <literal>scripts</literal> lists of the <literal>config</literal>
                 or <literal>setup</literal> sections in the image definition (without the <literal>.sh</literal> suffix).
                 See <xref linkend="imgdef-config"/> for details on the <literal>config</literal> section.</para>
     </section>
     <section xml:id="overlay-files">
       <title>Overlay files</title>
-      <para><literal>KIWI</literal> image descriptions can contain optional overlay archives, which will be
+      <para>KIWI image descriptions can contain optional overlay archives, which will be
                 extracted into the system’s root directory before the image is created.
-                Overlay files are located in sub-directories in <literal>data/overlayfiles</literal>,
+                Overlay files are located in sub-directories in <filename
+            class="directory">data/overlayfiles</filename>,
                 with each sub-directory representing an overlay files module. Any directory
                 structure under the module’s top directory is preserved.</para>
       <para>Overlay files modules can be referenced in the <literal>archive</literal> section of the image
                 definition using the <literal>_include_overlays</literal> directive. See <xref linkend="imgdef-archive"/> for
                 details.</para>
     </section>
-  </chapter>
-  <chapter xml:id="changelog-generator" xml:base="changelog_generator">
+  </section>
+  <section xml:id="changelog-generator">
     <title>Generating change logs</title>
-    <para><literal>Keg</literal> comes with a separate tool that can be used to produce a change log
-            for a generated image description from the git commit history of the used
-            <literal>keg recipes</literal> tree(s). This obviously requires these <literal>keg recipes</literal> to be
-            stored in git repositories.</para>
-    <para>To produce a change log for an image description, the description needs to
-            be generated with source info tracking enabled in <literal>keg</literal> (<literal>-s</literal> command
-            line switch).</para>
+    <para>
+      Keg comes with a separate tool that can be used to produce a
+      change log for a generated image description from the git commit
+      history of the used <literal>keg recipes</literal> tree(s). This
+      obviously requires these <literal>keg recipes</literal> to be
+      stored in git repositories.
+    </para>
+    <para>
+      To produce a change log for an image description, the
+      description needs to be generated with source info tracking
+      enabled in Keg (<literal>-s</literal> command line switch).
+    </para>
     <section xml:id="source-info-tracking">
       <title>Source info tracking</title>
-      <para>With source info tracking enabled, <literal>keg</literal> will write one or more source info
-                files in addition to the image description in the output directory. In case
-                the image description at hand is single-build, a single file
-                <literal>log_sources</literal> is written, in case it is multi-build, a file
-                <literal>log_sources_PROFILE</literal> is written for each profile. This allows for
-                generating individual change logs for the resulting image binaries.</para>
-      <para>The source info logs contain detailed information about which bits from the
-                <literal>keg-recipes</literal> tree was used to generate the image description. The source
-                info log files will contain several lines of the following format:</para>
+      <para>
+        With source info tracking enabled, Keg will write one or more
+        source info files in addition to the image description in the
+        output directory. In case the image description at hand is
+        single-build, a single file <filename>log_sources</filename> is
+        written, in case it is multi-build, a file
+        <filename>log_sources_<replaceable>PROFILE</replaceable></filename> is written for each
+        profile. This allows for generating individual change logs for
+        the resulting image binaries.
+      </para>
+      <para>
+        The source info logs contain detailed information about which
+        bits from the <literal>keg-recipes</literal> tree was used to
+        generate the image description. The source info log files will
+        contain several lines of the following format:
+      </para>
       <screen language="bash">root:/path/to/repository
 range:start:end:/path/to/repository/file
 /path/to/repository/file_or_dir</screen>
-      <para>The first line specifies the repository location. There will be one for
-                each <literal>keg-recipes</literal> directory given to <literal>keg</literal>. Lines starting with <literal>range:</literal>
-                specify a part of a file in a repository. This is used to track the source
-                location of each key that was in the final image dictionary. The third
-                line format simply specifies a file or a directory in the repository that
-                was used in the image description, and is used for configuration script
-                snippets and overlay files.</para>
-      <para>This enables the change log generator to produce a change log using the
-                git commit history, selecting only commits that apply to the generated
-                image description.</para>
+      <para>
+        The first line specifies the repository location. There will
+        be one for each <literal>keg-recipes</literal> directory given
+        to Keg. Lines starting with <literal>range:</literal> specify
+        a part of a file in a repository. This is used to track the
+        source location of each key that was in the final image
+        dictionary. The third line format simply specifies a file or a
+        directory in the repository that was used in the image
+        description, and is used for configuration script snippets and
+        overlay files.
+      </para>
+      <para>
+        This enables the change log generator to produce a change log
+        using the git commit history, selecting only commits that
+        apply to the generated image description.
+      </para>
     </section>
     <section xml:id="change-log-generator">
       <title>Change log generator</title>
-      <para>The generated source info log files, together with the <literal>keg-recipes</literal>
-                in the place and state they were used to generate the image description,
-                can be used to generate change logs. The <literal>keg</literal> distribution contains
-                a tool <literal>generate_recipes_changelog</literal> for that purpose. When called
-                with a source log file as argument, <literal>generate_recipes_changelog</literal>
-                will use the source information to select matching git messages and
-                produce a change log in chronological order. There are parameters to
-                to narrow down the applicable commit range as well as some formatting
-                options. Refer to <xref linkend="generate-recipes-changelog"/> command overview
-                for details.</para>
+      <para>
+        The generated source info log files, together with the
+        <literal>keg-recipes</literal> in the place and state they
+        were used to generate the image description, can be used to
+        generate change logs. The Keg distribution contains a tool
+        <command>generate_recipes_changelog</command> for that
+        purpose. When called with a source log file as argument,
+        <command>generate_recipes_changelog</command> will use the
+        source information to select matching git messages and produce
+        a change log in chronological order. There are parameters to
+        to narrow down the applicable commit range as well as some
+        formatting options. Refer to <xref
+        linkend="generate-recipes-changelog"/> command overview for
+        details.
+      </para>
     </section>
     <section xml:id="integration-in-obs-source-service">
       <title>Integration in OBS source service</title>
-      <para>The <literal>keg</literal> distribution contains a module for integrating with the Open Build
-                Service, an implementation of a so-called <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://openbuildservice.org/help/manuals/obs-user-guide/cha.obs.source_service.html">OBS Source Service</link>.
-                It supports automatic handling of change log generation. See <xref linkend="keg-obs-source-service"/> for details.</para>
+      <para>
+        The Keg distribution contains a module for integrating with
+        the Open Build Service, an implementation of a so-called <link
+        xlink:href="https://openbuildservice.org/help/manuals/obs-user-guide/cha.obs.source_service.html">OBS
+        Source Service</link>.  It supports automatic handling of
+        change log generation. See <xref
+        linkend="keg-obs-source-service"/> for details.
+      </para>
     </section>
-  </chapter>
-  <chapter xml:id="keg-obs-source-service" xml:base="obs_source_service">
+  </section>
+  <section xml:id="keg-obs-source-service">
     <title>Keg OBS source service</title>
-    <para>The <literal>OBS Source Service</literal> for <literal>keg</literal> provides a mechanism to produce <literal>kiwi</literal> image
-            descriptions for use with the <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://openbuildservice.org/help/manuals/obs-user-guide/">Open Build Service</link> in an automated
-            fashion. The <literal>OBS Source Service</literal>, named <literal>compose_kiwi_description</literal>, checks
-            out any given <literal>keg-recipes</literal> repositories, runs <literal>keg</literal> to produce the specified
-            image description, and optionally produces change log files and stores the
-            HEAD commit hashed of the <literal>keg-recipes</literal> repositories to be used for the next
-            source service run.</para>
-    <para>To set up an <literal>OBS</literal> package as a <literal>keg</literal> source service package, simply create a
-            file named <literal>_service</literal> in your package directory. The contents of the
-            file should look like the following:</para>
-    <screen language="xml">&lt;services&gt;
+    <para>
+      The <literal>OBS Source Service</literal> for Keg provides a
+      mechanism to produce <literal>kiwi</literal> image descriptions
+      for use with the <link
+      xlink:href="https://openbuildservice.org/help/manuals/obs-user-guide/">Open
+      Build Service</link> in an automated fashion. The <literal>OBS
+      Source Service</literal>, named
+      <command>compose_kiwi_description</command>, checks out any
+      given <literal>keg-recipes</literal> repositories, runs
+      <command>keg</command> to produce the specified image
+      description, and optionally produces change log files and stores
+      the HEAD commit hashed of the <literal>keg-recipes</literal>
+      repositories to be used for the next source service run.
+    </para>
+    <para>
+      To set up an OBS package as a Keg source service package, simply
+      create a file named <literal>_service</literal> in your package
+      directory. The contents of the file should look like the
+      following:
+    </para>
+    <screen>&lt;services&gt;
     &lt;service name="compose_kiwi_description"&gt;
         &lt;param name="git-recipes"&gt;https://github.com/SUSE-Enceladus/keg-recipes.git&lt;/param&gt;
         &lt;param name="git-branch"&gt;released&lt;/param&gt;
         &lt;param name="image-source"&gt;cross-cloud/sles/byos/15-sp3&lt;/param&gt;
     &lt;/service&gt;
 &lt;/services&gt;</screen>
-    <para>In this example, the <literal>released</literal> branch of the public <literal>keg-recipes</literal> repository
-            for SUSE Linux Enterprise images hosted on github is used as source and the
-            selected image source is <literal>cross-cloud/sles/byos/15-sp3</literal>. Running the source
-            service will produce a description for a SUSE Linux Enterprise Server 15 SP3
-            BYOS image for several cloud service provider frameworks.</para>
-    <para>The parameters <literal>&lt;git-recipes&gt;</literal> and <literal>&lt;git-branch&gt;</literal> may be used multiple times if
-            the image description should be composed from more than one repository.</para>
+    <para>
+      In this example, the <literal>released</literal> branch of the
+      public <literal>keg-recipes</literal> repository for SUSE Linux
+      Enterprise images hosted on github is used as source and the
+      selected image source is
+      <filename>cross-cloud/sles/byos/15-sp3</filename>. Running the
+      source service will produce a description for a SUSE Linux
+      Enterprise Server 15 SP3 BYOS image for several cloud service
+      provider frameworks.
+    </para>
+    <para>
+      The parameters <tag class="element">git-recipes</tag> and <tag
+      class="element">git-branch</tag> may be used multiple times if
+      the image description should be composed from more than one
+      repository.
+    </para>
     <para>There are a few additional optional parameters:</para>
-    <itemizedlist>
-      <listitem>
-        <para><literal>arch</literal> (string)</para>
-      </listitem>
-    </itemizedlist>
-    <para>Set build target architecture. Can be used multiple times.</para>
-    <itemizedlist>
-      <listitem>
-        <para><literal>image-version</literal> (string)</para>
-      </listitem>
-    </itemizedlist>
-    <para>Set image version. If no version is given, the version number of the existing
-            image description will be used with the patch level increased by one.</para>
-    <itemizedlist>
-      <listitem>
-        <para><literal>version-bump</literal> (true|false)</para>
-      </listitem>
-    </itemizedlist>
-    <para>Whether the patch version number should be incremented. Ignored if
-            <literal>--image-version</literal> is set. If set to <literal>false</literal> and <literal>--image-version</literal> is not set,
-            the image version defined in the recipes will be used. If no image version is
-            defined, image description generation will fail. Default is <literal>true</literal>.</para>
-    <itemizedlist>
-      <listitem>
-        <para><literal>update-changelogs</literal> (true|false)</para>
-      </listitem>
-    </itemizedlist>
-    <para>Whether <literal>changes.yaml</literal> files should be updated. Default is <literal>true</literal>.</para>
-    <itemizedlist>
-      <listitem>
-        <para><literal>update-revisions</literal> (true|false)</para>
-      </listitem>
-    </itemizedlist>
-    <para>Whether <literal>_keg_revisions</literal> (used for storing current commit IDs) should be
-            updated. Default is <literal>true</literal>.</para>
-    <itemizedlist>
-      <listitem>
-        <para><literal>force</literal> (true|false)</para>
-      </listitem>
-    </itemizedlist>
-    <para>If true, refresh image description even if there are no new commits. Default
-            is <literal>false</literal>.</para>
-    <para>The system the source service is run on needs to have <literal>keg</literal> and
-            <literal>obs-service-keg</literal> installed. Refer to the <link xmlns:xl="http://www.w3.org/1999/xlink" xl:href="https://openbuildservice.org/help/manuals/obs-user-guide/cha.obs.source_service.html">Using Source Services</link>
-            section of the OBS manual about details on how to run the source service and
-            which operating modes are available.</para>
-  </chapter>
-</book>
+    <variablelist>
+      <varlistentry>
+        <term><literal>arch</literal> (string)</term>
+        <listitem>
+          <para>
+            Set build target architecture. Can be used multiple times.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>image-version</literal> (string)</term>
+        <listitem>
+          <para>
+            Set image version. If no version is given, the version
+            number of the existing image description will be used with
+            the patch level increased by one.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>version-bump</literal> (true|false)</term>
+        <listitem>
+          <para>
+            Whether the patch version number should be
+            incremented. Ignored if <option>--image-version</option>
+            is set. If set to <literal>false</literal> and
+            <option>--image-version</option> is not set, the image
+            version defined in the recipes will be used. If no image
+            version is defined, image description generation will
+            fail. Default is <literal>true</literal>.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>update-changelogs</literal> (true|false)</term>
+        <listitem>
+          <para>
+            Whether <filename>changes.yaml</filename> files should be
+            updated. Default is <literal>true</literal>.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>update-revisions</literal> (true|false)</term>
+        <listitem>
+          <para>
+            Whether <literal>_keg_revisions</literal> (used for
+            storing current commit IDs) should be updated. Default is
+            <literal>true</literal>.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>force</literal> (true|false)</term>
+        <listitem>
+          <para>
+            If true, refresh image description even if there are no
+            new commits. Default is <literal>false</literal>.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>
+      The system the source service is running on needs to have Keg
+      and <literal>obs-service-keg</literal> installed. Refer to the
+      <link
+      xlink:href="https://openbuildservice.org/help/manuals/obs-user-guide/cha.obs.source_service.html">Using
+      Source Services</link> section of the OBS manual about details
+      on how to run the source service and which operating modes are
+      available.
+    </para>
+  </section>
+</article>
