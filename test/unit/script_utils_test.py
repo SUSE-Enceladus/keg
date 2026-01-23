@@ -62,7 +62,7 @@ def test_script_utils_get_config_script_no_profiles(mock_get_script_section):
 
 
 expected_output = '''
-profiles="${kiwi_profiles/,/|}"
+profiles="${kiwi_profiles//,/|}"
 if [[ profile_one =~ ^(${profiles})$ || profile_two =~ ^(${profiles})$ ]]; then
     script_data
 fi
