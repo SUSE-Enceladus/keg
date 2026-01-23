@@ -39,7 +39,7 @@ def get_config_script(config_dict: Dict, script_dirs: List[str]) -> str:
             content += '\n'
         profiles = config_section.get('profiles')
         if profiles:
-            content += '\nprofiles="${kiwi_profiles/,/|}"'
+            content += '\nprofiles="${kiwi_profiles//,/|}"'
             content += '\nif [[ {} =~ ^(${{profiles}})$ '.format(profiles[0])
             for profile in profiles[1:]:
                 content += '|| {} =~ ^(${{profiles}})$ '.format(profile)
