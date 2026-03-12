@@ -82,7 +82,7 @@
       number of image descriptions that have considerable overlap with
       respect to content and setup can be cumbersome and error-prone. 
       Keg alleviates that by allowing image descriptions to be broken 
-      into manageable modules. These modules can be composed in different 
+      into manageable modules. These modules can be composed in different ways
       within specific image definitions. The modules can inherit 
       from parent modules, allowing for fine-tuning of specific image setups. 
       Configuration scripts and overlay archives can also be generated in 
