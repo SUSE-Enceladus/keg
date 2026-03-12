@@ -178,7 +178,7 @@
     </para>
   </section>
   <section xml:id="installation">
-    <title>Installing Keg from openSUSE and PyPI repositories</title>
+    <title>Installing Keg from openSUSE or PyPI repositories</title>
     <para>
       This section describes how to install Keg. Currently, Keg is
       available via the <link
