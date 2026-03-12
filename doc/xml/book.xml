@@ -53,7 +53,7 @@
     </legalnotice>
     <abstract>
       <para>
-        The Kiwi Extension Generator (<literal>Keg</literal>) is a command-line tool 
+        <literal>Keg</literal> is a command-line tool 
         that automates the generation of appliance image descriptions used 
         to build custom system images with the <link
         xmlns:xl="http://www.w3.org/1999/xlink"
