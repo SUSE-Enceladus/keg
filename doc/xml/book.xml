@@ -1231,7 +1231,7 @@ images/opensuse/leap/15.3/image.yaml</screen>
     </section>
   </section>
   <section xml:id="data-modules">
-    <title>Using data Mmdules for modular configuration</title>
+    <title>Using data modules for modular configuration</title>
     <para>
       Data modules are directories in the <literal>data</literal> tree. There are
       three different kinds of data modules:
