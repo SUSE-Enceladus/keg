@@ -7,8 +7,7 @@
   <info>    
     <meta name="title" its:translate="yes">Keg Reference Guide</meta>
     <meta name="series" its:translate="no">Products &amp; Solutions</meta>
-    <meta name="description" its:translate="yes">Learn how to use the Kiwi Extension Generator (KEG) to automate appliance 
-      image descriptions for KIWI builds through validated configuration steps and integrated troubleshooting</meta>
+    <meta name="description" its:translate="yes">Learn to use Keg to create modular image descriptions for the KIWI appliance builder using recipes, data modules and inheritance</meta>
     <meta name="social-descr" its:translate="yes">Create and manage image descriptions for KIWI</meta>
     <meta name="task" its:translate="yes">
       <phrase>Image Building</phrase>
